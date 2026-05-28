@@ -1,0 +1,37 @@
+name: Main push guardrail
+
+# Fails any push to `main` that is not associated with a merged pull request.
+# Acts as a soft guardrail since GitHub Free does not allow branch protection
+# on private repos. To disable, delete this file.
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  verify-push-came-from-pr:
+    name: Verify push came from a PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check that the head commit is associated with a PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          SHA="${{ github.sha }}"
+          REPO="${{ github.repository }}"
+
+          echo "Checking commit $SHA for associated PRs..."
+          PR_COUNT=$(gh api "repos/${REPO}/commits/${SHA}/pulls" --jq 'length' || echo "0")
+
+          if [ "$PR_COUNT" -lt 1 ]; then
+            echo "::error::Direct push to main detected (commit $SHA has no associated PR)."
+            echo "::error::All changes to main must arrive via PR from develop."
+            echo "::error::Revert this commit and re-submit via PR. See README.md branch workflow."
+            exit 1
+          fi
+
+          echo "OK — commit was introduced via PR. ($PR_COUNT PR association(s) found.)"
