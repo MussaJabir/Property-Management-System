@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Project documentation
+    url: https://github.com/MussaJabir/Property-Management-System/blob/main/CLAUDE.md
+    about: Start with CLAUDE.md and the docs/ folder for any project question.

@@ -1,0 +1,78 @@
+# ---- PHP / Composer ----
+/vendor
+composer.phar
+.phpactor.json
+.phpunit.cache
+.phpunit.result.cache
+
+# ---- Laravel ----
+/storage/*.key
+/storage/pail
+/storage/logs/*.log
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+!/storage/framework/cache/data/.gitkeep
+!/storage/framework/sessions/.gitkeep
+!/storage/framework/testing/.gitkeep
+!/storage/framework/views/.gitkeep
+/storage/app/public/*
+!/storage/app/public/.gitkeep
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+/public/storage
+/public/hot
+/public/build
+
+# ---- Env / secrets (NEVER commit) ----
+.env
+.env.backup
+.env.production
+.env.local
+.env.*.local
+auth.json
+*-credentials.json
+*-credentials.yml
+b2-keys.txt
+selcom-keys.txt
+secrets/
+
+# ---- Node ----
+/node_modules
+npm-debug.log
+yarn-error.log
+yarn.lock
+.npm
+.pnpm-store
+
+# ---- IDE ----
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+/.phpstorm.meta.php
+*.iml
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ---- Backups / temp / logs ----
+*.bak
+*~
+*.tmp
+*.log
+logs/
+*.sql.bak
+*.dump
+
+# ---- Claude / AI tool session metadata ----
+/.claude
+*.local.md
+
+# ---- Docker overrides ----
+docker-compose.override.yml

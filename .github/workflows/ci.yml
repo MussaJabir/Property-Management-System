@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  docs-check:
+    name: Documentation present
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify required docs exist
+        run: |
+          set -e
+          for f in CLAUDE.md README.md LICENSE docs/IMPLEMENTATION_PLAN.md docs/DATA_MODEL.md docs/SETUP.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing required file: $f"
+              exit 1
+            fi
+          done
+          echo "All required docs present."
+
+  laravel-ci:
+    name: Laravel CI
+    runs-on: ubuntu-latest
+    # Only runs once composer.json exists (after Laravel is installed)
+    if: hashFiles('composer.json') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, pgsql, redis, gd, zip, bcmath
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Pint (formatting)
+        run: vendor/bin/pint --test
+
+      - name: Larastan (static analysis)
+        run: vendor/bin/phpstan analyse --memory-limit=2G
+
+      - name: Pest (tests)
+        run: vendor/bin/pest
