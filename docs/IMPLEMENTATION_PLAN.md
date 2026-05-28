@@ -27,36 +27,43 @@ PMS is a multi-tenant property management SaaS commissioned by BJP Technologies 
 
 ## 2. High-Level Architecture
 
+All application services run inside Docker containers on the production VPS. Local dev uses Laravel Sail (same containers, Sail-provided compose). Cloudflare and Backblaze B2 are external managed services.
+
 ```
                 ┌──────────────────────────────┐
                 │    Cloudflare (DNS/WAF/CDN)  │
                 └──────────────┬───────────────┘
                                ▼
-                ┌──────────────────────────────┐
-                │   Caddy (reverse proxy, SSL) │
-                └──────────────┬───────────────┘
-                               ▼
-                ┌──────────────────────────────┐
-                │ Laravel 12 + PHP 8.4 (FPM)   │
-                │   Filament v4 (operator)     │
-                │   Livewire 3 + Flux UI       │
-                │   Sanctum auth               │
-                │   stancl/tenancy (path mode) │
-                └─┬───────┬────────┬──────┬────┘
-                  │       │        │      │
-                  ▼       ▼        ▼      ▼
-            ┌───────┐ ┌──────┐ ┌──────┐ ┌──────────┐
-            │Postgres│ │Redis │ │Meili │ │Backblaze │
-            │   16   │ │  7   │ │search│ │   B2     │
-            └────────┘ └──┬───┘ └──────┘ └──────────┘
-                          │
-                          ▼
-                    ┌──────────┐
-                    │  Horizon │ → email/SMS/WhatsApp/reports
-                    │  workers │
-                    └──────────┘
-
-Cron → Laravel Scheduler → invoice generation, overdue checks, reminders
+        ╔══════════════════════════════════════════════╗
+        ║  DOCKER COMPOSE — Production VPS (8 GB)      ║
+        ║  ┌────────────────────────────────────────┐  ║
+        ║  │  Caddy (reverse proxy, auto-SSL)       │  ║
+        ║  └──────────────┬─────────────────────────┘  ║
+        ║                 ▼                            ║
+        ║  ┌────────────────────────────────────────┐  ║
+        ║  │  app:  Laravel 12 + PHP 8.4 FPM        │  ║
+        ║  │   Filament v4 · Livewire 3 + Flux      │  ║
+        ║  │   Sanctum · stancl/tenancy (path)      │  ║
+        ║  └─┬──────┬───────┬──────┬────────────────┘  ║
+        ║    ▼      ▼       ▼      │                   ║
+        ║  ┌─────┐┌─────┐┌──────┐  │                   ║
+        ║  │pgsql││redis││meili │  │                   ║
+        ║  │ 16  ││  7  ││search│  │                   ║
+        ║  └─────┘└──┬──┘└──────┘  │                   ║
+        ║            ▼              │                   ║
+        ║  ┌────────────────────┐   │                   ║
+        ║  │ worker: Horizon    │   │                   ║
+        ║  │ scheduler: cron    │   │                   ║
+        ║  └─────────┬──────────┘   │                   ║
+        ╚════════════│══════════════│═══════════════════╝
+                     │              │
+                     ▼              ▼
+              ┌────────────┐  ┌────────────┐
+              │  Resend    │  │ Backblaze  │
+              │  Beem SMS  │  │     B2     │
+              │  WhatsApp  │  │  (files)   │
+              │  Selcom v2 │  └────────────┘
+              └────────────┘
 ```
 
 URL surfaces under `pms.bjptechnologies.co.tz`:
@@ -138,18 +145,19 @@ URL surfaces under `pms.bjptechnologies.co.tz`:
 Phases are sequenced by dependency. No strict day count — solo dev pace.
 
 ### Phase 0 — Foundation
-1. Laravel 12 project created
-2. Postgres + Redis local installed
-3. `.env` configured
-4. Sanctum, Horizon, Pulse, Scout installed
-5. Spatie Permission + Activity Log + Media Library installed
-6. Filament v4 installed with two panels (`admin`, `operator`)
-7. Livewire 3 + Flux UI installed
-8. `stancl/tenancy` installed and configured for path-based mode
-9. B2 disk configured in `config/filesystems.php` and set as default
-10. `App\Models\Concerns\TenantScopedModel` trait/base created
-11. Bilingual scaffolding: `lang/en/` and `lang/sw/` directories, locale middleware, switcher component
-12. CI skeleton: GitHub Actions running Pint + Larastan + Pest
+1. Docker Engine + Compose plugin installed on host
+2. Laravel 12 project scaffolded via `laravelsail/php84-composer` one-shot container
+3. Laravel Sail installed with `pgsql,redis,meilisearch,mailpit` services — `sail up -d` brings up the whole stack
+4. `.env` configured to point at Sail container hostnames (`pgsql`, `redis`, `meilisearch`, `mailpit`)
+5. Sanctum, Horizon, Pulse, Scout installed
+6. Spatie Permission + Activity Log + Media Library installed
+7. Filament v4 installed with two panels (`admin`, `operator`)
+8. Livewire 3 + Flux UI installed
+9. `stancl/tenancy` installed and configured for path-based mode
+10. B2 disk configured in `config/filesystems.php` and set as default
+11. `App\Models\Concerns\TenantScopedModel` trait/base created
+12. Bilingual scaffolding: `lang/en/` and `lang/sw/` directories, locale middleware, switcher component
+13. CI updated: GitHub Actions runs Pint + Larastan + Pest inside Docker (matches Sail)
 
 ### Phase 1 — Super Admin & Tenant Provisioning
 1. `tenants`, `domains`, `plans`, `subscriptions` migrations (central DB)
@@ -232,13 +240,16 @@ Phases are sequenced by dependency. No strict day count — solo dev pace.
 
 ### Phase 11 — Production Deploy
 1. Provision 8 GB VPS (Hetzner CX32 or Oracle upgrade)
-2. Install Caddy, PHP 8.4, Postgres 16, Redis 7
-3. Configure Caddy site for `pms.bjptechnologies.co.tz` (auto-SSL via Let's Encrypt)
-4. Configure Cloudflare DNS + proxy
-5. GitHub Actions deploy script (SSH, pull, migrate, optimize, queue:restart)
-6. Backup automation: nightly Postgres dump → B2, weekly snapshot
-7. Uptime Kuma monitoring + alerts to email/WhatsApp
-8. First tenant provisioned, demo URL handed to boss
+2. Install Docker Engine + Compose plugin + ufw + fail2ban on host (no native PHP/Postgres/Redis)
+3. Build production `docker/Dockerfile.app` — multi-stage (Composer install → npm build → minimal PHP-FPM runtime), no dev deps, healthcheck baked in
+4. Author `docker/docker-compose.production.yml` — `caddy`, `app`, `worker` (Horizon), `scheduler`, `pgsql`, `redis`, `meilisearch` services with named volumes for data
+5. Author production `docker/Caddyfile` — `pms.bjptechnologies.co.tz` with auto-SSL via Let's Encrypt DNS-01 (Cloudflare API token)
+6. Configure Cloudflare DNS + proxy
+7. GitHub Actions deploy pipeline: build image → push to GHCR with git-SHA tag → SSH to VPS → `docker compose pull && up -d` → `docker compose exec app php artisan migrate --force`
+8. Backup automation: cron container runs nightly `pg_dump` → upload to B2 (30-day retention), Postgres volume snapshot weekly
+9. Uptime Kuma monitoring + alerts to email/WhatsApp
+10. Rollback procedure documented + tested: revert to previous SHA tag, `docker compose pull && up -d`
+11. First tenant provisioned, demo URL handed to boss
 
 ### Post-v1 backlog (loose order)
 - Selcom Pay integration
@@ -288,22 +299,25 @@ Don't start a downstream module before its upstream is stable. Cross-module hack
 ## 7. Deployment Plan
 
 ### Local dev
-Native PHP 8.4 + Postgres 16 + Redis 7 on Ubuntu. See `SETUP.md`. Local URL: `pms.test/{tenant}/…` via Caddy or `127.0.0.1:8000/{tenant}/…` via `php artisan serve`.
+Docker via **Laravel Sail**. See `SETUP.md`. Local URL: `http://localhost/{tenant}/…` — Sail handles PHP, Postgres, Redis, Meilisearch, Mailpit. No native installs on the host beyond Docker itself.
 
 ### Staging
-Deferred until first VPS provisioned. Optionally a `staging.pms.bjptechnologies.co.tz` subdomain on the same VPS with separate DB.
+Deferred until first VPS provisioned. Optionally a `staging.pms.bjptechnologies.co.tz` subdomain on the same VPS (separate compose project, separate DB volume).
 
 ### Production
 - Dedicated 8 GB VPS, separate from the existing shared Oracle box
-- Caddy auto-SSL
+- Host runs Docker only (plus SSH, ufw, fail2ban, unattended-upgrades)
+- All services via `docker-compose.production.yml`: `caddy`, `app`, `worker`, `scheduler`, `pgsql`, `redis`, `meilisearch`
+- Caddy container handles auto-SSL via Let's Encrypt DNS-01 (Cloudflare API token)
 - Cloudflare in front (proxy enabled)
-- Deploy via GitHub Actions on tag push
-- Zero-downtime via `php-fpm reload` + Horizon graceful restart
-- Postgres + B2 + Redis backed up nightly
+- GitHub Actions deploy pipeline: build image → push to GHCR with git-SHA tag → SSH to VPS → `docker compose pull && up -d` → migrate
+- Zero-downtime via rolling app container restart + Horizon graceful restart
+- Postgres + B2 backed up nightly
 
 ### Rollback
-- Tag-based releases; rollback = redeploy previous tag
-- Postgres backups retained 30 days
+- Image tags = git short SHAs (never `:latest` in prod)
+- Rollback = `docker compose pull <previous-sha> && up -d` — under 60 seconds
+- Postgres backups retained 30 days on B2
 - Never run destructive migrations without a tested rollback migration
 
 ---
@@ -321,6 +335,8 @@ Deferred until first VPS provisioned. Optionally a `staging.pms.bjptechnologies.
 | Solo-dev bus factor | Documentation in this repo, conventions enforced via static analysis |
 | Scope creep before MVP demo | This document is the line. New features land in v2 backlog. |
 | Boss changes requirements mid-build | Re-discuss scope, update this doc, don't silently absorb |
+| Dev/prod drift | All work via Docker (Sail dev, custom compose prod); same image versions; CI uses Docker services |
+| Deploy failure mid-rollout | Image-tag-based rollback (`docker compose pull <prev-sha> && up -d`) — under 60 seconds |
 
 ---
 
@@ -338,4 +354,4 @@ Deferred until first VPS provisioned. Optionally a `staging.pms.bjptechnologies.
 
 This file is updated as decisions evolve. When you (or any future Claude session) make a scope or architecture decision, update this file in the same commit as the code change. Avoid scattered decision history.
 
-Last updated: 2026-05-28
+Last updated: 2026-05-28 (Docker / Sail added)
