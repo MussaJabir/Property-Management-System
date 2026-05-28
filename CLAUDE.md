@@ -31,6 +31,7 @@ For full scope see `docs/IMPLEMENTATION_PLAN.md`. For data model see `docs/DATA_
 - **Payments (v2)**: Selcom Pay aggregator
 - **Errors**: Sentry · **Metrics**: Laravel Pulse · **Uptime**: Uptime Kuma
 - **Mobile (v2)**: Flutter + Provider, talks to Sanctum API
+- **Containerization**: Docker — **Laravel Sail** for local dev, custom **Docker Compose** for production (Caddy + PHP-FPM + Postgres + Redis + Horizon + Scheduler containers). All dev and prod work runs inside containers. No native PHP/Postgres/Redis on the host.
 
 ## Mandatory conventions
 
@@ -63,14 +64,27 @@ For full scope see `docs/IMPLEMENTATION_PLAN.md`. For data model see `docs/DATA_
 
 ## Run before claiming any task done
 
+All commands run **inside Sail** (don't invoke host PHP / Composer / artisan directly):
+
 ```bash
-vendor/bin/pint                       # format
-vendor/bin/phpstan analyse            # Larastan level 8
-vendor/bin/pest                       # tests
-php artisan migrate --pretend         # catch migration errors
+./vendor/bin/sail pint                       # format
+./vendor/bin/sail phpstan analyse            # Larastan level 8
+./vendor/bin/sail pest                       # tests
+./vendor/bin/sail artisan migrate --pretend  # catch migration errors
 ```
 
+Convenience: add `alias sail="./vendor/bin/sail"` to your shell.
+
 If any of the above fails, the task is not done.
+
+## Docker conventions
+
+- **Local dev: Laravel Sail.** Single `docker-compose.yml` at project root (Sail-generated). Spin up with `sail up -d`, shut down with `sail down`. Never run `php artisan ...` against host PHP.
+- **Production: custom `docker/` folder.** Multi-stage `Dockerfile.app` (build assets → install vendor → minimal runtime image), `docker-compose.production.yml`, hardened `Caddyfile`, `php.ini` overrides. Added in Phase 11 (Production Deploy), not now.
+- **No bind mounts in prod.** Production uses named volumes for Postgres data and Redis snapshots. Code is baked into the image, not mounted.
+- **One container per concern.** Don't run Horizon worker inside the web container. Separate `app`, `worker`, `scheduler`, `reverb` (when added) services.
+- **Image tags = git SHAs in prod.** Never `:latest`. Tag = short SHA so rollback is `docker compose pull <previous-sha> && up -d`.
+- **Secrets via environment, not files in image.** B2 keys, DB passwords, Resend API keys — all passed via `.env` (gitignored) or your secret manager. Never `COPY` them into the image.
 
 ## Don'ts
 
@@ -81,11 +95,16 @@ If any of the above fails, the task is not done.
 - Don't add packages without discussion — prefer Spatie / Laravel ecosystem packages over generic PHP packages
 - Don't hardcode English strings — every label goes through `__()`
 - Don't put files on the shared Oracle box that hosts the 6 existing client systems (`bejus, bms, demo, mufindipower, mwpt, vikundi`) — PMS goes on its own VPS
+- Don't run `php` / `composer` / `artisan` against the host. Always `sail <command>` so dev environment matches CI and prod
+- Don't use `:latest` Docker tags in production — always pin to a git SHA so rollback is deterministic
+- Don't bake secrets into Docker images — pass via environment variables only
 
 ## Production server context (for when we deploy)
 
 - Currently planned: dedicated 8 GB / 4 vCPU VPS (Hetzner CX32 or Oracle upgrade)
-- Reverse proxy: Caddy (auto-SSL, simpler than Apache)
+- Host runs: **Docker only** (plus SSH, ufw, fail2ban, unattended-upgrades). No native PHP, Postgres, Redis, or Nginx on the host.
+- Reverse proxy: **Caddy in a container** (auto-SSL via Let's Encrypt DNS-01 challenge through Cloudflare)
+- Application stack: `docker compose -f docker-compose.production.yml up -d` runs Caddy + PHP-FPM + Postgres + Redis + Horizon + Scheduler
 - Domain (v1): `pms.bjptechnologies.co.tz` with path-based tenants
 - DNS / CDN / WAF: Cloudflare
 - Storage: Backblaze B2 (separate buckets per environment)
