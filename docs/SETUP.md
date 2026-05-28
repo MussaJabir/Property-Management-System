@@ -1,162 +1,112 @@
 # PMS — Local Dev Setup
 
-Step-by-step to get PMS running on Ubuntu locally. Mirrors the production stack so cutover is just env swap + deploy.
+Get PMS running locally on Ubuntu via **Laravel Sail** (Docker). Production runs the same containers (with different configs), so cutover is mostly env-swap and image-build.
 
-> Target OS: Ubuntu 24.04 (Dutch's local machine). PHP via `ondrej/php` PPA. Caddy as local proxy so `pms.test/{tenant}/…` works.
+> Target OS: Ubuntu 24.04. Sail handles PHP, Postgres, Redis, Mailpit, Meilisearch — no native installs of those needed.
 
 ---
 
-## 1. Prerequisites
+## 1. Host prerequisites
 
 ```bash
-# PHP 8.4 (via ondrej PPA)
-sudo add-apt-repository ppa:ondrej/php -y
-sudo apt update
-sudo apt install -y php8.4 php8.4-fpm php8.4-cli php8.4-common \
-  php8.4-pgsql php8.4-zip php8.4-gd php8.4-mbstring php8.4-curl \
-  php8.4-xml php8.4-bcmath php8.4-intl php8.4-redis php8.4-pcov
+# Docker Engine + Compose plugin
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+newgrp docker   # or log out / back in
+docker --version
+docker compose version
 
-# Composer
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
-
-# PostgreSQL 16
-sudo apt install -y postgresql-16 postgresql-contrib-16
-sudo systemctl enable --now postgresql
-
-# Redis 7
-sudo apt install -y redis-server
-sudo systemctl enable --now redis-server
-
-# Node 22 (for Vite + Tailwind build)
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# Caddy (local reverse proxy for tenant URL testing)
-sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update && sudo apt install -y caddy
-
-# Meilisearch (optional for v1 — install when search lands)
-curl -L https://install.meilisearch.com | sh
-sudo mv ./meilisearch /usr/local/bin/
-
-# verify
-php -v             # expect 8.4.x
-psql --version     # expect 16.x
-redis-cli ping     # expect PONG
-node -v            # expect 22.x
-caddy version
+# Verify Docker works without sudo
+docker run --rm hello-world
 ```
 
----
-
-## 2. Database setup
-
 ```bash
-sudo -u postgres psql <<'SQL'
-CREATE USER pms_dev WITH PASSWORD 'change_me_locally';
-CREATE DATABASE pms_local OWNER pms_dev;
-GRANT ALL PRIVILEGES ON DATABASE pms_local TO pms_dev;
-\c pms_local
-GRANT ALL ON SCHEMA public TO pms_dev;
-SQL
+# Git (probably already installed)
+sudo apt install -y git
+
+# Optional: gh CLI for PRs from terminal
+sudo apt install -y gh
+gh auth login
 ```
 
-Test:
-```bash
-psql -U pms_dev -h 127.0.0.1 -d pms_local -c '\dt'
-```
+That's it for the host. **No PHP, no Composer, no Postgres, no Redis installed natively.** Everything runs in containers.
 
 ---
 
-## 3. Backblaze B2 setup (do this before first file upload)
-
-1. Sign up at https://www.backblaze.com/cloud-storage
-2. Create two buckets: `pms-dev-uploads` (dev), `pms-prod-uploads` (prod). Mark them **Private** (not public).
-3. Create an Application Key scoped to the dev bucket. Save: `keyID`, `applicationKey`, `endpoint`, `region`.
-4. The B2 S3-compatible endpoint will look like `https://s3.us-west-002.backblazeb2.com` (region varies).
-5. Plug into `.env` (next section).
-
----
-
-## 4. Laravel project init
+## 2. Clone the repo
 
 ```bash
-cd "/home/j4bir/Dev/BJP/Projects/Systems/Property Management System/PMS"
-
-# Scaffold Laravel into ./app
-composer create-project laravel/laravel:^12.0 app
+cd ~/Dev/BJP/Projects/Systems/Property\ Management\ System/PMS
+git clone https://github.com/MussaJabir/Property-Management-System.git app
 cd app
+git checkout develop
 ```
 
-### Install required packages
+(Once Laravel is installed in Phase 0, the `app/` folder will contain the actual Laravel project.)
+
+---
+
+## 3. First-time Laravel + Sail install (Phase 0 task — placeholder)
+
+When Phase 0 lands, the bootstrap is:
 
 ```bash
-# Core SaaS framework packages
-composer require filament/filament:"^4.0"
-composer require stancl/tenancy
-composer require livewire/livewire:"^3.6"
-composer require livewire/flux
-composer require laravel/sanctum
-composer require laravel/horizon
-composer require laravel/pulse
-composer require laravel/scout
+# From host (one-time, uses a temporary container just to scaffold Laravel)
+docker run --rm -v "$(pwd)":/opt/src -w /opt/src laravelsail/php84-composer:latest \
+  composer create-project laravel/laravel:^12.0 .
 
-# Spatie packages
-composer require spatie/laravel-permission
-composer require spatie/laravel-activitylog
-composer require spatie/laravel-medialibrary
-composer require spatie/browsershot
+# Install Sail
+docker run --rm -v "$(pwd)":/opt/src -w /opt/src laravelsail/php84-composer:latest \
+  composer require laravel/sail --dev
 
-# Storage + utility
-composer require league/flysystem-aws-s3-v3
-composer require maatwebsite/excel
-composer require cknow/laravel-money
-composer require propaganistas/laravel-phone
-composer require intervention/image
-composer require meilisearch/meilisearch-php
+# Publish Sail's docker-compose.yml with the services we need
+docker run --rm -v "$(pwd)":/opt/src -w /opt/src laravelsail/php84-composer:latest \
+  php artisan sail:install --with=pgsql,redis,meilisearch,mailpit
 
-# Dev tooling
-composer require --dev pestphp/pest
-composer require --dev pestphp/pest-plugin-laravel
-composer require --dev larastan/larastan
-composer require --dev laravel/pint
-composer require --dev laravel/telescope
+# Alias for convenience
+alias sail="./vendor/bin/sail"
+echo 'alias sail="./vendor/bin/sail"' >> ~/.bashrc
 ```
 
-> If `livewire/flux` requires registration, follow the Flux UI install docs at https://fluxui.dev. Flux's free tier covers all components needed for v1.
-
-### Init Pest
+After that, everything runs through `sail`:
 
 ```bash
-php artisan pest:install
+sail up -d                # start the stack
+sail down                 # stop everything
+sail artisan migrate      # run migrations inside the container
+sail composer require ... # install packages inside the container
+sail npm install          # install JS deps inside the container
+sail npm run dev          # Vite dev server (with HMR)
+sail pest                 # run tests
+sail pint                 # format
+sail phpstan analyse      # static analysis
+sail shell                # open a shell inside the app container
 ```
 
 ---
 
-## 5. `.env` configuration (local)
+## 4. `.env` configuration (local)
 
-Edit `app/.env`:
+`.env` is gitignored — never commit it. After Sail bootstrap, it's auto-generated. Adjust these keys:
 
 ```ini
 APP_NAME=PMS
 APP_ENV=local
 APP_DEBUG=true
-APP_URL=http://pms.test
+APP_URL=http://localhost
 APP_LOCALE=en
 APP_FALLBACK_LOCALE=en
 APP_TIMEZONE="Africa/Dar_es_Salaam"
 
+# These point to Sail container hostnames (NOT 127.0.0.1)
 DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
+DB_HOST=pgsql
 DB_PORT=5432
-DB_DATABASE=pms_local
-DB_USERNAME=pms_dev
-DB_PASSWORD=change_me_locally
+DB_DATABASE=pms
+DB_USERNAME=sail
+DB_PASSWORD=password
 
-REDIS_HOST=127.0.0.1
+REDIS_HOST=redis
 REDIS_PASSWORD=null
 REDIS_PORT=6379
 REDIS_CLIENT=phpredis
@@ -166,7 +116,7 @@ SESSION_DRIVER=redis
 QUEUE_CONNECTION=redis
 BROADCAST_CONNECTION=null
 
-# B2 as default disk — no local storage!
+# B2 as default disk from day one — no local file storage!
 FILESYSTEM_DISK=b2
 B2_KEY=your_b2_key_id
 B2_SECRET=your_b2_application_key
@@ -175,17 +125,30 @@ B2_REGION=us-west-002
 B2_ENDPOINT=https://s3.us-west-002.backblazeb2.com
 B2_URL=https://pms-dev-uploads.s3.us-west-002.backblazeb2.com
 
-MAIL_MAILER=log              # use Resend in staging/prod
-RESEND_API_KEY=
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+
+RESEND_API_KEY=        # only when testing real email
 
 SCOUT_DRIVER=meilisearch
-MEILISEARCH_HOST=http://127.0.0.1:7700
+MEILISEARCH_HOST=http://meilisearch:7700
 MEILISEARCH_KEY=
 
-SENTRY_LARAVEL_DSN=
+SENTRY_LARAVEL_DSN=    # local: leave blank
 ```
 
-Add B2 disk to `config/filesystems.php`:
+> **Important:** `DB_HOST=pgsql`, `REDIS_HOST=redis`, `MEILISEARCH_HOST=meilisearch` — those are Docker network hostnames, not localhost. Sail's compose file wires them.
+
+---
+
+## 5. Backblaze B2 setup (do this before first file upload)
+
+1. Sign up at https://www.backblaze.com/cloud-storage
+2. Create two buckets: `pms-dev-uploads` (dev) and `pms-prod-uploads` (prod). Mark **Private**.
+3. Create an Application Key scoped to the dev bucket. Note: `keyID`, `applicationKey`, `endpoint`, `region`.
+4. Put those into `.env` (section above).
+5. Add the disk config to `config/filesystems.php`:
 
 ```php
 'b2' => [
@@ -203,158 +166,119 @@ Add B2 disk to `config/filesystems.php`:
 
 ---
 
-## 6. Local Caddy setup for tenant URL testing
-
-Add to `/etc/hosts`:
-
-```
-127.0.0.1   pms.test
-```
-
-Local Caddyfile at `/etc/caddy/Caddyfile` (or `~/Caddyfile` if running unprivileged):
-
-```caddy
-pms.test {
-    reverse_proxy 127.0.0.1:8000
-    encode zstd gzip
-}
-```
-
-Run Laravel + Caddy:
+## 6. Spin up the stack
 
 ```bash
-# Terminal 1
-cd app
-php artisan serve --port=8000
-
-# Terminal 2
-sudo systemctl reload caddy
+sail up -d
+sail artisan key:generate
+sail artisan migrate
 ```
 
-Visit `http://pms.test` — should hit Laravel.
-
-> Caddy will try to auto-issue TLS for `pms.test`. Either accept the local self-signed flow or prefix with `http://` in the Caddyfile to skip TLS locally: `http://pms.test { … }`.
+Visit:
+- App: `http://localhost`
+- Tenant URL: `http://localhost/{tenant}/...` (path-based tenancy — no `/etc/hosts` edits needed locally)
+- Mailpit (catch-all SMTP): `http://localhost:8025`
+- Meilisearch: `http://localhost:7700`
+- Horizon: `http://localhost/horizon`
+- Telescope: `http://localhost/telescope`
+- Pulse: `http://localhost/pulse`
 
 ---
 
-## 7. First-run scaffolding
+## 7. Required packages (installed during Phase 0)
 
 ```bash
-cd app
+sail composer require filament/filament:"^4.0"
+sail composer require stancl/tenancy
+sail composer require livewire/livewire:"^3.6"
+sail composer require livewire/flux
+sail composer require laravel/sanctum
+sail composer require laravel/horizon
+sail composer require laravel/pulse
+sail composer require laravel/scout
+sail composer require spatie/laravel-permission
+sail composer require spatie/laravel-activitylog
+sail composer require spatie/laravel-medialibrary
+sail composer require spatie/browsershot
+sail composer require maatwebsite/excel
+sail composer require league/flysystem-aws-s3-v3
+sail composer require cknow/laravel-money
+sail composer require propaganistas/laravel-phone
+sail composer require intervention/image
+sail composer require meilisearch/meilisearch-php
 
-php artisan key:generate
+sail composer require --dev pestphp/pest
+sail composer require --dev pestphp/pest-plugin-laravel
+sail composer require --dev larastan/larastan
+sail composer require --dev laravel/pint
+sail composer require --dev laravel/telescope
 
-# Publish + run tenancy migrations
-php artisan vendor:publish --provider="Stancl\Tenancy\TenancyServiceProvider"
-# (Review generated files — we customize for path-based mode)
-
-# Sanctum
-php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
-
-# Spatie Permission
-php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
-
-# Activity Log
-php artisan vendor:publish --provider="Spatie\Activitylog\ActivitylogServiceProvider"
-
-# Media Library
-php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-migrations"
-
-# Horizon
-php artisan horizon:install
-
-# Pulse
-php artisan pulse:install
-
-# Filament panels
-php artisan filament:install --panels
-# Creates app/Providers/Filament/AdminPanelProvider.php — rename + add OperatorPanelProvider
-
-# Run all migrations
-php artisan migrate
+sail artisan pest:install
+sail artisan horizon:install
+sail artisan pulse:install
+sail artisan telescope:install
+sail artisan filament:install --panels
 ```
 
 ---
 
-## 8. Verify everything works
-
-```bash
-# Lint
-vendor/bin/pint
-
-# Static analysis
-vendor/bin/phpstan analyse
-
-# Tests
-vendor/bin/pest
-
-# Queue worker
-php artisan horizon          # full dashboard at /horizon
-
-# Or simpler queue
-php artisan queue:work --queue=critical,default,low
-
-# Vite dev server (for Filament/Livewire assets)
-npm run dev
-```
-
----
-
-## 9. Common dev commands
+## 8. Common dev workflows
 
 ```bash
 # Create a tenant for local testing (after Phase 1 lands)
-php artisan tinker
+sail artisan tinker
 >>> \App\Models\Tenant::create(['slug' => 'demo', 'name' => 'Demo Properties'])
 
-# Visit
-# http://pms.test/admin              ← super admin
-# http://pms.test/demo               ← tenant public landing
-# http://pms.test/demo/manage        ← tenant operator panel
-# http://pms.test/demo/portal        ← renter portal
+# URLs
+# http://localhost/admin              ← super admin
+# http://localhost/demo               ← tenant public landing
+# http://localhost/demo/manage        ← operator panel
+# http://localhost/demo/portal        ← renter portal
 
 # Reset & reseed
-php artisan migrate:fresh --seed
+sail artisan migrate:fresh --seed
 
-# Telescope (dev debugging)
-# http://pms.test/telescope
+# Watch logs
+sail logs -f laravel.test            # app
+sail logs -f                         # all services
 
-# Pulse
-# http://pms.test/pulse
+# Run a specific test
+sail pest tests/Feature/LeaseTest.php
 
-# Horizon
-# http://pms.test/horizon
+# Run linters before committing
+sail pint                            # auto-fix style
+sail pint --test                     # verify only
+sail phpstan analyse                 # static analysis
+sail pest --parallel                 # full test suite
 ```
 
 ---
 
-## 10. Gotchas & tips
+## 9. Gotchas & tips
 
-- **Always run `php artisan migrate --pretend` before merging a migration.** Catches syntax errors without touching DB.
-- **`stancl/tenancy` path mode** needs a tenant-resolver middleware. We'll write a custom resolver in Phase 1 that reads `$request->segment(1)` and resolves to `tenants.slug`.
-- **B2 is the default disk from day one.** Resist temptation to switch to `local` in dev — keep behaviour identical to prod.
-- **Filament asset publishing**: after each `composer update`, run `php artisan filament:upgrade`.
-- **PHP-FPM not needed locally** — `php artisan serve` is sufficient. Caddy proxies to it.
-- **Postgres `uuid_generate_v7()` doesn't exist natively yet.** Use Laravel's `Str::uuid7()` or the package's UUID helper. The `HasUuids` trait will be customized for v7.
+- **Always use `sail <cmd>`, never host `php`/`composer`/`artisan`.** Otherwise dev drifts from CI/prod.
+- **DB hostname is `pgsql`, not `127.0.0.1`.** Same for `redis`, `meilisearch`. They're Docker network names.
+- **B2 from day one — even in dev.** Don't switch to `local` disk for "convenience" — you'll re-test everything when you flip back.
+- **Sail's `vendor/bin/sail` isn't available until `composer install` runs.** First time, use the `docker run --rm laravelsail/php84-composer` trick above.
+- **Browsershot (PDF generation) needs Chromium.** Sail's PHP image doesn't include it. We'll add a custom Dockerfile in Phase 5 or use a remote browser service.
+- **Tenant URLs work via path** (`/demo/...`), so no `/etc/hosts` or local DNS hack needed.
 - **Spatie Permission with multi-tenancy**: use Spatie's "teams" feature where `team_id` = `tenant_id`. Config flag: `'teams' => true`.
-- **Browsershot needs Chrome/Chromium + Node**: `sudo apt install -y chromium-browser` and `npm install puppeteer` in the app folder.
-- **Activity log polymorphic**: tag with `tenant_id` via a custom log subject resolver.
+- **Stop everything cleanly**: `sail down`. To wipe DB volumes too: `sail down -v`.
 
 ---
 
-## 11. Pre-deploy checklist (for when we ship)
+## 10. Pre-deploy checklist (Phase 11)
 
-- [ ] All migrations re-run cleanly on a fresh DB (`migrate:fresh`)
-- [ ] All tests pass on CI
-- [ ] Pint + Larastan clean
-- [ ] `php artisan optimize` succeeds
-- [ ] `php artisan filament:optimize` succeeds
-- [ ] Horizon config tuned for production worker count
-- [ ] Sentry DSN set
+- [ ] `sail artisan migrate:fresh` runs cleanly on a fresh DB
+- [ ] `sail pest` passes
+- [ ] `sail pint --test` clean
+- [ ] `sail phpstan analyse` clean
+- [ ] `sail artisan optimize` succeeds
+- [ ] `sail artisan filament:optimize` succeeds
+- [ ] Production `Dockerfile.app` builds without errors (`docker build -f docker/Dockerfile.app .`)
+- [ ] Production `docker-compose.production.yml` validates (`docker compose -f docker/docker-compose.production.yml config`)
 - [ ] B2 prod bucket key set
 - [ ] Cloudflare DNS record for `pms.bjptechnologies.co.tz`
-- [ ] Caddyfile on prod server configured
-- [ ] Postgres backups cron installed
 - [ ] At least one super-admin user seeded
 - [ ] Smoke test: create tenant → log in as operator → create property → unit → renter → lease → invoice → payment → receipt PDF
 
