@@ -149,13 +149,20 @@ return [
         'suffix_storage_path' => true,
 
         /**
-         * By default, asset() calls are made multi-tenant too. You can use global_asset() and mix()
-         * for global, non-tenant-specific assets. However, you might have some issues when using
-         * packages that use asset() calls inside the tenant app. To avoid such issues, you can
-         * disable asset() helper tenancy and explicitly use tenant_asset() calls in places
-         * where you want to use tenant-specific assets (product images, avatars, etc).
+         * PMS: asset_helper_tenancy DISABLED.
+         *
+         * When true, every asset() call gets rewritten to /tenancy/assets/{path}
+         * which routes to tenant-specific storage. Filament and many other
+         * Laravel packages call asset() for their own published CSS/JS — those
+         * files are NOT in tenant storage, so every Filament URL would 404
+         * (no styles, no JS).
+         *
+         * We use B2 (with explicit paths via Spatie Media Library) for tenant
+         * file uploads, so this rewriting is unnecessary. If we ever need
+         * tenant-specific local-disk assets, use the explicit tenant_asset()
+         * helper at the call site.
          */
-        'asset_helper_tenancy' => true,
+        'asset_helper_tenancy' => false,
     ],
 
     /**

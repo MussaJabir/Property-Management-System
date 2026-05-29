@@ -110,7 +110,10 @@ return [
          * foreign key is other than `team_id`.
          */
 
-        'team_foreign_key' => 'team_id',
+        // PMS: roles are scoped per Client, and our Client FK is `tenant_id`
+        // (stancl/tenancy convention). Reuse it as the Spatie "team" key so
+        // we don't carry two parallel scoping columns.
+        'team_foreign_key' => 'tenant_id',
     ],
 
     /*
@@ -148,7 +151,7 @@ return [
      * (view the latest version of this package's migration file)
      */
 
-    'teams' => false,
+    'teams' => true,
 
     /*
      * The class to use to resolve the permissions team id
