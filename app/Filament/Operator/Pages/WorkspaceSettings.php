@@ -15,6 +15,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Workspace Settings — Owner-only Filament page for editing client branding,
@@ -32,31 +33,50 @@ class WorkspaceSettings extends Page implements HasForms
 
     protected string $view = 'filament.operator.pages.workspace-settings';
 
-    /** @var array<string, mixed> */
-    public array $data = [];
+    /** @var array<string, mixed>|null */
+    public ?array $data = [];
+
+    public ?Client $client = null;
 
     public static function canAccess(): bool
     {
         $user = auth()->user();
 
-        return $user !== null && $user->hasRole('owner');
+        if (! $user || ! $user->tenant_id) {
+            return false;
+        }
+
+        // Defensive: ensure Spatie's team context is set before hasRole().
+        // The InitializeTenancyByUser middleware also does this, but canAccess
+        // can be called in places where middleware hasn't run yet (sidebar
+        // rendering, navigation tree building, etc.).
+        app(PermissionRegistrar::class)
+            ->setPermissionsTeamId($user->tenant_id);
+
+        return $user->hasRole('owner');
     }
 
     public function mount(): void
     {
-        $client = $this->currentClient();
+        $tenantId = auth()->user()?->tenant_id;
 
-        if (! $client) {
+        if (! $tenantId) {
+            abort(404);
+        }
+
+        $this->client = Client::find($tenantId);
+
+        if (! $this->client) {
             abort(404);
         }
 
         $this->form->fill([
-            'name' => $client->name,
-            'contact_email' => $client->contact_email,
-            'contact_phone' => $client->contact_phone,
-            'logo_path' => $client->logo_path,
-            'brand_primary_color' => $client->brand_primary_color,
-            'default_locale' => $client->settings['default_locale'] ?? 'en',
+            'name' => $this->client->name,
+            'contact_email' => $this->client->contact_email,
+            'contact_phone' => $this->client->contact_phone,
+            'logo_path' => $this->client->logo_path,
+            'brand_primary_color' => $this->client->brand_primary_color,
+            'default_locale' => $this->client->settings['default_locale'] ?? 'en',
         ]);
     }
 
@@ -120,18 +140,16 @@ class WorkspaceSettings extends Page implements HasForms
 
     public function save(): void
     {
-        $client = $this->currentClient();
-
-        if (! $client) {
+        if (! $this->client) {
             return;
         }
 
         $data = $this->form->getState();
 
-        $settings = $client->settings ?? [];
-        $settings['default_locale'] = $data['default_locale'];
+        $settings = $this->client->settings ?? [];
+        $settings['default_locale'] = $data['default_locale'] ?? 'en';
 
-        $client->update([
+        $this->client->update([
             'name' => $data['name'],
             'contact_email' => $data['contact_email'],
             'contact_phone' => $data['contact_phone'],
@@ -144,12 +162,5 @@ class WorkspaceSettings extends Page implements HasForms
             ->title('Settings saved')
             ->success()
             ->send();
-    }
-
-    protected function currentClient(): ?Client
-    {
-        $tenantId = auth()->user()?->tenant_id;
-
-        return $tenantId ? Client::find($tenantId) : null;
     }
 }
