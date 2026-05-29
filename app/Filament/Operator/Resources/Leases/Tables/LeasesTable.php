@@ -93,6 +93,23 @@ class LeasesTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
+                Action::make('history')
+                    ->label('History')
+                    ->icon(Heroicon::OutlinedClock)
+                    ->color('gray')
+                    ->modalHeading(function (Lease $record): string {
+                        $who = $record->renter ? $record->renter->display_name : 'lease';
+                        $unit = $record->unit ? $record->unit->code : '—';
+
+                        return "Lease history — {$who} / {$unit}";
+                    })
+                    ->modalWidth('3xl')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close')
+                    ->modalContent(fn (Lease $record) => view('leases.history-modal', [
+                        'history' => $record->history()->with('user')->get(),
+                    ])),
+
                 Action::make('activate')
                     ->label('Activate')
                     ->icon(Heroicon::OutlinedPlayCircle)

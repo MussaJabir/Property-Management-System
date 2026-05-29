@@ -5,6 +5,7 @@ namespace App\Filament\Operator\Resources\Leases;
 use App\Filament\Operator\Resources\Leases\Pages\CreateLease;
 use App\Filament\Operator\Resources\Leases\Pages\EditLease;
 use App\Filament\Operator\Resources\Leases\Pages\ListLeases;
+use App\Filament\Operator\Resources\Leases\RelationManagers\HistoryRelationManager;
 use App\Filament\Operator\Resources\Leases\Schemas\LeaseForm;
 use App\Filament\Operator\Resources\Leases\Tables\LeasesTable;
 use App\Models\Lease;
@@ -48,6 +49,13 @@ class LeaseResource extends Resource
             'index' => ListLeases::route('/'),
             'create' => CreateLease::route('/create'),
             'edit' => EditLease::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            HistoryRelationManager::class,
         ];
     }
 

@@ -6,12 +6,21 @@ use App\Models\Concerns\TenantScopedModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Append-only audit row for lease state transitions. Created by Lease's
  * activate() / terminate() / end() methods — do not write directly from UI.
  *
  * No soft deletes — audit rows are immutable.
+ *
+ * @property string $action
+ * @property array<string, mixed>|null $before
+ * @property array<string, mixed>|null $after
+ * @property string|null $reason
+ * @property Carbon|null $created_at
+ * @property-read Lease|null $lease
+ * @property-read User|null $user
  */
 class LeaseHistory extends Model
 {
