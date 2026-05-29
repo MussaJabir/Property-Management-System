@@ -4,8 +4,6 @@ namespace App\Notifications;
 
 use App\Models\Receipt;
 use App\Services\ReceiptPdfGenerator;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -16,11 +14,14 @@ use Illuminate\Notifications\Notification;
  * Mail driver:
  *   - dev: SMTP → Mailpit (see SETUP.md)
  *   - prod: switch MAIL_MAILER=resend (or use Resend SMTP) — no code change
+ *
+ * Not currently queued (no Horizon worker provisioned yet — Phase 11). Send
+ * is synchronous which adds ~2s for the Browsershot PDF render. PaymentObserver
+ * already wraps the dispatch in try/catch so a flaky SMTP can't break payment
+ * recording. Re-enable ShouldQueue once a worker container ships.
  */
-class ReceiptIssuedNotification extends Notification implements ShouldQueue
+class ReceiptIssuedNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(public Receipt $receipt) {}
 
     /**
