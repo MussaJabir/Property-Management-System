@@ -44,6 +44,14 @@ class UnitsTable
                     ->label('Cycle')
                     ->badge()
                     ->color('gray')
+                    ->formatStateUsing(fn (string $state, $record): string => match ($state) {
+                        'monthly' => 'Monthly',
+                        'quarterly' => 'Every 3 months',
+                        'semi_annual' => 'Every 6 months',
+                        'annual' => 'Yearly',
+                        'custom' => 'Every '.($record->billing_cycle_months ?? '?').' months',
+                        default => ucfirst($state),
+                    })
                     ->toggleable(),
 
                 TextColumn::make('status')
@@ -72,6 +80,15 @@ class UnitsTable
                         'office' => 'Office',
                         'shop' => 'Shop',
                         'warehouse' => 'Warehouse',
+                    ]),
+                SelectFilter::make('billing_cycle')
+                    ->label('Billing cycle')
+                    ->options([
+                        'monthly' => 'Monthly',
+                        'quarterly' => 'Quarterly',
+                        'semi_annual' => 'Semi-annual',
+                        'annual' => 'Yearly',
+                        'custom' => 'Custom',
                     ]),
                 TrashedFilter::make(),
             ])

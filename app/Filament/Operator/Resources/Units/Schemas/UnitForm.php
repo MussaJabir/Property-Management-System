@@ -61,12 +61,22 @@ class UnitForm
                     ->columns(3)
                     ->components([
                         TextInput::make('rent_amount')
-                            ->label('Rent (TZS cents)')
+                            ->label('Rent')
+                            ->prefix(fn (callable $get) => $get('rent_currency') ?? 'TZS')
                             ->numeric()
                             ->required()
                             ->minValue(0)
+                            ->step(1)
                             ->default(0)
-                            ->helperText('In cents. e.g. 35,000,000 = TZS 350,000.'),
+                            ->placeholder('350000')
+                            ->helperText('Amount in whole shillings — e.g. 350000 for TZS 350,000.')
+                            // Form shows whole shillings; DB stores cents for precision.
+                            ->dehydrateStateUsing(fn ($state) => $state === null ? 0 : (int) round(((float) $state) * 100))
+                            ->afterStateHydrated(function (TextInput $component, $state): void {
+                                if ($state !== null) {
+                                    $component->state(((int) $state) / 100);
+                                }
+                            }),
 
                         Select::make('rent_currency')
                             ->required()
@@ -75,17 +85,34 @@ class UnitForm
                                 'USD' => 'USD',
                             ])
                             ->default('TZS')
+                            ->live()
                             ->native(false),
 
                         Select::make('billing_cycle')
+                            ->label('Billing cycle')
                             ->required()
                             ->options([
                                 'monthly' => 'Monthly',
-                                'quarterly' => 'Quarterly',
-                                'annual' => 'Annual',
+                                'quarterly' => 'Every 3 months (Quarterly)',
+                                'semi_annual' => 'Every 6 months',
+                                'annual' => 'Yearly',
+                                'custom' => 'Custom — pick the months',
                             ])
                             ->default('monthly')
+                            ->live()
                             ->native(false),
+
+                        TextInput::make('billing_cycle_months')
+                            ->label('Custom cycle (months)')
+                            ->placeholder('e.g. 9')
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(60)
+                            ->step(1)
+                            ->required(fn (callable $get) => $get('billing_cycle') === 'custom')
+                            ->visible(fn (callable $get) => $get('billing_cycle') === 'custom')
+                            ->helperText('How often rent is invoiced, in months.')
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Specs')
