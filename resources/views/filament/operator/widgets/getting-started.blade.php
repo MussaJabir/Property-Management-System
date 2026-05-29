@@ -29,7 +29,7 @@
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
                     Create a lease, generate invoices, record payments.
                 </p>
-                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Coming in Phase 4 + 5.</p>
+                <p class="mt-2 text-xs text-emerald-600 dark:text-emerald-400">Ready — Leasing &amp; Billing menus.</p>
             </div>
         </div>
     </x-filament::section>
