@@ -1,0 +1,22 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    # Starting at level 5 — will tighten to level 8 (per CLAUDE.md) as the
+    # codebase stabilizes and we have time to add type hints across the board.
+    level: 5
+
+    paths:
+        - app
+
+    excludePaths:
+        - app/Providers/Filament/*
+
+    # Don't fail when an ignore pattern doesn't match — patterns may apply
+    # in some sweeps and not others as the codebase evolves.
+    reportUnmatchedIgnoredErrors: false
+
+    # Ignore third-party library typing gaps that we can't fix
+    ignoreErrors:
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics

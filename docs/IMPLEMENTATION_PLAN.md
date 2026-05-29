@@ -8,16 +8,18 @@ Source of truth for what gets built, in what order, and why. Update as scope evo
 
 ## 1. Project Summary
 
-PMS is a multi-tenant property management SaaS commissioned by BJP Technologies for the Tanzanian rental + business-frame market. One codebase, many landlord clients, each accessing their own workspace via a path-based subdomain (`pms.bjptechnologies.co.tz/{tenant}/…`). Future migration to wildcard subdomains when a dedicated SaaS domain is bought.
+PMS is a multi-tenant property management SaaS commissioned by BJP Technologies for the Tanzanian rental + business-frame market. One codebase, many **clients** (landlord / property-management companies), each accessing their own workspace via a path-based subdomain (`pms.bjptechnologies.co.tz/{client}/…`). Future migration to wildcard subdomains when a dedicated SaaS domain is bought.
+
+> **Terminology:** "Client" = the SaaS customer. "Renter" / "Mpangaji" = the person renting a unit. See `CLAUDE.md > Naming glossary` for the full convention (DB-level "tenant" terminology is kept where stancl/tenancy requires it).
 
 **Primary users**
-1. **Super Admin** (BJP team) — provisions client tenants, manages plans, monitors platform.
-2. **Operator** (landlord / property manager / their staff) — runs day-to-day property management inside a tenant workspace.
+1. **Super Admin** (BJP team) — provisions clients, manages plans, monitors platform.
+2. **Operator** (landlord / property manager / their staff) — runs day-to-day property management inside a client workspace.
 3. **Renter / Mpangaji** — logs into a self-service portal to view invoices, pay rent, request maintenance.
-4. **Public visitor** — sees the tenant's CMS-managed public landing page and vacant unit listings.
+4. **Public visitor** — sees the client's CMS-managed public landing page and vacant unit listings.
 
 **Success criteria for v1**
-- Boss can log in as super admin, create a tenant, and hand off a working URL to a prospective client.
+- Boss can log in as super admin, create a client, and hand off a working URL to a prospective landlord.
 - That client can manage properties → units → renters → leases → invoices → payments → receipts end-to-end.
 - The client's renters can log into the portal and see what they owe.
 - The client has a public landing page they can edit (hero, about, news, contact).
@@ -354,4 +356,4 @@ Deferred until first VPS provisioned. Optionally a `staging.pms.bjptechnologies.
 
 This file is updated as decisions evolve. When you (or any future Claude session) make a scope or architecture decision, update this file in the same commit as the code change. Avoid scattered decision history.
 
-Last updated: 2026-05-28 (Docker / Sail added)
+Last updated: 2026-05-30 (Phase 5 complete — invoices, payments, receipts, PDFs, email notification, daily overdue scheduler)

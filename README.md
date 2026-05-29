@@ -1,6 +1,8 @@
 # PMS — Property Management System
 
-A multi-tenant property management SaaS for the Tanzanian rental and business-frame market. One codebase serves multiple landlord clients (operators), each accessing their own workspace via path-based tenancy under a single subdomain.
+A multi-tenant property management SaaS for the Tanzanian rental and business-frame market. One codebase serves multiple **clients** (landlord / property-management companies), each accessing their own workspace via path-based tenancy under a single subdomain.
+
+> **Terminology:** "Client" = the SaaS customer (the landlord company). "Renter" / "mpangaji" = the person renting a unit from that client. The word "tenant" is overloaded in this domain — we standardize on Client/Renter to avoid confusion. See `CLAUDE.md > Naming glossary`.
 
 > **Status:** In development. See [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for current phase and what's next.
 

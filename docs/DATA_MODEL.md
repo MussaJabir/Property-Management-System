@@ -2,16 +2,18 @@
 
 Complete schema reference. Every table, every column, every relationship. Update in same commit as the migration that introduces or alters anything.
 
+> **Naming**: In code and UI we use **Client** (the SaaS customer = landlord company) and **Renter** (the person renting a unit = mpangaji). The DB-level terminology keeps "tenant" / `tenant_id` because `stancl/tenancy` hard-codes those names. See `CLAUDE.md > Naming glossary`.
+
 > Central tables live in the main `public` schema (no `tenant_id`).
-> Tenant-scoped tables carry `tenant_id` (FK to `tenants.id`, indexed).
+> Client-scoped tables carry `tenant_id` (FK to `tenants.id`, indexed) — read "tenant_id" as "the Client this row belongs to".
 > All UUID columns use `bigint`-backed UUIDv7 via Laravel's `uuid()` (sortable, time-ordered).
 
 ---
 
 ## 1. Central tables (no tenant_id)
 
-### `tenants`
-The landlord client company.
+### `tenants` (the Client table)
+The landlord / property-management company using PMS. UI/code refer to this as **Client**; the DB table name is kept as `tenants` for stancl/tenancy compatibility.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -207,13 +209,14 @@ Indexes: `(tenant_id, property_id)`, `(tenant_id, status)`.
 | end_date | date, nullable | null = open-ended |
 | rent_amount | bigint | TZS cents — snapshot from unit at lease creation |
 | currency | string(3) | |
-| deposit_amount | bigint | |
-| billing_cycle | enum | same as unit |
-| payment_due_day | int (1-28) | day of month |
+| deposit_amount | bigint | TZS cents, snapshot |
+| billing_cycle | enum | `monthly` \| `quarterly` \| `semi_annual` \| `annual` \| `custom` (mirrors unit) |
+| billing_cycle_months | smallint, nullable | required when billing_cycle = `custom` |
+| payment_due_day | tinyint (1-28) | day of each billing period invoices fall due |
 | status | enum | `pending` \| `active` \| `ended` \| `terminated` |
 | terms_notes | text, nullable | |
-| activated_at | timestamp, nullable | |
-| ended_at | timestamp, nullable | |
+| activated_at | timestamp, nullable | set by Lease::activate() |
+| ended_at | timestamp, nullable | set by Lease::end() / terminate() |
 
 Indexes: `(tenant_id, status)`, `(tenant_id, unit_id, status)`.
 
@@ -464,9 +467,21 @@ tenants ─┬─< users (operators, renters)
 - **JSONB for translations** instead of separate translation tables. Read with: `$page->title['en']` or via `__()`/`trans()` helpers wired to current locale.
 - **CMS content blocks** validated against a schema per block type. Filament Builder field handles the editor UI.
 - **Tenant scoping** enforced via a global scope in `TenantScopedModel`. Always-on; bypass only via super-admin context with `Tenant::withoutScope()` explicitly.
-- **Sequence tables** (`invoice_sequences`) use Postgres advisory locks during increment to prevent race conditions when invoices are created in parallel.
+- **Sequence tables** (`invoice_sequences`, `receipt_sequences`) use Postgres advisory locks during increment to prevent race conditions when invoices / receipts are issued in parallel.
 - **Soft deletes** preserve historical data (a deleted renter still appears on old invoices). Reports always filter on `deleted_at` as appropriate.
 
 ---
 
-Last updated: 2026-05-28
+### `receipt_sequences`
+Tenant-scoped receipt numbering. Same shape as `invoice_sequences`; populated by `ReceiptNumberGenerator` (advisory-lock protected). Format: `RCP-{tenant_slug}-{year}-{padded_number}` e.g. `RCP-BEJUS-2026-000041`.
+
+| Column | Type | Notes |
+|---|---|---|
+| tenant_id | UUID PK part | FK tenants.id |
+| year | smallint PK part | |
+| last_number | bigint | |
+| created_at, updated_at | timestamps | |
+
+---
+
+Last updated: 2026-05-30 (Phase 5 — invoices, invoice_items, payments, receipts, receipt_sequences, observer-driven status machine)
