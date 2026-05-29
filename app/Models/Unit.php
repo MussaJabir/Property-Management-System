@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * rent_amount is stored as TZS cents (integer). Use ->rent_amount / 100 for
  * display or wire up cknow/laravel-money casts later.
+ *
+ * @property-read Property|null $property
  */
 class Unit extends Model
 {

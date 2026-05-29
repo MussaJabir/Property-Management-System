@@ -220,6 +220,28 @@ sail artisan telescope:install
 sail artisan filament:install --panels
 ```
 
+### 7.5 PDF rendering (Browsershot + Chromium)
+
+Lease PDFs (Phase 4) and any future PDF outputs render through `spatie/browsershot`, which shells out to a Node script that uses Puppeteer + Chromium. The Sail image ships Node but NOT Chromium, so it has to be installed once per fresh checkout:
+
+```bash
+# Install puppeteer dev dependency (declared in package.json already)
+sail npm install
+
+# Run puppeteer's postinstall so it downloads Chromium into ~/.cache/puppeteer
+sail exec laravel.test npm rebuild puppeteer --foreground-scripts
+```
+
+The first command resolves the puppeteer package. The second runs its postinstall script (npm normally skips it). After that, Browsershot just works — no path config needed.
+
+Verify with a one-liner:
+
+```bash
+sail exec laravel.test php -r "echo strlen((new Spatie\Browsershot\Browsershot)::html('<h1>ok</h1>')->noSandbox()->pdf());"
+```
+
+A non-zero number means Chromium is wired up.
+
 ---
 
 ## 8. Common dev workflows
