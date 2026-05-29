@@ -209,13 +209,14 @@ Indexes: `(tenant_id, property_id)`, `(tenant_id, status)`.
 | end_date | date, nullable | null = open-ended |
 | rent_amount | bigint | TZS cents — snapshot from unit at lease creation |
 | currency | string(3) | |
-| deposit_amount | bigint | |
-| billing_cycle | enum | same as unit |
-| payment_due_day | int (1-28) | day of month |
+| deposit_amount | bigint | TZS cents, snapshot |
+| billing_cycle | enum | `monthly` \| `quarterly` \| `semi_annual` \| `annual` \| `custom` (mirrors unit) |
+| billing_cycle_months | smallint, nullable | required when billing_cycle = `custom` |
+| payment_due_day | tinyint (1-28) | day of each billing period invoices fall due |
 | status | enum | `pending` \| `active` \| `ended` \| `terminated` |
 | terms_notes | text, nullable | |
-| activated_at | timestamp, nullable | |
-| ended_at | timestamp, nullable | |
+| activated_at | timestamp, nullable | set by Lease::activate() |
+| ended_at | timestamp, nullable | set by Lease::end() / terminate() |
 
 Indexes: `(tenant_id, status)`, `(tenant_id, unit_id, status)`.
 
@@ -471,4 +472,4 @@ tenants ─┬─< users (operators, renters)
 
 ---
 
-Last updated: 2026-05-28
+Last updated: 2026-05-29 (Phase 4 — renters, leases, lease_history)

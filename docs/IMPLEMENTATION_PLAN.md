@@ -356,4 +356,4 @@ Deferred until first VPS provisioned. Optionally a `staging.pms.bjptechnologies.
 
 This file is updated as decisions evolve. When you (or any future Claude session) make a scope or architecture decision, update this file in the same commit as the code change. Avoid scattered decision history.
 
-Last updated: 2026-05-28 (Docker / Sail added)
+Last updated: 2026-05-29 (Phase 4 complete — renters, leases, lease_history, lease PDF via Browsershot)

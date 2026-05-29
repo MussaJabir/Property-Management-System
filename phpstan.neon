@@ -12,10 +12,11 @@ parameters:
     excludePaths:
         - app/Providers/Filament/*
 
+    # Don't fail when an ignore pattern doesn't match — patterns may apply
+    # in some sweeps and not others as the codebase evolves.
+    reportUnmatchedIgnoredErrors: false
+
     # Ignore third-party library typing gaps that we can't fix
     ignoreErrors:
         - identifier: missingType.iterableValue
-
-    # Larastan defaults
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
+        - identifier: missingType.generics
