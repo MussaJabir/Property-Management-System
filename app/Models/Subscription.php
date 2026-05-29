@@ -20,9 +20,9 @@ class Subscription extends Model
         ];
     }
 
-    public function tenant(): BelongsTo
+    public function client(): BelongsTo
     {
-        return $this->belongsTo(Tenant::class);
+        return $this->belongsTo(Client::class);
     }
 
     public function plan(): BelongsTo

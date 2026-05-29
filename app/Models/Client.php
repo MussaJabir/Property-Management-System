@@ -10,7 +10,17 @@ use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 
-class Tenant extends BaseTenant implements TenantWithDatabase
+/**
+ * Client = the landlord / property-management company using PMS.
+ *
+ * Extends stancl/tenancy's base Tenant and is wired in as the tenant_model
+ * in config/tenancy.php. We call it "Client" everywhere in our UI, docs,
+ * and code; the underlying DB table stays `tenants` and the FK is
+ * `tenant_id` because stancl's scoping logic depends on those names.
+ *
+ * See CLAUDE.md > Naming glossary.
+ */
+class Client extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains, SoftDeletes;
 
@@ -26,9 +36,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     {
         parent::boot();
 
-        static::creating(function (self $tenant): void {
-            if (empty($tenant->getAttribute('id')) && ! empty($tenant->getAttribute('slug'))) {
-                $tenant->setAttribute('id', $tenant->getAttribute('slug'));
+        static::creating(function (self $client): void {
+            if (empty($client->getAttribute('id')) && ! empty($client->getAttribute('slug'))) {
+                $client->setAttribute('id', $client->getAttribute('slug'));
             }
         });
     }

@@ -46,9 +46,9 @@ class PlansTable
                     ->boolean()
                     ->label('Public'),
 
-                TextColumn::make('tenants_count')
-                    ->label('Tenants')
-                    ->counts('tenants')
+                TextColumn::make('clients_count')
+                    ->label('Clients')
+                    ->counts('clients')
                     ->sortable(),
             ])
             ->recordActions([

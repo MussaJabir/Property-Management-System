@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         // Unknown tenant slug → friendly 404 with link back to the PMS landing.
         $exceptions->render(function (TenantCouldNotBeIdentifiedException $e, $request) {
-            return response()->view('errors.tenant-not-found', [
+            return response()->view('errors.client-not-found', [
                 'slug' => $request->segment(1),
             ], 404);
         });

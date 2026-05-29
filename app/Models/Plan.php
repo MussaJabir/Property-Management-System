@@ -24,9 +24,9 @@ class Plan extends Model
         ];
     }
 
-    public function tenants(): HasMany
+    public function clients(): HasMany
     {
-        return $this->hasMany(Tenant::class);
+        return $this->hasMany(Client::class);
     }
 
     public function subscriptions(): HasMany

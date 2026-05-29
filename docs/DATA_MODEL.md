@@ -2,16 +2,18 @@
 
 Complete schema reference. Every table, every column, every relationship. Update in same commit as the migration that introduces or alters anything.
 
+> **Naming**: In code and UI we use **Client** (the SaaS customer = landlord company) and **Renter** (the person renting a unit = mpangaji). The DB-level terminology keeps "tenant" / `tenant_id` because `stancl/tenancy` hard-codes those names. See `CLAUDE.md > Naming glossary`.
+
 > Central tables live in the main `public` schema (no `tenant_id`).
-> Tenant-scoped tables carry `tenant_id` (FK to `tenants.id`, indexed).
+> Client-scoped tables carry `tenant_id` (FK to `tenants.id`, indexed) — read "tenant_id" as "the Client this row belongs to".
 > All UUID columns use `bigint`-backed UUIDv7 via Laravel's `uuid()` (sortable, time-ordered).
 
 ---
 
 ## 1. Central tables (no tenant_id)
 
-### `tenants`
-The landlord client company.
+### `tenants` (the Client table)
+The landlord / property-management company using PMS. UI/code refer to this as **Client**; the DB table name is kept as `tenants` for stancl/tenancy compatibility.
 
 | Column | Type | Notes |
 |---|---|---|

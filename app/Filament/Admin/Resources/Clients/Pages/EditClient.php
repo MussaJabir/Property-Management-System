@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Filament\Admin\Resources\Tenants\Pages;
+namespace App\Filament\Admin\Resources\Clients\Pages;
 
-use App\Filament\Admin\Resources\Tenants\TenantResource;
+use App\Filament\Admin\Resources\Clients\ClientResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditTenant extends EditRecord
+class EditClient extends EditRecord
 {
-    protected static string $resource = TenantResource::class;
+    protected static string $resource = ClientResource::class;
 
     protected function getHeaderActions(): array
     {

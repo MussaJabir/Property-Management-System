@@ -25,6 +25,11 @@ composer.phar
 /public/hot
 /public/build
 
+# Filament-published assets (regenerate via `sail artisan filament:assets` on deploy)
+/public/css/filament
+/public/js/filament
+/public/fonts
+
 # ---- Env / secrets (NEVER commit) ----
 .env
 .env.backup

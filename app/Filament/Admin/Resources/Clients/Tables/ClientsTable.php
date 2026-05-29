@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources\Tenants\Tables;
+namespace App\Filament\Admin\Resources\Clients\Tables;
 
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -13,7 +13,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
-class TenantsTable
+class ClientsTable
 {
     public static function configure(Table $table): Table
     {
@@ -25,9 +25,11 @@ class TenantsTable
                     ->weight('semibold'),
 
                 TextColumn::make('slug')
+                    ->label('URL')
+                    ->prefix('/')
                     ->searchable()
                     ->copyable()
-                    ->copyMessage('Slug copied')
+                    ->copyMessage('URL copied')
                     ->color('gray'),
 
                 TextColumn::make('status')

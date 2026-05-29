@@ -20,7 +20,7 @@
         <span class="badge">404</span>
         <h1>Workspace not found</h1>
         <p>
-            We couldn't find a tenant workspace for
+            We couldn't find a client workspace for
             @if ($slug)
                 <span class="slug">/{{ $slug }}</span>.
             @else

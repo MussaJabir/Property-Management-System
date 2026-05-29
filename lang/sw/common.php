@@ -46,6 +46,8 @@ return [
 
     // Renter portal
     'welcome' => 'Karibu',
+    'client' => 'Mteja',
+    'clients' => 'Wateja',
     'mpangaji' => 'Mpangaji',
     'total_balance' => 'Salio la Jumla',
     'due_in_days' => 'Inakatika baada ya siku :days',

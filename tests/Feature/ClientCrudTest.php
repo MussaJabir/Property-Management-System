@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\Client;
 use App\Models\Plan;
 use App\Models\SuperAdminUser;
-use App\Models\Tenant;
 use Illuminate\Database\QueryException;
 
 beforeEach(function () {
@@ -20,9 +20,8 @@ beforeEach(function () {
     ]);
 });
 
-it('creates a tenant with custom columns persisted', function () {
-    $tenant = Tenant::create([
-        'id' => 'tenant-test-1',
+it('creates a client with custom columns persisted', function () {
+    $client = Client::create([
         'slug' => 'demo',
         'name' => 'Demo Properties Ltd',
         'contact_email' => 'hello@demo.example',
@@ -30,66 +29,62 @@ it('creates a tenant with custom columns persisted', function () {
         'status' => 'trial',
     ]);
 
-    expect($tenant->fresh())
+    expect($client->fresh())
+        ->id->toBe('demo')
         ->slug->toBe('demo')
         ->name->toBe('Demo Properties Ltd')
         ->status->toBe('trial')
         ->plan_id->toBe($this->plan->id);
 });
 
-it('exposes the plan relationship from a tenant', function () {
-    $tenant = Tenant::create([
-        'id' => 'tenant-test-2',
+it('exposes the plan relationship from a client', function () {
+    $client = Client::create([
         'slug' => 'kariakoo',
         'name' => 'Kariakoo Heights',
         'plan_id' => $this->plan->id,
         'status' => 'active',
     ]);
 
-    expect($tenant->fresh()->plan->name)->toBe('Test Plan');
+    expect($client->fresh()->plan->name)->toBe('Test Plan');
 });
 
-it('suspends and reactivates a tenant', function () {
-    $tenant = Tenant::create([
-        'id' => 'tenant-test-3',
+it('suspends and reactivates a client', function () {
+    $client = Client::create([
         'slug' => 'demo3',
         'name' => 'Demo 3',
         'status' => 'active',
     ]);
 
-    $tenant->update(['status' => 'suspended']);
-    expect($tenant->fresh()->isSuspended())->toBeTrue();
+    $client->update(['status' => 'suspended']);
+    expect($client->fresh()->isSuspended())->toBeTrue();
 
-    $tenant->update(['status' => 'active']);
-    expect($tenant->fresh()->isActive())->toBeTrue();
+    $client->update(['status' => 'active']);
+    expect($client->fresh()->isActive())->toBeTrue();
 });
 
-it('enforces unique slugs across tenants', function () {
-    Tenant::create([
-        'id' => 'tenant-a',
+it('enforces unique slugs across clients', function () {
+    Client::create([
         'slug' => 'unique-slug',
         'name' => 'A',
         'status' => 'trial',
     ]);
 
-    expect(fn () => Tenant::create([
-        'id' => 'tenant-b',
+    expect(fn () => Client::create([
         'slug' => 'unique-slug',
         'name' => 'B',
         'status' => 'trial',
     ]))->toThrow(QueryException::class);
 });
 
-it('soft-deletes tenants', function () {
-    $tenant = Tenant::create([
-        'id' => 'tenant-soft',
+it('soft-deletes clients', function () {
+    $client = Client::create([
         'slug' => 'soft',
         'name' => 'Soft Delete',
         'status' => 'cancelled',
     ]);
 
-    $tenant->delete();
+    $client->delete();
 
-    expect(Tenant::find('tenant-soft'))->toBeNull();
-    expect(Tenant::withTrashed()->find('tenant-soft'))->not->toBeNull();
+    expect(Client::find('soft'))->toBeNull();
+    expect(Client::withTrashed()->find('soft'))->not->toBeNull();
 });

@@ -46,6 +46,8 @@ return [
 
     // Renter portal
     'welcome' => 'Welcome',
+    'client' => 'Client',
+    'clients' => 'Clients',
     'mpangaji' => 'Renter',
     'total_balance' => 'Total Balance',
     'due_in_days' => 'Due in :days days',
