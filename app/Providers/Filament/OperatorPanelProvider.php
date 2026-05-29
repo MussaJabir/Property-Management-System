@@ -4,7 +4,6 @@ namespace App\Providers\Filament;
 
 use App\Filament\Operator\Widgets\GettingStartedWidget;
 use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
-use App\Http\Middleware\InitializeTenancyByUser;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,10 +26,11 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  * Lives at /manage. Authentication uses the web guard against the User model
  * (filtered to type='operator' via User::canAccessPanel).
  *
- * After login, InitializeTenancyByUser middleware reads $user->tenant_id and
- * initializes stancl/tenancy context + Spatie Permission team scope. This means
- * every Eloquent query, every role check, every file upload — all automatically
- * scoped to the operator's Client.
+ * InitializeTenancyByUser middleware (registered globally in bootstrap/app.php
+ * on the web stack so it runs for both panel page loads AND Livewire AJAX
+ * requests) reads $user->tenant_id and initializes stancl/tenancy context +
+ * Spatie Permission team scope. Every Eloquent query, every role check, every
+ * file upload — all automatically scoped to the operator's Client.
  *
  * URL design note: this panel does NOT carry the client slug in the URL
  * (e.g. /manage instead of /{slug}/manage). The user is authenticated and
@@ -74,7 +74,6 @@ class OperatorPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                InitializeTenancyByUser::class,
             ]);
     }
 }

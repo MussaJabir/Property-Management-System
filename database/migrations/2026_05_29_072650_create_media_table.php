@@ -11,7 +11,12 @@ return new class extends Migration
         Schema::create('media', function (Blueprint $table) {
             $table->id();
 
-            $table->morphs('model');
+            // PMS: model_id stored as string so the table accepts both
+            // bigint-keyed models (User, Renter…) and UUID-keyed models
+            // (Property, Unit, Lease…) without needing two separate tables.
+            $table->string('model_type');
+            $table->string('model_id');
+            $table->index(['model_type', 'model_id'], 'media_model_type_model_id_index');
             $table->uuid()->nullable()->unique();
             $table->string('collection_name');
             $table->string('name');
