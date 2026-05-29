@@ -467,9 +467,21 @@ tenants ─┬─< users (operators, renters)
 - **JSONB for translations** instead of separate translation tables. Read with: `$page->title['en']` or via `__()`/`trans()` helpers wired to current locale.
 - **CMS content blocks** validated against a schema per block type. Filament Builder field handles the editor UI.
 - **Tenant scoping** enforced via a global scope in `TenantScopedModel`. Always-on; bypass only via super-admin context with `Tenant::withoutScope()` explicitly.
-- **Sequence tables** (`invoice_sequences`) use Postgres advisory locks during increment to prevent race conditions when invoices are created in parallel.
+- **Sequence tables** (`invoice_sequences`, `receipt_sequences`) use Postgres advisory locks during increment to prevent race conditions when invoices / receipts are issued in parallel.
 - **Soft deletes** preserve historical data (a deleted renter still appears on old invoices). Reports always filter on `deleted_at` as appropriate.
 
 ---
 
-Last updated: 2026-05-29 (Phase 4 — renters, leases, lease_history)
+### `receipt_sequences`
+Tenant-scoped receipt numbering. Same shape as `invoice_sequences`; populated by `ReceiptNumberGenerator` (advisory-lock protected). Format: `RCP-{tenant_slug}-{year}-{padded_number}` e.g. `RCP-BEJUS-2026-000041`.
+
+| Column | Type | Notes |
+|---|---|---|
+| tenant_id | UUID PK part | FK tenants.id |
+| year | smallint PK part | |
+| last_number | bigint | |
+| created_at, updated_at | timestamps | |
+
+---
+
+Last updated: 2026-05-30 (Phase 5 — invoices, invoice_items, payments, receipts, receipt_sequences, observer-driven status machine)
