@@ -2,19 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Models\Client;
 use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper;
 use Stancl\Tenancy\Database\Models\Domain;
-use Stancl\Tenancy\Database\Models\Tenant;
 use Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
-use Stancl\Tenancy\UUIDGenerator;
 
 return [
-    'tenant_model' => Tenant::class,
-    'id_generator' => UUIDGenerator::class,
+    'tenant_model' => Client::class,
+    // Use slug as tenant id (set in App\Models\Tenant::booted()) instead of
+    // auto-generated UUIDs — keeps URLs human-readable and lets path-based
+    // identification resolve directly by primary key.
+    'id_generator' => null,
 
     'domain_model' => Domain::class,
 

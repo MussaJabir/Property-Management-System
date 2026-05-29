@@ -6,6 +6,30 @@ For full scope see `docs/IMPLEMENTATION_PLAN.md`. For data model see `docs/DATA_
 
 ---
 
+## Naming glossary (IMPORTANT — read before working on tenancy code)
+
+The word "tenant" is overloaded in this domain. To avoid confusion, PMS adopts the following terminology in **all user-facing surfaces, code, and documentation**:
+
+- **Client** = the landlord / property-management company using PMS (our SaaS customer)
+- **Renter** (or `mpangaji` in Swahili) = the person renting a unit from a client
+
+The underlying multi-tenancy library (`stancl/tenancy`) calls the SaaS-level concept "tenant" internally. We **cannot fight that** without forking the package, so the following names retain the legacy "tenant" terminology — treat them as implementation details:
+
+| Stays as "tenant" | Why |
+|---|---|
+| DB table `tenants` | stancl scopes by this table name |
+| FK column `tenant_id` on every tenant-scoped table | stancl's `BelongsToTenant` trait queries this column |
+| `App\Models\Concerns\TenantScopedModel` trait | Wraps stancl's `BelongsToTenant`; renaming requires changing every model |
+| `tenant()` helper function | stancl-provided global |
+| `routes/tenant.php` file name | Matches `InitializeTenancyByPath` middleware naming |
+| `Stancl\Tenancy\…` namespace, middleware, exceptions | Vendor code |
+
+**Everything else is "Client"**: `App\Models\Client`, `App\Filament\Admin\Resources\Clients\*`, Filament labels, route URLs (`/admin/clients`), translation keys (`client`, `clients`, `mteja`, `wateja`), documentation prose, error views.
+
+When you see `tenant_id` in a migration or `BelongsToTenant` in a model, mentally translate to "the SaaS-level Client this row belongs to" — it is **never** the renter.
+
+---
+
 ## Locked stack (do not change without re-discussion)
 
 - **Backend**: Laravel 12 LTS + PHP 8.4
@@ -35,7 +59,7 @@ For full scope see `docs/IMPLEMENTATION_PLAN.md`. For data model see `docs/DATA_
 
 ## Mandatory conventions
 
-- Every tenant-scoped model uses the `App\Models\Concerns\TenantScopedModel` trait (wraps `stancl/tenancy`'s `BelongsToTenant`: global scope + `tenant_id` auto-fill + belongsTo tenant relationship)
+- Every client-scoped model uses the `App\Models\Concerns\TenantScopedModel` trait (wraps `stancl/tenancy`'s `BelongsToTenant`: global scope + `tenant_id` auto-fill + belongsTo Client relationship). See "Naming glossary" above for why the trait keeps the "Tenant" name.
 - All migrations index `tenant_id` first, plus commonly queried columns
 - Phone numbers stored as **E.164** (`+255712345678`) via `propaganistas/laravel-phone`; accept `0712…` on input and normalize
 - Money via `cknow/laravel-money` — **never floats** for currency
@@ -57,10 +81,10 @@ For full scope see `docs/IMPLEMENTATION_PLAN.md`. For data model see `docs/DATA_
 
 ## Multi-tenancy rules
 
-- **NEVER** write a query that crosses tenant boundaries unless explicitly in super-admin context (and even then, prefer scoped helpers)
-- When testing operator/renter features manually, sign in as that tenant — not as super admin
-- Adding a new tenant-scoped table requires: `tenant_id` FK, index, model extends `TenantScopedModel`, registered in `config/tenancy.php` if needed
-- Tenant resolution middleware reads the first URL segment (`/{tenant}/…`) and resolves via `tenants.slug`
+- **NEVER** write a query that crosses client boundaries unless explicitly in super-admin context (and even then, prefer scoped helpers)
+- When testing operator/renter features manually, sign in inside that client workspace — not as super admin
+- Adding a new client-scoped table requires: `tenant_id` FK (legacy column name — see glossary), index, model uses `TenantScopedModel` trait
+- Client resolution middleware reads the first URL segment (`/{client}/…`) and resolves via `Client::find($slug)` (slug is the primary key)
 
 ## Run before claiming any task done
 
