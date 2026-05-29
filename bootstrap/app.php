@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\InitializeTenancyByUser;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             SetLocale::class,
+            // Global so Livewire AJAX POSTs (form submits) also get the
+            // tenancy context set, not just full page loads through the
+            // panel auth middleware. No-op if user not authenticated.
+            InitializeTenancyByUser::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

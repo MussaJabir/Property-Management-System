@@ -4,11 +4,11 @@ namespace App\Filament\Operator\Resources\Properties\Schemas;
 
 use App\Models\Location;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Schemas\SpatieMediaLibraryFileUpload;
 
 class PropertyForm
 {
