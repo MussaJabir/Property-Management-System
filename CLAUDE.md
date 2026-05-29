@@ -35,7 +35,7 @@ For full scope see `docs/IMPLEMENTATION_PLAN.md`. For data model see `docs/DATA_
 
 ## Mandatory conventions
 
-- Every tenant-scoped model extends `App\Models\Concerns\TenantScopedModel` (global scope + `tenant_id` auto-fill)
+- Every tenant-scoped model uses the `App\Models\Concerns\TenantScopedModel` trait (wraps `stancl/tenancy`'s `BelongsToTenant`: global scope + `tenant_id` auto-fill + belongsTo tenant relationship)
 - All migrations index `tenant_id` first, plus commonly queried columns
 - Phone numbers stored as **E.164** (`+255712345678`) via `propaganistas/laravel-phone`; accept `0712…` on input and normalize
 - Money via `cknow/laravel-money` — **never floats** for currency
