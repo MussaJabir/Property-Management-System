@@ -221,7 +221,7 @@ Phases are sequenced by dependency. No strict day count — solo dev pace.
 6. Profile / password change
 7. Locale switcher
 
-### Phase 9 — Tenant CMS & Public Pages
+### Phase 9 — Tenant CMS & Public Pages  ✅ shipped
 1. `cms_pages` table with JSON block content
 2. Filament Builder field for editing block layouts
 3. Block components: Hero, Rich Text, Image Gallery, Featured Units, Announcement List, Contact Form

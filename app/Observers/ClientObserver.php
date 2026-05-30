@@ -3,7 +3,9 @@
 namespace App\Observers;
 
 use App\Models\Client;
+use App\Models\CmsPage;
 use App\Models\ExpenseCategory;
+use App\Services\Cms\DefaultPageContent;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -12,11 +14,12 @@ use Spatie\Permission\Models\Role;
  *
  *   - four default roles (Spatie teams scoped to tenant_id)
  *   - six default expense categories (Repair, Cleaning, Security, …)
+ *   - five default CMS pages (home/about/units/news/contact) with sample
+ *     block content so the public site renders immediately
  *
- * Tenancy global scopes on ExpenseCategory inject tenant_id automatically
- * because the writes happen inside a tenant context — but we set it
- * explicitly here for robustness (this observer can fire outside a tenant
- * context when a client is created from the super-admin panel).
+ * Tenancy global scopes inject tenant_id automatically inside a tenant
+ * context — we set it explicitly here because this observer also fires
+ * when the super-admin creates a client outside any tenant context.
  */
 class ClientObserver
 {
@@ -41,6 +44,18 @@ class ClientObserver
             ExpenseCategory::withoutGlobalScopes()->firstOrCreate(
                 ['tenant_id' => $client->id, 'name' => $cat['name']],
                 ['color' => $cat['color']],
+            );
+        }
+
+        foreach (DefaultPageContent::forClient($client->name) as $page) {
+            CmsPage::withoutGlobalScopes()->firstOrCreate(
+                ['tenant_id' => $client->id, 'slug' => $page['slug']],
+                [
+                    'title' => $page['title'],
+                    'subtitle' => $page['subtitle'],
+                    'blocks' => $page['blocks'],
+                    'published_at' => now(),
+                ],
             );
         }
     }
