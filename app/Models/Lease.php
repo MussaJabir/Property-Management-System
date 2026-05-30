@@ -81,6 +81,11 @@ class Lease extends Model implements HasMedia
         return $this->hasMany(LeaseHistory::class)->orderByDesc('created_at');
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function registerMediaCollections(): void
     {
         // Lease PDF (signed contract) lives here. Single-file collection — a
