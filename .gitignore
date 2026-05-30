@@ -19,6 +19,8 @@ composer.phar
 !/storage/framework/views/.gitkeep
 /storage/app/public/*
 !/storage/app/public/.gitkeep
+# stancl/tenancy per-tenant disks
+/storage/tenant*
 /bootstrap/cache/*
 !/bootstrap/cache/.gitkeep
 /public/storage

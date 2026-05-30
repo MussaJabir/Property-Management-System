@@ -2,7 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Operator\Widgets\BillingHealthWidget;
 use App\Filament\Operator\Widgets\GettingStartedWidget;
+use App\Filament\Operator\Widgets\RecentPaymentsWidget;
+use App\Filament\Operator\Widgets\TopUnpaidInvoicesWidget;
 use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -59,6 +62,9 @@ class OperatorPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 WorkspaceOverviewWidget::class,
+                BillingHealthWidget::class,
+                TopUnpaidInvoicesWidget::class,
+                RecentPaymentsWidget::class,
                 GettingStartedWidget::class,
             ])
             ->middleware([

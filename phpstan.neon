@@ -20,3 +20,36 @@ parameters:
     ignoreErrors:
         - identifier: missingType.iterableValue
         - identifier: missingType.generics
+
+        # Collection<int, array<string, string>> covariance — PHPStan can't see
+        # array shape literals as subtypes of array<string, string>. Known limitation.
+        -
+            message: '#Method App\\Reports\\Builders\\.+::rows\(\) should return#'
+            path: app/Reports/Builders/*.php
+        -
+            message: '#Method App\\Exports\\ReportExcelExport::collection\(\) should return#'
+            path: app/Exports/ReportExcelExport.php
+
+        # Filament v4 Page has dynamic $form property via InteractsWithForms.
+        -
+            message: '#Access to an undefined property App\\Filament\\.+::\$form#'
+            paths:
+                - app/Filament/Operator/Pages/*.php
+                - app/Filament/Operator/Pages/Reports/*.php
+
+        # whereHas / generic Eloquent Model closures lose the concrete relation type.
+        -
+            message: '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$leases#'
+            path: app/Reports/Builders/*.php
+
+        # Defensive ?-> on belongsTo relations whose FK is non-null in practice
+        # but could be deleted out-of-band. Cheap insurance; keep the nullsafe.
+        -
+            message: '#Using nullsafe property access ".+" on left side of \?\? is#'
+            path: app/Reports/Builders/*.php
+
+        # ReportBuilder meta() declares title as required; ?? '' in exporter is
+        # belt-and-suspenders.
+        -
+            message: "#Offset 'title' on array.+on left side of \\?\\? always exists#"
+            path: app/Exports/ReportExcelExport.php
