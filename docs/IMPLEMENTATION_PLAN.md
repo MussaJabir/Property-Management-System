@@ -356,4 +356,4 @@ Deferred until first VPS provisioned. Optionally a `staging.pms.bjptechnologies.
 
 This file is updated as decisions evolve. When you (or any future Claude session) make a scope or architecture decision, update this file in the same commit as the code change. Avoid scattered decision history.
 
-Last updated: 2026-05-30 (Phase 5 complete — invoices, payments, receipts, PDFs, email notification, daily overdue scheduler)
+Last updated: 2026-05-30 (Phase 6 complete — maintenance lifecycle with audit timeline, expense categories with auto-seeding, expenses with receipt photos)

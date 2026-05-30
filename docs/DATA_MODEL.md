@@ -315,10 +315,10 @@ Indexes: `(tenant_id, invoice_id)`, `(tenant_id, payment_date)`.
 ### `maintenance_requests`
 | Column | Type | Notes |
 |---|---|---|
-| id | bigint PK | |
+| id | UUID PK | UUIDv7. Required because Spatie Media's `model_id` column is varchar to accommodate UUID morphable models; a bigint id would fail Postgres's strict `varchar = integer` check. |
 | tenant_id | UUID FK | |
 | unit_id | UUID FK | |
-| reported_by_user_id | FK users.id | could be renter |
+| reported_by_user_id | FK users.id, nullable | could be renter |
 | title | string | |
 | description | text | |
 | priority | enum | `low` \| `medium` \| `high` \| `urgent` |
@@ -336,8 +336,8 @@ Photos via Spatie Media on the model.
 |---|---|---|
 | id | bigint PK | |
 | tenant_id | UUID FK | |
-| maintenance_request_id | FK | |
-| user_id | FK users.id | |
+| maintenance_request_id | UUID FK | |
+| user_id | FK users.id, nullable | |
 | note | text | |
 | status_change | enum, nullable | new status if changed |
 | created_at | timestamp | |
@@ -347,15 +347,15 @@ Photos via Spatie Media on the model.
 |---|---|---|
 | id | bigint PK | |
 | tenant_id | UUID FK | |
-| name | string | |
-| color | string, nullable | hex |
+| name | string | unique within tenant |
+| color | string(7), nullable | hex like `#ef4444` |
 
-Seeded per tenant: `Repair`, `Cleaning`, `Security`, `Utilities`, `Tax`, `Other`.
+Seeded per tenant by `ClientObserver::created`: `Repair`, `Cleaning`, `Security`, `Utilities`, `Tax`, `Other`.
 
 ### `expenses`
 | Column | Type | Notes |
 |---|---|---|
-| id | bigint PK | |
+| id | UUID PK | UUIDv7 — same Spatie Media reason as `maintenance_requests` |
 | tenant_id | UUID FK | |
 | property_id | UUID FK, nullable | null = general overhead |
 | category_id | FK expense_categories.id | |
@@ -363,9 +363,9 @@ Seeded per tenant: `Repair`, `Cleaning`, `Security`, `Utilities`, `Tax`, `Other`
 | currency | string(3) | |
 | expense_date | date | |
 | description | text, nullable | |
-| recorded_by_user_id | FK users.id | |
+| recorded_by_user_id | FK users.id, nullable | |
 
-Receipt attachment via Spatie Media.
+Receipt attachment via Spatie Media (single-file collection).
 
 ### `cms_pages`
 Per-tenant editable public pages.
@@ -484,4 +484,4 @@ Tenant-scoped receipt numbering. Same shape as `invoice_sequences`; populated by
 
 ---
 
-Last updated: 2026-05-30 (Phase 5 — invoices, invoice_items, payments, receipts, receipt_sequences, observer-driven status machine)
+Last updated: 2026-05-30 (Phase 6 — maintenance_requests, maintenance_updates, expense_categories, expenses; default categories seeded per client)

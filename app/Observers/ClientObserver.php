@@ -3,14 +3,20 @@
 namespace App\Observers;
 
 use App\Models\Client;
+use App\Models\ExpenseCategory;
 use Spatie\Permission\Models\Role;
 
 /**
- * Seed the four default roles whenever a new Client is created, so the
- * first operator user can be assigned a role without manual SQL.
+ * Seed sensible defaults whenever a new Client is created so the workspace
+ * is usable out of the box:
  *
- * Roles are scoped to the client via Spatie's teams feature, where
- * team_id == tenant_id == client.id (configured in config/permission.php).
+ *   - four default roles (Spatie teams scoped to tenant_id)
+ *   - six default expense categories (Repair, Cleaning, Security, …)
+ *
+ * Tenancy global scopes on ExpenseCategory inject tenant_id automatically
+ * because the writes happen inside a tenant context — but we set it
+ * explicitly here for robustness (this observer can fire outside a tenant
+ * context when a client is created from the super-admin panel).
  */
 class ClientObserver
 {
@@ -29,6 +35,13 @@ class ClientObserver
                 'guard_name' => 'web',
                 'tenant_id' => $client->id,
             ]);
+        }
+
+        foreach (ExpenseCategory::DEFAULT_CATEGORIES as $cat) {
+            ExpenseCategory::withoutGlobalScopes()->firstOrCreate(
+                ['tenant_id' => $client->id, 'name' => $cat['name']],
+                ['color' => $cat['color']],
+            );
         }
     }
 }
