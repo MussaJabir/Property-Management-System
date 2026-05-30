@@ -53,3 +53,32 @@ parameters:
         -
             message: "#Offset 'title' on array.+on left side of \\?\\? always exists#"
             path: app/Exports/ReportExcelExport.php
+
+        # Renter portal (Phase 8): Auth::guard('renter')->user() returns the
+        # generic Authenticatable contract, so PHPStan can't see User-specific
+        # relations or columns. Defensive ?-> chains also trip the nullsafe
+        # checker. All correct at runtime.
+        -
+            message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::leases\(\)#'
+            paths:
+                - app/Livewire/Portal/*
+                - app/Http/Controllers/Portal/*
+                - app/Http/Middleware/EnsureRenterAuthenticated.php
+        -
+            message: '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$(id|name|slug|tenant_id)#'
+            paths:
+                - app/Http/Controllers/Portal/*
+                - app/Notifications/PortalCredentialsIssuedNotification.php
+        -
+            message: '#Using nullsafe property access ".+" on left side of \?\? is#'
+            paths:
+                - app/Http/Controllers/Portal/*
+                - app/Http/Middleware/EnsureRenterAuthenticated.php
+                - app/Livewire/Portal/*
+                - app/Notifications/PortalCredentialsIssuedNotification.php
+
+        # provisionFor() returns User but Renter::user belongsTo is typed
+        # at the Model contract.
+        -
+            message: '#Method App\\Services\\Portal\\RenterPortalAccountProvisioner::provisionFor\(\) should return#'
+            path: app/Services/Portal/RenterPortalAccountProvisioner.php
