@@ -212,9 +212,9 @@ Phases are sequenced by dependency. No strict day count — solo dev pace.
 2. Reports module with date-range pickers
 3. PDF + Excel exports for each report
 
-### Phase 8 — Renter Portal (v1)
+### Phase 8 — Renter Portal (v1)  ✅ shipped
 1. Renter registration triggered when lease is activated (auto-create `users` row with portal access)
-2. Renter login at `/{tenant}/portal/login` (phone + password)
+2. Renter login at `/{tenant}/portal/login` (phone + password) — dedicated `renter` guard sharing the User model
 3. Renter dashboard: active lease, next due date, balance
 4. Invoices list + receipts download
 5. Maintenance request submission + status view

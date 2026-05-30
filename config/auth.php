@@ -49,6 +49,14 @@ return [
             'driver' => 'session',
             'provider' => 'super_admins',
         ],
+
+        // Renter portal (`/{tenant}/portal`) — uses the shared User model but
+        // a dedicated guard so an operator and a renter can stay logged in
+        // side-by-side without one stomping on the other's session.
+        'renter' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*

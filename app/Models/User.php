@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -38,6 +39,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         'password',
         'locale',
         'status',
+        'must_change_password',
     ];
 
     protected $hidden = [
@@ -52,12 +54,18 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
         ];
     }
 
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class, 'tenant_id');
+    }
+
+    public function renter(): HasOne
+    {
+        return $this->hasOne(Renter::class);
     }
 
     public function isOperator(): bool
