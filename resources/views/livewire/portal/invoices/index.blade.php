@@ -55,7 +55,10 @@
                             <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $cls }}">{{ ucfirst($invoice->status) }}</span>
                         </td>
                         <td class="px-4 py-3 text-right">
-                            @forelse ($invoice->receipts as $receipt)
+                            @php
+                                $receipts = $invoice->payments->map(fn ($p) => $p->receipt)->filter();
+                            @endphp
+                            @forelse ($receipts as $receipt)
                                 <a href="{{ url('/'.$client->slug.'/portal/invoices/'.$invoice->id.'/receipt/'.$receipt->id) }}"
                                    class="text-xs text-sky-600 hover:underline dark:text-sky-400">
                                     {{ $receipt->receipt_number ?? __('PDF') }}
