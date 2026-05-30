@@ -82,3 +82,10 @@ parameters:
         -
             message: '#Method App\\Services\\Portal\\RenterPortalAccountProvisioner::provisionFor\(\) should return#'
             path: app/Services/Portal/RenterPortalAccountProvisioner.php
+
+        # Filament EditRecord::$record is typed as Model|int|string until the
+        # record is hydrated. We dereference $record->status defensively in
+        # afterFill() where it is guaranteed to be a model instance.
+        -
+            message: '#Cannot access property \$status on Illuminate\\Database\\Eloquent\\Model\|int\|string#'
+            path: app/Filament/Operator/Resources/ContactSubmissions/Pages/EditContactSubmission.php
