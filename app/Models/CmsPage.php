@@ -8,6 +8,7 @@ use App\Models\Concerns\TenantScopedModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * Editable page on the client's public site. Each client has a fixed set of
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * by the operator via the Filament Builder field. Rendering is handled by
  * resources/views/components/cms/block.blade.php which dispatches on type.
  *
- * @property \Illuminate\Support\Carbon|null $published_at
+ * @property Carbon|null $published_at
  * @property array<int, array{type: string, data: array<string, mixed>}>|null $blocks
  */
 class CmsPage extends Model

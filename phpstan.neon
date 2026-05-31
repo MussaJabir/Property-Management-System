@@ -89,3 +89,27 @@ parameters:
         -
             message: '#Cannot access property \$status on Illuminate\\Database\\Eloquent\\Model\|int\|string#'
             path: app/Filament/Operator/Resources/ContactSubmissions/Pages/EditContactSubmission.php
+
+        # Phase 10 notifications: $renterUser comes from a belongsTo whose
+        # template type defaults to Model. The Notifiable trait is on User —
+        # PHPStan can't see it through the relation.
+        -
+            message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::notify\(\)#'
+            paths:
+                - app/Models/Invoice.php
+                - app/Observers/PaymentObserver.php
+
+        # Defensive ?-> on Client::find() chains and notifiable->name/email.
+        -
+            message: '#Using nullsafe property access ".+" on left side of \?\? is#'
+            paths:
+                - app/Notifications/*.php
+
+        # Notifiable model properties (name/email/phone/tenant_id) accessed
+        # via the generic object $notifiable signature required by the
+        # Laravel Notification contract.
+        -
+            message: '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$(name|email|phone|tenant_id|id)#'
+            paths:
+                - app/Notifications/*.php
+                - app/Services/Admin/OperatorOwnerProvisioner.php

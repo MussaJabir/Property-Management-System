@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Client;
+use App\Models\MaintenanceRequest;
 use App\Models\Payment;
 use App\Observers\ClientObserver;
+use App\Observers\MaintenanceRequestObserver;
 use App\Observers\PaymentObserver;
 use Illuminate\Support\ServiceProvider;
 
@@ -19,5 +21,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Client::observe(ClientObserver::class);
         Payment::observe(PaymentObserver::class);
+        MaintenanceRequest::observe(MaintenanceRequestObserver::class);
     }
 }

@@ -49,6 +49,8 @@ class OperatorPanelProvider extends PanelProvider
             ->id('operator')
             ->path('manage')
             ->login()
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->brandName('PMS Operator')
             ->colors([
                 'primary' => Color::Teal,

@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Payment;
 use App\Models\Receipt;
+use App\Notifications\PaymentReceivedNotification;
 use App\Notifications\ReceiptIssuedNotification;
 use App\Services\ReceiptNumberGenerator;
 use Illuminate\Support\Facades\Log;
@@ -69,6 +70,26 @@ class PaymentObserver
         ]);
 
         $this->maybeEmail($payment, $receipt);
+        $this->maybeBellNotify($payment);
+    }
+
+    /**
+     * Database notification for the renter's portal bell. Cheap and never
+     * blocks — wrapped in try/catch.
+     */
+    protected function maybeBellNotify(Payment $payment): void
+    {
+        try {
+            $renterUser = $payment->invoice?->lease?->renter?->user;
+            if ($renterUser) {
+                $renterUser->notify(new PaymentReceivedNotification($payment));
+            }
+        } catch (Throwable $e) {
+            Log::warning('Failed to record payment-received bell notification', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
