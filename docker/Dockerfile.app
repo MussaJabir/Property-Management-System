@@ -12,12 +12,17 @@ FROM composer:2.7 AS composer
 WORKDIR /app
 COPY composer.json composer.lock ./
 COPY database/ database/
+# The composer base image ships PHP 8.3 without intl/pcntl/bcmath/gd/exif,
+# while our lockfile targets PHP 8.4 + those extensions. We don't need them
+# resolved here — vendor/ is just code that runs in the PHP 8.4 runtime stage
+# below, which DOES have them — so skip platform checks during install.
 RUN composer install \
         --no-dev \
         --no-scripts \
         --no-interaction \
         --prefer-dist \
-        --optimize-autoloader
+        --optimize-autoloader \
+        --ignore-platform-reqs
 
 # ─────────── 2. node / vite stage ───────────
 FROM node:22-alpine AS node
@@ -42,7 +47,7 @@ RUN set -eux; \
         libwebp-dev freetype-dev libzip-dev oniguruma-dev linux-headers; \
     docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype; \
     docker-php-ext-install -j$(nproc) \
-        bcmath gd intl mbstring opcache pcntl pdo_pgsql pgsql zip; \
+        bcmath exif gd intl mbstring opcache pcntl pdo_pgsql pgsql zip; \
     pecl install redis-6.1.0 && docker-php-ext-enable redis; \
     apk del .build-deps; \
     rm -rf /tmp/* /var/cache/apk/*
