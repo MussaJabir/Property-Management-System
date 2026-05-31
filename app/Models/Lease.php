@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantScopedModel;
+use App\Services\Portal\RenterPortalAccountProvisioner;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,9 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Throwable;
 
 /**
  * Lease = renter ↔ unit contract for a span of time. Money columns store
@@ -81,6 +84,11 @@ class Lease extends Model implements HasMedia
         return $this->hasMany(LeaseHistory::class)->orderByDesc('created_at');
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function registerMediaCollections(): void
     {
         // Lease PDF (signed contract) lives here. Single-file collection — a
@@ -135,6 +143,19 @@ class Lease extends Model implements HasMedia
                 'before' => $before,
                 'after' => ['status' => $this->status, 'activated_at' => $activatedAt->toIso8601String()],
             ]);
+
+            if ($this->renter) {
+                try {
+                    app(RenterPortalAccountProvisioner::class)->provisionFor($this->renter);
+                } catch (Throwable $e) {
+                    // Provisioning shouldn't block activation; the operator
+                    // can resend credentials from the renter's profile later.
+                    Log::warning(
+                        'Renter portal provisioning failed during lease activation',
+                        ['lease_id' => $this->id, 'error' => $e->getMessage()],
+                    );
+                }
+            }
         });
     }
 

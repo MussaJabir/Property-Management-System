@@ -132,6 +132,29 @@ class ClientForm
                             ->placeholder('#0F766E'),
                     ]),
 
+                Section::make('Owner account')
+                    ->description('Optional. Fill these to provision the first operator user automatically and email them sign-in credentials.')
+                    ->columns(2)
+                    ->visibleOn('create')
+                    ->components([
+                        // These fields are not Client columns — CreateClient::mutateFormDataBeforeCreate
+                        // pulls them off $data before the model is saved.
+                        TextInput::make('owner_name')
+                            ->label('Owner name')
+                            ->placeholder('e.g. Bejus Properties Director')
+                            ->maxLength(150),
+                        TextInput::make('owner_email')
+                            ->label('Owner email')
+                            ->email()
+                            ->placeholder('owner@bejus-properties.co.tz')
+                            ->maxLength(160),
+                        TextInput::make('owner_phone')
+                            ->label('Owner phone')
+                            ->placeholder('+255712345678')
+                            ->maxLength(30)
+                            ->helperText('Leave name + email blank to skip — you can create the user manually later.'),
+                    ]),
+
                 Section::make('Internal notes (admin only)')
                     ->description('Only visible to BJP super admins. The client never sees this.')
                     ->collapsed()

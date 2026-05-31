@@ -28,6 +28,17 @@ class InitializeTenancyByUser
 
     public function handle(Request $request, Closure $next): Response
     {
+        // Path-based tenant URLs (public CMS site at /{slug}, renter portal
+        // at /{slug}/portal) are resolved by InitializeTenancyByPath which
+        // runs later in the stack. Defer to it so a stale operator session
+        // doesn't pin the wrong tenant on a public page load.
+        $first = $request->segment(1);
+        $systemPaths = ['manage', 'admin', 'livewire', 'flux', 'horizon', 'filament', 'storage', 'up', '_ignition'];
+
+        if ($first && ! in_array($first, $systemPaths, true) && Client::query()->where('slug', $first)->exists()) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         if ($user && $user->tenant_id) {

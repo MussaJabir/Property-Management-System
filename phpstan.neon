@@ -20,3 +20,96 @@ parameters:
     ignoreErrors:
         - identifier: missingType.iterableValue
         - identifier: missingType.generics
+
+        # Collection<int, array<string, string>> covariance — PHPStan can't see
+        # array shape literals as subtypes of array<string, string>. Known limitation.
+        -
+            message: '#Method App\\Reports\\Builders\\.+::rows\(\) should return#'
+            path: app/Reports/Builders/*.php
+        -
+            message: '#Method App\\Exports\\ReportExcelExport::collection\(\) should return#'
+            path: app/Exports/ReportExcelExport.php
+
+        # Filament v4 Page has dynamic $form property via InteractsWithForms.
+        -
+            message: '#Access to an undefined property App\\Filament\\.+::\$form#'
+            paths:
+                - app/Filament/Operator/Pages/*.php
+                - app/Filament/Operator/Pages/Reports/*.php
+
+        # whereHas / generic Eloquent Model closures lose the concrete relation type.
+        -
+            message: '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$leases#'
+            path: app/Reports/Builders/*.php
+
+        # Defensive ?-> on belongsTo relations whose FK is non-null in practice
+        # but could be deleted out-of-band. Cheap insurance; keep the nullsafe.
+        -
+            message: '#Using nullsafe property access ".+" on left side of \?\? is#'
+            path: app/Reports/Builders/*.php
+
+        # ReportBuilder meta() declares title as required; ?? '' in exporter is
+        # belt-and-suspenders.
+        -
+            message: "#Offset 'title' on array.+on left side of \\?\\? always exists#"
+            path: app/Exports/ReportExcelExport.php
+
+        # Renter portal (Phase 8): Auth::guard('renter')->user() returns the
+        # generic Authenticatable contract, so PHPStan can't see User-specific
+        # relations or columns. Defensive ?-> chains also trip the nullsafe
+        # checker. All correct at runtime.
+        -
+            message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::leases\(\)#'
+            paths:
+                - app/Livewire/Portal/*
+                - app/Http/Controllers/Portal/*
+                - app/Http/Middleware/EnsureRenterAuthenticated.php
+        -
+            message: '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$(id|name|slug|tenant_id)#'
+            paths:
+                - app/Http/Controllers/Portal/*
+                - app/Notifications/PortalCredentialsIssuedNotification.php
+        -
+            message: '#Using nullsafe property access ".+" on left side of \?\? is#'
+            paths:
+                - app/Http/Controllers/Portal/*
+                - app/Http/Middleware/EnsureRenterAuthenticated.php
+                - app/Livewire/Portal/*
+                - app/Notifications/PortalCredentialsIssuedNotification.php
+
+        # provisionFor() returns User but Renter::user belongsTo is typed
+        # at the Model contract.
+        -
+            message: '#Method App\\Services\\Portal\\RenterPortalAccountProvisioner::provisionFor\(\) should return#'
+            path: app/Services/Portal/RenterPortalAccountProvisioner.php
+
+        # Filament EditRecord::$record is typed as Model|int|string until the
+        # record is hydrated. We dereference $record->status defensively in
+        # afterFill() where it is guaranteed to be a model instance.
+        -
+            message: '#Cannot access property \$status on Illuminate\\Database\\Eloquent\\Model\|int\|string#'
+            path: app/Filament/Operator/Resources/ContactSubmissions/Pages/EditContactSubmission.php
+
+        # Phase 10 notifications: $renterUser comes from a belongsTo whose
+        # template type defaults to Model. The Notifiable trait is on User —
+        # PHPStan can't see it through the relation.
+        -
+            message: '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::notify\(\)#'
+            paths:
+                - app/Models/Invoice.php
+                - app/Observers/PaymentObserver.php
+
+        # Defensive ?-> on Client::find() chains and notifiable->name/email.
+        -
+            message: '#Using nullsafe property access ".+" on left side of \?\? is#'
+            paths:
+                - app/Notifications/*.php
+
+        # Notifiable model properties (name/email/phone/tenant_id) accessed
+        # via the generic object $notifiable signature required by the
+        # Laravel Notification contract.
+        -
+            message: '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$(name|email|phone|tenant_id|id)#'
+            paths:
+                - app/Notifications/*.php
+                - app/Services/Admin/OperatorOwnerProvisioner.php

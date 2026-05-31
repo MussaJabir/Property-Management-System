@@ -1,0 +1,181 @@
+# PMS production stack — trimmed for a 1 GB host.
+#
+# Services included:
+#   - app:        PHP-FPM (Laravel)
+#   - scheduler:  runs `php artisan schedule:run` every minute
+#   - pgsql:      Postgres 16, tuned for ~150 MB resident
+#   - redis:      Redis 7, append-only off, maxmem 50 MB
+#
+# Deliberately NOT included for the 1 GB demo box (re-enable on bigger box):
+#   - meilisearch (~150 MB)
+#   - horizon worker (notifications already run sync)
+#   - reverb (websockets)
+#   - browsershot container (Chromium would OOM)
+#
+# Edge:
+#   The host's existing nginx terminates SSL and proxies pms.bjptechnologies.co.tz
+#   to 127.0.0.1:9080 → app container's nginx-less php-fpm.
+#   ⚠  This means the app container exposes BOTH php-fpm AND a tiny nginx
+#       sidecar OR the host nginx talks fastcgi directly to php-fpm.
+#       We use the second pattern (fastcgi_pass to 127.0.0.1:9000) so the
+#       container is just php-fpm — saves ~30 MB by skipping in-container nginx.
+#
+# Run:
+#   docker compose -f docker-compose.production.yml --env-file /opt/pms/.env up -d
+
+name: pms
+
+services:
+  app:
+    image: ghcr.io/mussajabir/pms:${PMS_TAG:-latest}
+    restart: unless-stopped
+    # Host nginx proxy-passes HTTP to this on localhost — in-container nginx
+    # listens on 8080. NOT exposed publicly; loopback only.
+    ports:
+      - "127.0.0.1:9080:8080"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: https://pms.bjptechnologies.co.tz
+      APP_KEY: ${APP_KEY}
+      LOG_CHANNEL: stack
+      LOG_LEVEL: warning
+
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pms}
+      DB_USERNAME: ${DB_USERNAME:-pms}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: redis
+      SESSION_LIFETIME: 240
+
+      FILESYSTEM_DISK: ${FILESYSTEM_DISK:-b2}
+      AWS_ACCESS_KEY_ID: ${B2_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${B2_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${B2_REGION:-us-west-002}
+      AWS_BUCKET: ${B2_BUCKET}
+      AWS_ENDPOINT: ${B2_ENDPOINT}
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+
+      MAIL_MAILER: ${MAIL_MAILER:-resend}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-PMS}
+      RESEND_KEY: ${RESEND_KEY}
+
+      SCOUT_DRIVER: collection
+
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - app_storage:/var/www/html/storage
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  scheduler:
+    image: ghcr.io/mussajabir/pms:${PMS_TAG:-latest}
+    restart: unless-stopped
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --no-interaction >> /proc/1/fd/1 2>&1 || true;
+        sleep 60;
+      done"
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-pms}
+      DB_USERNAME: ${DB_USERNAME:-pms}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: sync
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    volumes:
+      - app_storage:/var/www/html/storage
+    deploy:
+      resources:
+        limits:
+          memory: 96M
+
+  pgsql:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-pms}
+      POSTGRES_USER: ${DB_USERNAME:-pms}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # Tuned for ~150 MB resident on a 1 GB host. Override on bigger boxes.
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=64MB"
+      - "-c"
+      - "effective_cache_size=256MB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "maintenance_work_mem=32MB"
+      - "-c"
+      - "max_connections=30"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-pms} -d ${DB_DATABASE:-pms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 220M
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - "redis-server"
+      - "--maxmemory"
+      - "50mb"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+      - "--appendonly"
+      - "no"
+      - "--save"
+      - ""
+    volumes:
+      - redisdata:/data
+    deploy:
+      resources:
+        limits:
+          memory: 80M
+
+volumes:
+  pgdata:
+    name: pms_pgdata
+  redisdata:
+    name: pms_redisdata
+  app_storage:
+    name: pms_app_storage

@@ -1,0 +1,47 @@
+# Keep the build context small — only what the image actually needs.
+
+.git/
+.github/
+.idea/
+.vscode/
+.fleet/
+.nova/
+.zed/
+.phpactor.json
+.phpunit.cache
+.phpunit.result.cache
+.phpstorm.meta.php
+.DS_Store
+
+# Local node + vendor are rebuilt inside the multi-stage image.
+node_modules/
+vendor/
+public/build/
+public/hot
+public/storage
+
+# Host envs — secrets pass via docker-compose `environment:` block, not files.
+.env
+.env.*
+auth.json
+
+# Logs + caches
+storage/logs/*.log
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+bootstrap/cache/*.php
+
+# Per-tenant runtime storage (stancl)
+storage/tenant*
+
+# Local dev compose (Sail) — not used in prod
+docker-compose.yml
+docker-compose.override.yml
+
+# Tests + docs aren't needed in the runtime image
+tests/
+docs/reports/
+*.md
+!docker/README.md
