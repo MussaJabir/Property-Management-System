@@ -84,13 +84,23 @@ jobs:
             docker compose -f docker-compose.production.yml --env-file .env pull
             docker compose -f docker-compose.production.yml --env-file .env up -d
 
-            # Wait for the app container to be healthy.
-            for i in $(seq 1 30); do
+            # Wait for the app container to be healthy. Uses if/then/fi
+            # (NOT `[ ] && break`) because under `set -e` + remote bash, a
+            # failed test in a && short-circuit can spuriously exit the script.
+            for i in $(seq 1 60); do
               status=$(docker inspect --format='{{.State.Health.Status}}' pms-app-1 2>/dev/null || echo "starting")
-              [ "$status" = "healthy" ] && break
+              if [ "$status" = "healthy" ]; then
+                echo "app is healthy after ${i} polls"
+                break
+              fi
               echo "waiting for app health… ($status)"
               sleep 2
             done
+            if [ "$status" != "healthy" ]; then
+              echo "❌ app container never became healthy. Last status: $status"
+              docker compose -f docker-compose.production.yml logs --tail=100 app
+              exit 1
+            fi
 
             # Run migrations against the new image.
             docker compose -f docker-compose.production.yml --env-file .env exec -T app \
