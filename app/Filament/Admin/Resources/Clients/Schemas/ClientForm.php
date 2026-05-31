@@ -137,21 +137,20 @@ class ClientForm
                     ->columns(2)
                     ->visibleOn('create')
                     ->components([
+                        // These fields are not Client columns — CreateClient::mutateFormDataBeforeCreate
+                        // pulls them off $data before the model is saved.
                         TextInput::make('owner_name')
                             ->label('Owner name')
                             ->placeholder('e.g. Bejus Properties Director')
-                            ->dehydrated(false)
                             ->maxLength(150),
                         TextInput::make('owner_email')
                             ->label('Owner email')
                             ->email()
                             ->placeholder('owner@bejus-properties.co.tz')
-                            ->dehydrated(false)
                             ->maxLength(160),
                         TextInput::make('owner_phone')
                             ->label('Owner phone')
                             ->placeholder('+255712345678')
-                            ->dehydrated(false)
                             ->maxLength(30)
                             ->helperText('Leave name + email blank to skip — you can create the user manually later.'),
                     ]),

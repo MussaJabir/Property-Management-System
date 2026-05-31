@@ -49,6 +49,7 @@ class OperatorPanelProvider extends PanelProvider
             ->id('operator')
             ->path('manage')
             ->login()
+            ->profile(\App\Filament\Operator\Pages\Auth\EditOperatorProfile::class)
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->brandName('PMS Operator')
@@ -82,6 +83,7 @@ class OperatorPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                \App\Http\Middleware\ForceOperatorPasswordChange::class,
             ]);
     }
 }
