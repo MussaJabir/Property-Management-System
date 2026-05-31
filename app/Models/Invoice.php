@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantScopedModel;
+use App\Notifications\InvoiceIssuedNotification;
+use App\Notifications\InvoiceOverdueNotification;
 use App\Services\InvoiceNumberGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 /**
@@ -129,6 +132,17 @@ class Invoice extends Model
             $this->issued_at = now();
             $this->save();
         });
+
+        try {
+            $renterUser = $this->lease?->renter?->user;
+            if ($renterUser) {
+                $renterUser->notify(new InvoiceIssuedNotification($this->fresh()));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('InvoiceIssuedNotification failed', [
+                'invoice_id' => $this->id, 'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -215,6 +229,17 @@ class Invoice extends Model
 
         $this->status = self::STATUS_OVERDUE;
         $this->save();
+
+        try {
+            $renterUser = $this->lease?->renter?->user;
+            if ($renterUser) {
+                $renterUser->notify(new InvoiceOverdueNotification($this->fresh()));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('InvoiceOverdueNotification failed', [
+                'invoice_id' => $this->id, 'error' => $e->getMessage(),
+            ]);
+        }
 
         return true;
     }

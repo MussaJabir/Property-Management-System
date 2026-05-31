@@ -30,6 +30,19 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public const TYPE_RENTER = 'renter';
 
+    protected static function booted(): void
+    {
+        // Once the user actually picks a new password on an existing account,
+        // drop the "must change on next sign-in" gate. Only fires on updates
+        // ($user->exists) so we don't clobber the flag at initial provisioning
+        // time, which is the whole point of the flag.
+        static::updating(function (self $user): void {
+            if ($user->isDirty('password') && $user->must_change_password) {
+                $user->must_change_password = false;
+            }
+        });
+    }
+
     protected $fillable = [
         'tenant_id',
         'type',

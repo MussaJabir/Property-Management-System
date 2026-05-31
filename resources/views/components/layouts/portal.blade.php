@@ -51,6 +51,7 @@
                 @endforeach
             </nav>
             <div class="flex items-center gap-3 text-sm">
+                <livewire:portal.notifications-bell />
                 <form method="POST" action="{{ url('/'.$clientSlug.'/portal/locale') }}" class="hidden md:block">
                     @csrf
                     <select name="locale" onchange="this.form.submit()" class="rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs dark:border-zinc-700 dark:bg-zinc-900">

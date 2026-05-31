@@ -230,15 +230,18 @@ Phases are sequenced by dependency. No strict day count — solo dev pace.
 6. Contact form submissions → tenant inbox + email notification
 7. `cms_announcements` resource for News page
 
-### Phase 10 — Notifications & Polish
+### Phase 10 — Notifications & Polish  ✅ code-only items shipped
 1. Email notifications: invoice issued, payment received, overdue, new maintenance request
 2. In-app notification bell (Filament + Livewire)
-3. Notification preferences per user
-4. Seed data command for demos (3 properties, 12 units, 8 renters, 20 invoices, sample CMS content)
-5. Mobile responsive QA on real Android phone
-6. Performance pass: query N+1 check via Telescope, Redis cache warm
-7. Sentry integration
+3. Notification preferences per user — *deferred to v2*
+4. Seed data command for demos (3 properties, 12 units, 8 renters, 12 invoices, sample CMS content)
+5. Mobile responsive QA on real Android phone — *manual, do during UAT*
+6. Performance pass: query N+1 check via Telescope, Redis cache warm — *deferred to Phase 11 prep*
+7. Sentry integration — *deferred to Phase 11 (needs prod env first)*
 8. Error pages styled
+
+Also added (was a Phase 1 gap surfaced during Phase 9):
+- Auto-create operator owner user when a super admin provisions a new client; emails temporary credentials via `OperatorCredentialsIssuedNotification`. Mirror of the Phase 8 renter portal account provisioner.
 
 ### Phase 11 — Production Deploy
 1. Provision 8 GB VPS (Hetzner CX32 or Oracle upgrade)
