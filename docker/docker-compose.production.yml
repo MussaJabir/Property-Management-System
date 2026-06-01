@@ -115,6 +115,11 @@ services:
         condition: service_healthy
     volumes:
       - app_storage:/var/www/html/storage
+    # The image's HEALTHCHECK curls localhost:8080, but the scheduler does
+    # not run nginx — only an artisan schedule:run loop. Disable so this
+    # service does not flap to "unhealthy" forever.
+    healthcheck:
+      disable: true
     deploy:
       resources:
         limits:
