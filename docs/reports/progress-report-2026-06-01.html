@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS — Progress Report — 1 June 2026</title>
+    <style>
+        @page { size: A4; margin: 14mm 12mm; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #1f2937;
+            line-height: 1.55;
+            background: #f9fafb;
+            font-size: 10.5pt;
+        }
+
+        .page {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 18mm 14mm;
+            background: #ffffff;
+        }
+
+        /* Hero */
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #0f766e;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .hero .brand {
+            font-size: 22pt;
+            font-weight: 800;
+            color: #0f766e;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        .hero .brand-sub {
+            font-size: 10pt;
+            color: #6b7280;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .hero .meta {
+            text-align: right;
+            font-size: 9.5pt;
+            color: #4b5563;
+        }
+
+        .hero .meta strong { color: #1f2937; }
+
+        .hero .live-badge {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 3px 10px;
+            background: #064e3b;
+            color: #d1fae5;
+            border-radius: 9999px;
+            font-size: 9pt;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 14pt;
+            color: #0f766e;
+            margin: 26px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        h3 {
+            font-size: 11pt;
+            color: #111827;
+            margin: 14px 0 6px;
+            font-weight: 700;
+        }
+
+        p { margin-bottom: 8px; }
+
+        /* Executive summary */
+        .summary {
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%);
+            border: 1px solid #99f6e4;
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin-bottom: 22px;
+        }
+
+        .summary p {
+            font-size: 10.5pt;
+            color: #134e4a;
+        }
+
+        .summary p:last-child { margin-bottom: 0; }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .stat {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px 14px;
+        }
+
+        .stat .label {
+            font-size: 8.5pt;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .stat .value {
+            font-size: 20pt;
+            font-weight: 800;
+            color: #0f766e;
+            line-height: 1.1;
+        }
+
+        .stat .hint {
+            font-size: 8.5pt;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* Progress bar */
+        .progress-wrap { margin-bottom: 22px; }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9.5pt;
+            color: #4b5563;
+            margin-bottom: 6px;
+        }
+
+        .progress-meta strong { color: #0f766e; }
+
+        .progress-bar {
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%);
+            border-radius: 9999px;
+        }
+
+        /* Features list */
+        .features {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 18px;
+        }
+
+        .features li {
+            padding-left: 18px;
+            position: relative;
+            font-size: 10pt;
+            color: #1f2937;
+        }
+
+        .features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #0f766e;
+            font-weight: 700;
+        }
+
+        /* Phases */
+        .phases {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .phase {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px 12px;
+            background: #ffffff;
+        }
+
+        .phase.done { border-left: 4px solid #0f766e; background: #f0fdfa; }
+        .phase.pending { border-left: 4px solid #cbd5e1; }
+
+        .phase .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .phase .name {
+            font-weight: 700;
+            font-size: 10pt;
+            color: #111827;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 8.5pt;
+            font-weight: 600;
+        }
+
+        .badge-done { background: #d1fae5; color: #065f46; }
+        .badge-pending { background: #e5e7eb; color: #4b5563; }
+
+        .phase .body {
+            font-size: 9.5pt;
+            color: #4b5563;
+            line-height: 1.45;
+        }
+
+        /* Callout */
+        .callout {
+            background: #fef9c3;
+            border: 1px solid #fde68a;
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin-top: 14px;
+            font-size: 10pt;
+            color: #713f12;
+        }
+
+        .callout strong {
+            display: block;
+            color: #78350f;
+            margin-bottom: 4px;
+        }
+
+        /* URLs box */
+        .urls {
+            background: #f0fdfa;
+            border: 1px solid #99f6e4;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 14px 0 22px;
+        }
+
+        .urls .url-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid #ccfbf1;
+            font-size: 10pt;
+        }
+
+        .urls .url-row:last-child { border-bottom: 0; }
+
+        .urls .url-label {
+            min-width: 150px;
+            font-weight: 600;
+            color: #134e4a;
+        }
+
+        .urls .url-value {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 9.5pt;
+            color: #0f766e;
+            word-break: break-all;
+        }
+
+        /* Safety */
+        .safety {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .safety-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px 14px;
+        }
+
+        .safety-card .title {
+            font-weight: 700;
+            color: #111827;
+            font-size: 10pt;
+            margin-bottom: 4px;
+        }
+
+        .safety-card .desc {
+            font-size: 9.5pt;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        footer {
+            margin-top: 28px;
+            padding-top: 14px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 9pt;
+            color: #6b7280;
+        }
+
+        footer strong { color: #0f766e; }
+
+        @media print {
+            body { background: #ffffff; }
+            .page { padding: 0; box-shadow: none; }
+            .phases, .stats, .features, .safety, .urls { page-break-inside: avoid; }
+            .phase, .stat, .safety-card { page-break-inside: avoid; }
+            h2 { page-break-after: avoid; }
+        }
+
+        @media screen {
+            .page {
+                box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+                margin: 24px auto;
+                border-radius: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <header class="hero">
+        <div>
+            <div class="brand">PMS</div>
+            <div class="brand-sub">Property Management System &middot; BJP Technologies</div>
+        </div>
+        <div class="meta">
+            <strong>Progress Report</strong><br>
+            Date: <strong>1 June 2026</strong><br>
+            Stage: v1 complete<br>
+            <span class="live-badge">&bull; Live in production</span>
+        </div>
+    </header>
+
+    <!-- ===== Executive summary ===== -->
+    <section class="summary">
+        <p><strong>The v1 build is complete and live on the public internet.</strong> All twelve planned stages are finished. A landlord can now run their entire business end-to-end &mdash; from onboarding properties and tenants, through invoicing and collections, to maintenance, expenses, financial reports, and a fully bilingual self-service portal for their tenants. Each landlord also gets their own public-facing website that they can edit themselves.</p>
+        <p>The system is deployed at <strong>pms.bjptechnologies.co.tz</strong> on a hardened cloud VPS, with HTTPS, automatic SSL renewal, nightly backups, and continuous deployment from GitHub. A live marketing landing page is already at the root domain, and a fully-seeded demo workspace is ready to walk prospective clients through every feature.</p>
+    </section>
+
+    <!-- ===== Stat grid ===== -->
+    <div class="stats">
+        <div class="stat">
+            <div class="label">Build progress</div>
+            <div class="value">12 / 12</div>
+            <div class="hint">all stages complete</div>
+        </div>
+        <div class="stat">
+            <div class="label">Ready-to-use features</div>
+            <div class="value">40+</div>
+            <div class="hint">working today</div>
+        </div>
+        <div class="stat">
+            <div class="label">Safety checks</div>
+            <div class="value">99</div>
+            <div class="hint">run before every update</div>
+        </div>
+        <div class="stat">
+            <div class="label">Languages</div>
+            <div class="value">2</div>
+            <div class="hint">English &amp; Swahili</div>
+        </div>
+    </div>
+
+    <!-- ===== Progress bar ===== -->
+    <div class="progress-wrap">
+        <div class="progress-meta">
+            <span>Overall v1 build progress</span>
+            <span><strong>100%</strong></span>
+        </div>
+        <div class="progress-bar">
+            <div class="fill" style="width:100%"></div>
+        </div>
+    </div>
+
+    <!-- ===== Live URLs ===== -->
+    <h2>How to see it live, right now</h2>
+    <div class="urls">
+        <div class="url-row">
+            <span class="url-label">Marketing site</span>
+            <span class="url-value">https://pms.bjptechnologies.co.tz/</span>
+        </div>
+        <div class="url-row">
+            <span class="url-label">Owner / staff sign in</span>
+            <span class="url-value">https://pms.bjptechnologies.co.tz/manage/login</span>
+        </div>
+        <div class="url-row">
+            <span class="url-label">Demo login</span>
+            <span class="url-value">owner@demo.local &nbsp;&middot;&nbsp; demo1234</span>
+        </div>
+        <div class="url-row">
+            <span class="url-label">BJP admin panel</span>
+            <span class="url-value">https://pms.bjptechnologies.co.tz/admin/login</span>
+        </div>
+        <div class="url-row">
+            <span class="url-label">Tenant portal (demo)</span>
+            <span class="url-value">https://pms.bjptechnologies.co.tz/demo/portal/login</span>
+        </div>
+    </div>
+
+    <!-- ===== What a landlord can do ===== -->
+    <h2>What a landlord can do today</h2>
+    <ul class="features">
+        <li>Sign in to their own private workspace</li>
+        <li>Customise workspace name, logo, and brand colour</li>
+        <li>Add staff with the right role (Owner, Manager, Accountant, Maintenance)</li>
+        <li>Add properties with photos and detailed locations</li>
+        <li>Add the units inside each property (rooms, apartments, shops, offices, warehouses)</li>
+        <li>Set rent per unit on monthly, quarterly, half-yearly, yearly, or any custom cycle</li>
+        <li>See a live dashboard with units, occupancy, billed, collected, and outstanding</li>
+        <li>Register tenants &mdash; individual or business &mdash; with NIDA and TIN stored encrypted</li>
+        <li>Sign a lease through a step-by-step wizard with PDF generation</li>
+        <li>Activate, end, or terminate a lease &mdash; with full audit history</li>
+        <li>Issue invoices with line items and unique numbers per landlord per year</li>
+        <li>Record payments via cash, bank transfer, mobile money, cheque, or card</li>
+        <li>Auto-email receipts to the tenant the moment a payment is recorded</li>
+        <li>Get late invoices flagged automatically every morning</li>
+        <li>Raise maintenance jobs with photos and priority levels</li>
+        <li>Assign maintenance to staff and track each job to completion</li>
+        <li>Record property expenses by category with receipt attachments</li>
+        <li>Generate financial reports &mdash; rent roll, collection, arrears, occupancy, P&amp;L</li>
+        <li>Export any report as PDF (printable) or Excel (further analysis)</li>
+        <li>Build the property's own public-facing website inside PMS</li>
+        <li>Edit homepage, about, vacant units, news, and contact pages themselves</li>
+        <li>Publish announcements that appear on both portal and public site</li>
+        <li>Get in-app notifications when invoices issue, payments arrive, or maintenance comes in</li>
+        <li>Switch the entire interface between English and Swahili in one click</li>
+        <li>Use it from phone, tablet, or desktop browser &mdash; no app install needed</li>
+    </ul>
+
+    <!-- ===== What a tenant can do ===== -->
+    <h2>What a tenant can do today</h2>
+    <ul class="features">
+        <li>Log in to their own private portal with their phone number</li>
+        <li>See their current outstanding balance at a glance</li>
+        <li>View every invoice ever issued to them</li>
+        <li>Download invoice PDFs anytime</li>
+        <li>See their complete payment history with receipts</li>
+        <li>Download receipt PDFs to keep for their records</li>
+        <li>Submit maintenance requests with photos and priority</li>
+        <li>Track maintenance from submitted &rarr; assigned &rarr; in progress &rarr; resolved</li>
+        <li>See announcements from their landlord</li>
+        <li>Switch between English and Swahili anywhere</li>
+        <li>Use everything from a basic phone over a slow connection</li>
+    </ul>
+
+    <!-- ===== Build stages ===== -->
+    <h2>Build stages</h2>
+    <div class="phases">
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 1 &mdash; Platform foundations</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">Database, security, multi-landlord support, and English &amp; Swahili setup.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 2 &mdash; Onboarding new landlords</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">BJP creates a new landlord workspace from one admin panel and hands over a working link.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 3 &mdash; Staff login &amp; workspace</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">Landlord staff log in, see their dashboard, and configure their branding.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 4 &mdash; Properties &amp; units</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">Buildings and the rentable units inside &mdash; with photos, rent amounts, and billing cycles.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 5 &mdash; Tenants &amp; leases</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">Register tenants, sign lease contracts, download lease PDFs, and track full lease history.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 6 &mdash; Invoices, payments &amp; receipts</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">The full money side &mdash; from issuing an invoice to recording payment to auto-emailing the receipt.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 7 &mdash; Maintenance &amp; expenses</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">Track maintenance jobs from request to completion, and record expenses against each property.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 8 &mdash; Reports &amp; analytics</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">Rent roll, collection, arrears, occupancy, P&amp;L, expenses &mdash; downloadable as PDF or Excel.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 9 &mdash; Tenant self-service portal</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">Tenants log in to see invoices, payment history, download receipts, and raise maintenance requests.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 10 &mdash; Each landlord's public website</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">A simple public-facing site for each landlord (home, about, vacant units, news, contact form) that they edit themselves.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 11 &mdash; Notifications &amp; polish</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">In-app notification bell, audience-pattern routing, mobile testing, and final polish across both panels.</div>
+        </div>
+
+        <div class="phase done">
+            <div class="head">
+                <div class="name">Stage 12 &mdash; Going live</div>
+                <span class="badge badge-done">Done</span>
+            </div>
+            <div class="body">Deployed to a hardened cloud VPS with HTTPS, automatic SSL renewal, nightly backups, and CI/CD from GitHub.</div>
+        </div>
+
+    </div>
+
+    <!-- ===== Bonus ===== -->
+    <h2>Beyond the original plan</h2>
+    <div class="callout">
+        <strong>A pro-grade marketing landing page at the root domain</strong>
+        Beyond the planned build, we shipped a marketing site at <strong>pms.bjptechnologies.co.tz</strong> &mdash; a fully bilingual landing page with an operator dashboard mockup, problem/solution comparison, renter-side phone mockup, principles section, and FAQ. It is ready to show to any prospective landlord without further work.
+    </div>
+
+    <!-- ===== Demo path ===== -->
+    <h2>What you can show a prospective landlord today</h2>
+    <div class="callout">
+        <strong>Live end-to-end demo &mdash; no setup needed</strong>
+        Open <strong>pms.bjptechnologies.co.tz/manage/login</strong> on any phone or laptop, sign in with <strong>owner@demo.local / demo1234</strong>, and walk a prospect through the entire workflow live: dashboard &rarr; properties &rarr; units &rarr; tenants &rarr; sign a lease (download the PDF) &rarr; issue an invoice &rarr; record a payment &rarr; show the receipt arriving &rarr; raise a maintenance request &rarr; close it &rarr; pull a financial report. Then open the tenant side at <strong>/demo/portal/login</strong> to show the renter experience. All on the live production system.
+    </div>
+
+    <!-- ===== Safety & reliability ===== -->
+    <h2>How we keep it safe and reliable</h2>
+    <div class="safety">
+        <div class="safety-card">
+            <div class="title">Each landlord is in their own private space</div>
+            <div class="desc">No landlord can ever see another landlord's tenants, invoices, payments, or expenses. Verified by automatic safety checks on every code change.</div>
+        </div>
+        <div class="safety-card">
+            <div class="title">99 automatic safety tests</div>
+            <div class="desc">The system re-tests itself before every update. If anything important breaks, the update is blocked from reaching production.</div>
+        </div>
+        <div class="safety-card">
+            <div class="title">Sensitive data is encrypted at rest</div>
+            <div class="desc">Tenant NIDA and TIN numbers are stored in encrypted form. Even with direct database access, the raw numbers cannot be read.</div>
+        </div>
+        <div class="safety-card">
+            <div class="title">Money handled to the shilling</div>
+            <div class="desc">All money calculations use exact arithmetic. No rounding drift even on very large amounts, partial payments, or unusual billing cycles.</div>
+        </div>
+        <div class="safety-card">
+            <div class="title">Invoice numbers never collide</div>
+            <div class="desc">Even if multiple staff issue invoices in the exact same instant, every invoice gets a unique sequential number per landlord per year.</div>
+        </div>
+        <div class="safety-card">
+            <div class="title">Bilingual from day one</div>
+            <div class="desc">Every label, notification, and PDF supports English and Swahili. Users (landlord staff and tenants) can switch anywhere in one click.</div>
+        </div>
+        <div class="safety-card">
+            <div class="title">Files stored on professional cloud storage</div>
+            <div class="desc">Property photos, lease PDFs, and receipts are stored on dedicated cloud storage (Backblaze B2) &mdash; never on the application server itself.</div>
+        </div>
+        <div class="safety-card">
+            <div class="title">HTTPS, backups, and one-click rollback</div>
+            <div class="desc">Production runs behind HTTPS with auto-renewing certificates, nightly database backups, and a rollback script that reverts to the previous version in seconds if anything misbehaves.</div>
+        </div>
+    </div>
+
+    <!-- ===== Coming next ===== -->
+    <h2>What's next &mdash; Version 2</h2>
+    <p>v1 is feature-complete and live. The next phase moves to the v2 integrations that were deliberately scaffolded but not switched on for v1:</p>
+    <ul class="features">
+        <li><strong>Mobile money payments</strong> &mdash; M-Pesa, Tigo Pesa, Airtel Money via Selcom Pay (currently recorded manually)</li>
+        <li><strong>SMS reminders</strong> &mdash; rent due, overdue, and payment confirmations via Beem Africa</li>
+        <li><strong>WhatsApp receipts</strong> &mdash; receipts delivered directly to the tenant on WhatsApp</li>
+        <li><strong>Login by phone OTP</strong> &mdash; tenants log in with phone number + one-time code</li>
+        <li><strong>Automatic invoice generation</strong> &mdash; the system creates next month's invoices on its own</li>
+        <li><strong>Live updates</strong> &mdash; dashboard refreshes as payments come in (Laravel Reverb / websockets)</li>
+        <li><strong>Native mobile apps</strong> &mdash; Flutter apps for landlords and tenants, talking to the existing API</li>
+    </ul>
+
+    <footer>
+        Report prepared <strong>1 June 2026</strong> &middot; PMS v1 live &middot; BJP Technologies
+    </footer>
+
+</div>
+</body>
+</html>
