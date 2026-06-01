@@ -102,6 +102,42 @@ return [
     'showcase_pill_3' => 'PDF na risiti zenye chapa',
     'showcase_pill_4' => 'Dashibodi ya madeni ya moja kwa moja',
 
+    // ──────────────── Renter-side mockups (phone + maintenance) ────────────────
+    'renters_eyebrow' => 'Imebuniwa kwa pande zote mbili',
+    'renters_title' => 'Wapangaji wako pia wanapata uzoefu wa hali ya juu',
+    'renters_subtitle' => 'Wapangaji wakijihudumia wenyewe, simu yako inakoma kuita kuhusu ankara za madeni na mabomba yanayovuja.',
+
+    // Phone mockup
+    'phone_greeting' => 'Habari, Asha',
+    'phone_subline' => 'Mikocheni B · Chumba 3B',
+    'phone_balance_label' => 'Salio la madeni',
+    'phone_balance_value' => 'TSh 485,000',
+    'phone_invoice_label' => 'Ankara za hivi karibuni',
+    'phone_invoice_period_jun' => 'Juni 2026',
+    'phone_invoice_period_may' => 'Mei 2026',
+    'phone_invoice_status_due' => 'Inastahili siku 3',
+    'phone_invoice_status_paid' => 'Imelipwa',
+    'phone_cta_pay' => 'Lipa sasa',
+    'phone_nav_home' => 'Nyumbani',
+    'phone_nav_invoices' => 'Ankara',
+    'phone_nav_maintenance' => 'Matengenezo',
+
+    // Maintenance request mockup
+    'maint_eyebrow' => 'MATENGENEZO',
+    'maint_id' => '#MR-0017',
+    'maint_summary' => 'Bomba la jikoni linavuja — Chumba 3B',
+    'maint_status_label' => 'Inaendelea',
+    'maint_photo_label' => 'Mpangaji ameambatisha picha 1',
+    'maint_step_submitted' => 'Imewasilishwa',
+    'maint_step_assigned' => 'Imepelekwa kwa fundi',
+    'maint_step_progress' => 'Fundi anakuja',
+    'maint_step_resolved' => 'Imekamilika',
+    'maint_assigned_name' => 'John K. · Fundi wa bomba',
+    'maint_assigned_time' => 'Anafika leo saa 8:30 mchana',
+
+    // ──────────────── Brand subtitle (under logo in nav) ────────────────
+    'brand_by' => 'kutoka BJP Technologies',
+
     // ──────────────── How it works ────────────────
     'how_eyebrow' => 'Anza ndani ya siku, si miezi',
     'how_title' => 'Inavyofanya kazi',

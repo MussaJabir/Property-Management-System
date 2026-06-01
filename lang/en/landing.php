@@ -103,6 +103,42 @@ return [
     'showcase_pill_3' => 'Branded PDFs and receipts',
     'showcase_pill_4' => 'Live arrears dashboard',
 
+    // ──────────────── Renter-side mockups (phone + maintenance) ────────────────
+    'renters_eyebrow' => 'Designed for both sides',
+    'renters_title' => 'Your renters get a first-class experience too',
+    'renters_subtitle' => 'When renters can self-serve, your phone stops ringing about overdue invoices and leaking taps.',
+
+    // Phone mockup
+    'phone_greeting' => 'Habari, Asha',
+    'phone_subline' => 'Mikocheni B · Unit 3B',
+    'phone_balance_label' => 'Outstanding balance',
+    'phone_balance_value' => 'TSh 485,000',
+    'phone_invoice_label' => 'Recent invoices',
+    'phone_invoice_period_jun' => 'June 2026',
+    'phone_invoice_period_may' => 'May 2026',
+    'phone_invoice_status_due' => 'Due in 3 days',
+    'phone_invoice_status_paid' => 'Paid',
+    'phone_cta_pay' => 'Pay now',
+    'phone_nav_home' => 'Home',
+    'phone_nav_invoices' => 'Invoices',
+    'phone_nav_maintenance' => 'Maintenance',
+
+    // Maintenance request mockup
+    'maint_eyebrow' => 'MAINTENANCE',
+    'maint_id' => '#MR-0017',
+    'maint_summary' => 'Kitchen tap leaking — Unit 3B',
+    'maint_status_label' => 'In progress',
+    'maint_photo_label' => 'Renter attached 1 photo',
+    'maint_step_submitted' => 'Submitted',
+    'maint_step_assigned' => 'Assigned to plumber',
+    'maint_step_progress' => 'Technician on the way',
+    'maint_step_resolved' => 'Resolved',
+    'maint_assigned_name' => 'John K. · Plumber',
+    'maint_assigned_time' => 'Arriving today at 14:30',
+
+    // ──────────────── Brand subtitle (under logo in nav) ────────────────
+    'brand_by' => 'by BJP Technologies',
+
     // ──────────────── How it works ────────────────
     'how_eyebrow' => 'Get started in days, not months',
     'how_title' => 'How it works',

@@ -25,8 +25,11 @@
                 linear-gradient(to bottom, rgba(15, 118, 110, 0.06) 1px, transparent 1px);
             background-size: 56px 56px;
         }
+        /* Scroll-reveal: starts hidden, becomes visible when IO toggles .is-visible */
+        .pms-reveal { opacity: 0; transform: translateY(16px); transition: opacity 600ms ease-out, transform 600ms ease-out; }
+        .pms-reveal.is-visible { opacity: 1; transform: translateY(0); }
         @media (prefers-reduced-motion: reduce) {
-            .pms-fade-in { opacity: 1 !important; transform: none !important; }
+            .pms-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
         }
     </style>
 </head>
@@ -37,7 +40,10 @@
     <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8">
         <a href="/" class="flex items-center gap-2.5 text-lg font-bold text-slate-900">
             <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-600 to-teal-700 text-sm font-extrabold text-white shadow-sm ring-1 ring-teal-700/20">P</span>
-            <span class="text-[17px] tracking-tight">{{ __('landing.brand_name') }}</span>
+            <span class="flex flex-col leading-none">
+                <span class="text-[17px] tracking-tight">{{ __('landing.brand_name') }}</span>
+                <span class="mt-0.5 text-[10px] font-medium tracking-wide text-slate-500">{{ __('landing.brand_by') }}</span>
+            </span>
         </a>
 
         <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
@@ -444,6 +450,194 @@
     </div>
 </section>
 
+{{-- ═════════════════════════════════════════════ RENTER-SIDE MOCKUPS ══ --}}
+<section class="relative overflow-hidden bg-slate-900 py-20 text-white sm:py-24">
+    {{-- Decorative background glow --}}
+    <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgba(20,184,166,0.18),transparent_60%)]"></div>
+    <div class="absolute inset-x-0 top-0 -z-10 h-full pms-grid-bg opacity-[0.12]"></div>
+
+    <div class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center pms-reveal">
+            <p class="text-xs font-semibold uppercase tracking-widest text-teal-300">{{ __('landing.renters_eyebrow') }}</p>
+            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                {{ __('landing.renters_title') }}
+            </h2>
+            <p class="mt-4 text-lg leading-8 text-slate-300">{{ __('landing.renters_subtitle') }}</p>
+        </div>
+
+        <div class="mx-auto mt-14 grid max-w-6xl items-center gap-10 lg:grid-cols-12">
+            {{-- ─────── Phone-frame mockup: renter portal ─────── --}}
+            <div class="relative flex justify-center pms-reveal lg:col-span-5">
+                {{-- Glow halo behind phone --}}
+                <div class="absolute inset-0 -z-10 mx-auto h-72 w-72 self-center rounded-full bg-teal-500/30 blur-3xl"></div>
+
+                <div class="relative w-[280px] rounded-[2.5rem] bg-slate-800 p-2.5 shadow-2xl ring-1 ring-white/10">
+                    {{-- Phone notch --}}
+                    <div class="absolute left-1/2 top-2.5 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-slate-900"></div>
+
+                    {{-- Inner screen --}}
+                    <div class="overflow-hidden rounded-[2rem] bg-white">
+                        {{-- Status bar --}}
+                        <div class="flex items-center justify-between px-6 pb-2 pt-6 text-[10px] font-semibold text-slate-900">
+                            <span>14:32</span>
+                            <div class="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3"><path d="M2 13.5a1.5 1.5 0 0 1 1.5-1.5h.5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-.5A1.5 1.5 0 0 1 2 16.5v-3Zm5-3.5a.5.5 0 0 1 .5-.5h.5a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5h-.5a.5.5 0 0 1-.5-.5v-7Zm5-3a.5.5 0 0 1 .5-.5h.5a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-.5a.5.5 0 0 1-.5-.5v-11Zm5-2.5a.5.5 0 0 1 .5-.5h.5A1.5 1.5 0 0 1 19 5.5v11A1.5 1.5 0 0 1 17.5 18H17a.5.5 0 0 1-.5-.5v-13Z" /></svg>
+                                <span>5G</span>
+                                <div class="h-2 w-4 rounded-sm border border-slate-900">
+                                    <div class="h-full w-3/4 rounded-sm bg-slate-900"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Header --}}
+                        <div class="px-5 pb-4 pt-3">
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 flex-none rounded-full bg-gradient-to-br from-teal-400 to-teal-600"></div>
+                                <div class="min-w-0">
+                                    <div class="truncate text-sm font-bold text-slate-900">{{ __('landing.phone_greeting') }}</div>
+                                    <div class="truncate text-[11px] text-slate-500">{{ __('landing.phone_subline') }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Balance card --}}
+                        <div class="mx-4 rounded-2xl bg-gradient-to-br from-teal-600 to-teal-700 p-4 text-white shadow-lg shadow-teal-600/30">
+                            <div class="text-[10px] font-semibold uppercase tracking-wider text-teal-200">{{ __('landing.phone_balance_label') }}</div>
+                            <div class="mt-1 text-2xl font-extrabold tracking-tight">{{ __('landing.phone_balance_value') }}</div>
+                            <button type="button" class="mt-3 inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-sm font-bold text-teal-700 shadow-sm transition-colors hover:bg-teal-50">
+                                {{ __('landing.phone_cta_pay') }}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4"><path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+
+                        {{-- Invoice list --}}
+                        <div class="px-4 pb-3 pt-4">
+                            <div class="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ __('landing.phone_invoice_label') }}</div>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2">
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-900">{{ __('landing.phone_invoice_period_jun') }}</div>
+                                        <div class="text-[10px] font-semibold text-amber-700">{{ __('landing.phone_invoice_status_due') }}</div>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-slate-900">485,000</span>
+                                </div>
+                                <div class="flex items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2">
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-900">{{ __('landing.phone_invoice_period_may') }}</div>
+                                        <div class="text-[10px] font-semibold text-emerald-700">{{ __('landing.phone_invoice_status_paid') }} · 01/05</div>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-slate-900">485,000</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Bottom tab bar --}}
+                        <div class="flex items-center justify-around border-t border-slate-100 bg-white px-4 py-2.5">
+                            <div class="flex flex-col items-center gap-0.5 text-teal-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4"><path d="M10.707 2.293a1 1 0 0 0-1.414 0l-7 7a1 1 0 1 0 1.414 1.414L4 10.414V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6.586l.293.293a1 1 0 0 0 1.414-1.414l-7-7Z" /></svg>
+                                <span class="text-[8px] font-bold">{{ __('landing.phone_nav_home') }}</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-0.5 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4"><path fill-rule="evenodd" d="M4.25 2A2.25 2.25 0 0 0 2 4.25v11.5A2.25 2.25 0 0 0 4.25 18h11.5A2.25 2.25 0 0 0 18 15.75V4.25A2.25 2.25 0 0 0 15.75 2H4.25ZM6 7a.75.75 0 0 1 .75-.75h6.5a.75.75 0 0 1 0 1.5h-6.5A.75.75 0 0 1 6 7Zm.75 2.75a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Zm0 3.5a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z" clip-rule="evenodd" /></svg>
+                                <span class="text-[8px] font-semibold">{{ __('landing.phone_nav_invoices') }}</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-0.5 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4"><path fill-rule="evenodd" d="M14.5 1A1.5 1.5 0 0 0 13 2.5v15a.5.5 0 0 0 .5.5h.5A2.5 2.5 0 0 0 16.5 15.5V2.5A1.5 1.5 0 0 0 15 1h-.5ZM3.5 5A1.5 1.5 0 0 0 2 6.5v11a.5.5 0 0 0 .5.5h.5A2.5 2.5 0 0 0 5.5 15.5V6.5A1.5 1.5 0 0 0 4 5h-.5Z" clip-rule="evenodd" /></svg>
+                                <span class="text-[8px] font-semibold">{{ __('landing.phone_nav_maintenance') }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Home indicator --}}
+                        <div class="flex justify-center pb-2 pt-1">
+                            <div class="h-1 w-24 rounded-full bg-slate-300"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ─────── Maintenance request card ─────── --}}
+            <div class="pms-reveal lg:col-span-7">
+                <div class="overflow-hidden rounded-2xl bg-white p-1.5 shadow-2xl ring-1 ring-slate-900/10">
+                    <div class="flex items-center gap-1.5 px-2 pt-1.5">
+                        <span class="h-2 w-2 rounded-full bg-red-400/80"></span>
+                        <span class="h-2 w-2 rounded-full bg-amber-400/80"></span>
+                        <span class="h-2 w-2 rounded-full bg-emerald-400/80"></span>
+                    </div>
+
+                    <div class="rounded-xl bg-white p-6 text-slate-900">
+                        {{-- Header --}}
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                    {{ __('landing.maint_eyebrow') }} · {{ __('landing.maint_id') }}
+                                </div>
+                                <h3 class="mt-1 text-lg font-bold text-slate-900 sm:text-xl">{{ __('landing.maint_summary') }}</h3>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75"></span>
+                                    <span class="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
+                                </span>
+                                {{ __('landing.maint_status_label') }}
+                            </span>
+                        </div>
+
+                        {{-- Photo placeholder --}}
+                        <div class="mt-5 grid grid-cols-3 gap-3">
+                            <div class="col-span-2 flex aspect-[4/3] items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 via-slate-200 to-slate-300 text-slate-400 ring-1 ring-slate-200">
+                                <div class="flex flex-col items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-8 w-8"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+                                    <span class="text-[11px] font-semibold">{{ __('landing.maint_photo_label') }}</span>
+                                </div>
+                            </div>
+                            <div class="flex aspect-[4/3] flex-col justify-center gap-1 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200">
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Technician</div>
+                                <div class="text-sm font-bold text-slate-900">{{ __('landing.maint_assigned_name') }}</div>
+                                <div class="text-[11px] text-slate-500">{{ __('landing.maint_assigned_time') }}</div>
+                            </div>
+                        </div>
+
+                        {{-- Timeline --}}
+                        <div class="mt-6">
+                            <ol class="relative grid grid-cols-4 gap-2">
+                                @php
+                                    $steps = [
+                                        ['key' => 'submitted', 'state' => 'done'],
+                                        ['key' => 'assigned', 'state' => 'done'],
+                                        ['key' => 'progress', 'state' => 'active'],
+                                        ['key' => 'resolved', 'state' => 'pending'],
+                                    ];
+                                @endphp
+                                @foreach ($steps as $idx => $s)
+                                    <li class="relative flex flex-col items-center text-center">
+                                        @if ($idx < count($steps) - 1)
+                                            <span aria-hidden="true" class="absolute left-1/2 top-3 h-px w-full
+                                                {{ $s['state'] === 'done' ? 'bg-teal-500' : ($s['state'] === 'active' ? 'bg-gradient-to-r from-teal-500 to-slate-200' : 'bg-slate-200') }}"></span>
+                                        @endif
+                                        <span class="relative z-10 flex h-6 w-6 items-center justify-center rounded-full
+                                            {{ $s['state'] === 'done' ? 'bg-teal-600 text-white shadow-sm' :
+                                               ($s['state'] === 'active' ? 'bg-amber-500 text-white shadow-sm ring-4 ring-amber-100' : 'bg-slate-100 text-slate-400 ring-1 ring-slate-200') }}">
+                                            @if ($s['state'] === 'done')
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3 w-3"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                                            @else
+                                                <span class="text-[10px] font-bold">{{ $idx + 1 }}</span>
+                                            @endif
+                                        </span>
+                                        <span class="mt-2 text-[10px] font-semibold leading-tight
+                                            {{ $s['state'] === 'pending' ? 'text-slate-400' : 'text-slate-700' }} sm:text-[11px]">
+                                            {{ __('landing.maint_step_'.$s['key']) }}
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {{-- ════════════════════════════════════════════════════════ PRINCIPLES ══ --}}
 <section class="bg-white py-20 sm:py-24">
     <div class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
@@ -570,6 +764,28 @@
         </div>
     </div>
 </footer>
+
+<script>
+    // Scroll-reveal: toggle .is-visible on .pms-reveal elements as they enter the viewport.
+    // CSS handles the actual transition; this script just flips the class.
+    // prefers-reduced-motion users get an instant-visible CSS override (see <style> block).
+    (function () {
+        const targets = document.querySelectorAll('.pms-reveal');
+        if (!targets.length || typeof IntersectionObserver === 'undefined') {
+            targets.forEach(el => el.classList.add('is-visible'));
+            return;
+        }
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    io.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
+        targets.forEach(el => io.observe(el));
+    })();
+</script>
 
 </body>
 </html>
