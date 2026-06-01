@@ -74,6 +74,10 @@ RUN set -eux; \
     php artisan config:clear || true; \
     php artisan view:clear || true; \
     php artisan route:clear || true; \
+    # Publish Filament-bundled CSS/JS/fonts into public/. Without this the
+    # admin + operator panels render unstyled HTML. Idempotent — re-published
+    # on every deploy via the workflow as well.
+    php artisan filament:assets || true; \
     mkdir -p /var/log/supervisor /run/nginx; \
     chown -R www-data:www-data /var/log/nginx /run/nginx
 
