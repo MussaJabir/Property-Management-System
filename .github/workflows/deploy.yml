@@ -106,6 +106,12 @@ jobs:
             docker compose -f docker-compose.production.yml --env-file .env exec -T app \
               php artisan migrate --force
 
+            # Publish Filament's bundled CSS/JS/fonts into public/. Already baked
+            # into the image, but re-publishing here keeps things in sync when a
+            # Filament plugin is added without a fresh image rebuild.
+            docker compose -f docker-compose.production.yml --env-file .env exec -T app \
+              php artisan filament:assets
+
             # Cache config/routes/views for the running image.
             docker compose -f docker-compose.production.yml --env-file .env exec -T app \
               php artisan config:cache
