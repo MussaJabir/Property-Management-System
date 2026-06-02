@@ -122,7 +122,20 @@ return [
         'suffix_base' => 'tenant',
         'disks' => [
             'local',
-            'public',
+            // 'public' is deliberately NOT suffixed per tenant.
+            //
+            // Suffixing it routes uploads to storage/tenant{id}/app/public/,
+            // but `asset_helper_tenancy => false` (below) means the /storage
+            // URL and the `public/storage` symlink point at the GLOBAL
+            // storage/app/public/ — so every tenant-uploaded image 404s
+            // (file is written to the tenant path, URL reads the global path).
+            //
+            // Public CMS images (property photos, hero banners) are served to
+            // the whole internet anyway, so per-tenant physical isolation buys
+            // nothing here — the media rows stay tenant-scoped in the DB.
+            // Keeping `public` global lets the standard storage:link symlink
+            // serve them. When B2 is enabled (FILESYSTEM_DISK=b2) uploads go to
+            // the cloud disk via explicit Spatie paths, so this is moot there.
             // 's3',
         ],
 
@@ -134,7 +147,8 @@ return [
         'root_override' => [
             // Disks whose roots should be overridden after storage_path() is suffixed.
             'local' => '%storage_path%/app/',
-            'public' => '%storage_path%/app/public/',
+            // 'public' intentionally omitted — see the 'disks' note above; the
+            // public disk stays global so its files are reachable via /storage.
         ],
 
         /**
