@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -18,6 +19,15 @@ class UnitsTable
     {
         return $table
             ->columns([
+                SpatieMediaLibraryImageColumn::make('cover')
+                    ->label('')
+                    ->collection('photos')
+                    ->conversion('thumb')
+                    ->imageWidth(56)
+                    ->imageHeight(40)
+                    ->extraImgAttributes(['class' => 'rounded-md object-cover'])
+                    ->defaultImageUrl(fn ($record): ?string => $record->property?->getFirstMediaUrl('photos', 'thumb') ?: null),
+
                 TextColumn::make('code')
                     ->searchable()
                     ->sortable()

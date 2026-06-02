@@ -4,6 +4,7 @@ namespace App\Filament\Operator\Resources\Units\Schemas;
 
 use App\Models\Property;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -125,6 +126,22 @@ class UnitForm
 
                         Textarea::make('description')
                             ->rows(3)
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Photos')
+                    ->description('Show off this specific unit — living area, kitchen, bedroom, bathroom. The first photo is the cover. If you add none, the property\'s photos are used automatically.')
+                    ->components([
+                        SpatieMediaLibraryFileUpload::make('photos')
+                            ->label('Unit photos')
+                            ->collection('photos')
+                            ->multiple()
+                            ->reorderable()
+                            ->appendFiles()
+                            ->image()
+                            ->imageEditor()
+                            ->maxSize(5120)
+                            ->panelLayout('grid')
                             ->columnSpanFull(),
                     ]),
             ]);

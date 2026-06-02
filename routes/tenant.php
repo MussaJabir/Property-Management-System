@@ -15,6 +15,7 @@ use App\Livewire\Portal\Maintenance\Show as MaintenanceShow;
 use App\Livewire\Portal\Profile;
 use App\Livewire\Public\Page as PublicPage;
 use App\Livewire\Public\Units as PublicUnits;
+use App\Livewire\Public\UnitShow as PublicUnitShow;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 
@@ -39,6 +40,7 @@ Route::middleware([
     Route::get('/', PublicPage::class)->defaults('slug', 'home')->name('public.home');
     Route::get('/about', PublicPage::class)->defaults('slug', 'about')->name('public.about');
     Route::get('/units', PublicUnits::class)->name('public.units');
+    Route::get('/units/{unit}', PublicUnitShow::class)->name('public.units.show');
     Route::get('/news', PublicPage::class)->defaults('slug', 'news')->name('public.news');
     Route::get('/contact', PublicPage::class)->defaults('slug', 'contact')->name('public.contact');
 

@@ -128,11 +128,10 @@
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($units as $unit)
                 @php
-                    $thumb = $unit->property?->getFirstMediaUrl('photos', 'thumb');
-                    $full = $unit->property?->getFirstMediaUrl('photos');
-                    $img = $thumb ?: $full;
+                    $img = $unit->coverImageUrl('thumb') ?: $unit->coverImageUrl();
                 @endphp
-                <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-zinc-900/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_rgba(0,0,0,0.1)]">
+                <a href="{{ url('/'.tenant()->slug.'/units/'.$unit->id) }}"
+                   class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-zinc-900/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_rgba(0,0,0,0.1)]">
                     {{-- Photo --}}
                     <div class="relative aspect-[4/3] overflow-hidden">
                         @if ($img)
@@ -219,7 +218,7 @@
 
                     {{-- Brand-color underline that slides in on hover --}}
                     <div aria-hidden="true" class="absolute bottom-0 left-0 h-[3px] w-0 transition-all duration-500 group-hover:w-full" style="background-color: var(--brand);"></div>
-                </article>
+                </a>
             @endforeach
         </div>
 
