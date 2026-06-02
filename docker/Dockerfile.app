@@ -63,8 +63,8 @@ COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# su-exec lets the entrypoint drop privileges from root → www-data when
-# running storage:link, so the resulting symlink ends up with the right owner.
+# su-exec lets the entrypoint optionally drop privileges to www-data for any
+# artisan housekeeping it runs at boot.
 RUN apk add --no-cache su-exec
 
 WORKDIR /var/www/html
@@ -75,8 +75,15 @@ COPY --from=node /app/public/build ./public/build
 
 RUN set -eux; \
     mkdir -p storage/framework/{cache/data,sessions,testing,views} storage/logs bootstrap/cache; \
+    mkdir -p storage/app/public storage/app/private; \
     chown -R www-data:www-data storage bootstrap/cache; \
     chmod -R ug+rwX storage bootstrap/cache; \
+    # Public storage symlink, baked at BUILD time as root. public/ is part of
+    # the image (NOT the mounted volume — only storage/ is), so this symlink
+    # persists and resolves at runtime against the volume-backed target.
+    # Doing it here avoids the runtime `storage:link` which fails because
+    # www-data cannot write into the root-owned public/ directory.
+    ln -sfn /var/www/html/storage/app/public public/storage; \
     php artisan config:clear || true; \
     php artisan view:clear || true; \
     php artisan route:clear || true; \
@@ -85,7 +92,13 @@ RUN set -eux; \
     # on every deploy via the workflow as well.
     php artisan filament:assets || true; \
     mkdir -p /var/log/supervisor /run/nginx; \
-    chown -R www-data:www-data /var/log/nginx /run/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx; \
+    # nginx runs its worker as www-data (see nginx-internal.conf), so its
+    # request-body temp dir must be writable by www-data. Without this, file
+    # uploads larger than the in-memory buffer fail with HTTP 500
+    # ("client_body ... Permission denied") before ever reaching PHP/Livewire.
+    mkdir -p /var/lib/nginx/tmp/client_body /var/lib/nginx/tmp/proxy /var/lib/nginx/tmp/fastcgi; \
+    chown -R www-data:www-data /var/lib/nginx
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS http://127.0.0.1:8080/up || exit 1
