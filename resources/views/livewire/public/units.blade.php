@@ -71,6 +71,21 @@
                    class="min-h-[44px] rounded-lg border border-zinc-200 bg-white px-3 text-sm placeholder:text-zinc-400">
             <input wire:model.live.debounce.400ms="maxRent" type="number" placeholder="{{ __('Max rent') }}"
                    class="min-h-[44px] rounded-lg border border-zinc-200 bg-white px-3 text-sm placeholder:text-zinc-400">
+
+            {{-- Amenity filter (AND) --}}
+            <div class="sm:col-span-2 md:col-span-3">
+                <span class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">{{ __('amenities.heading') }}</span>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    @foreach ($amenityOptions as $key => $label)
+                        <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors
+                                      {{ in_array($key, $amenities, true) ? 'text-white' : 'bg-white text-zinc-700 ring-zinc-900/10 hover:ring-zinc-900/25' }}"
+                               style="{{ in_array($key, $amenities, true) ? 'background-color: var(--brand); --tw-ring-color: var(--brand);' : '' }}">
+                            <input type="checkbox" wire:model.live="amenities" value="{{ $key }}" class="sr-only">
+                            {{ $label }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </details>
 
@@ -212,6 +227,12 @@
                                         <span class="font-semibold">{{ $unit->size_sqm }}</span> m²
                                     </span>
                                 @endif
+                            </div>
+                        @endif
+
+                        @if (! empty($unit->amenityLabels()))
+                            <div class="mt-4">
+                                <x-cms.amenity-list :unit="$unit" :limit="3" compact />
                             </div>
                         @endif
                     </div>

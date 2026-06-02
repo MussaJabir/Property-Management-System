@@ -101,6 +101,16 @@
                 </div>
             @endif
 
+            {{-- Amenities --}}
+            @if (! empty($unit->amenityLabels()))
+                <div>
+                    <h2 class="font-display text-xl font-bold tracking-tight text-zinc-900">{{ __('amenities.heading') }}</h2>
+                    <div class="mt-4">
+                        <x-cms.amenity-list :unit="$unit" />
+                    </div>
+                </div>
+            @endif
+
             {{-- Description --}}
             @if ($unit->description)
                 <div>
