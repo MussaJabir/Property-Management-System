@@ -57,6 +57,29 @@ class Unit extends Model implements HasMedia
 
     public const BILLING_ANNUAL = 'annual';
 
+    /**
+     * Amenity catalog. Keys are stored in the `amenities` jsonb column; labels
+     * are translated via lang/{locale}/amenities.php (key => label). Icons are
+     * mapped in the amenity-list Blade partial. Curated for the Tanzanian
+     * rental market — keep additions here in sync with the lang files.
+     */
+    public const AMENITIES = [
+        'air_conditioning',
+        'wifi',
+        'parking',
+        'water_247',
+        'backup_power',
+        'security',
+        'furnished',
+        'hot_water',
+        'fitted_kitchen',
+        'balcony',
+        'cctv',
+        'ensuite',
+        'garden',
+        'servant_quarter',
+    ];
+
     protected $guarded = [];
 
     protected function casts(): array
@@ -66,7 +89,43 @@ class Unit extends Model implements HasMedia
             'bedrooms' => 'integer',
             'bathrooms' => 'integer',
             'size_sqm' => 'decimal:2',
+            'amenities' => 'array',
         ];
+    }
+
+    /**
+     * Translated amenity labels for the keys this unit has, preserving the
+     * catalog order. Unknown/legacy keys are skipped.
+     *
+     * @return array<string, string> key => translated label
+     */
+    public function amenityLabels(): array
+    {
+        $selected = (array) ($this->amenities ?? []);
+        $labels = [];
+
+        foreach (self::AMENITIES as $key) {
+            if (in_array($key, $selected, true)) {
+                $labels[$key] = __('amenities.'.$key);
+            }
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Options for a Filament CheckboxList: key => translated label, full catalog.
+     *
+     * @return array<string, string>
+     */
+    public static function amenityOptions(): array
+    {
+        $options = [];
+        foreach (self::AMENITIES as $key) {
+            $options[$key] = __('amenities.'.$key);
+        }
+
+        return $options;
     }
 
     public function property(): BelongsTo

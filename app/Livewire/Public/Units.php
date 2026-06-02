@@ -35,6 +35,10 @@ class Units extends Component
     #[Url(as: 'max')]
     public ?int $maxRent = null;
 
+    /** @var array<int, string> selected amenity keys (AND-filtered) */
+    #[Url(as: 'amenities')]
+    public array $amenities = [];
+
     public function updating($name, $value): void
     {
         $this->resetPage();
@@ -45,7 +49,7 @@ class Units extends Component
     {
         $query = Unit::query()
             ->where('status', Unit::STATUS_VACANT)
-            ->with(['property.location'])
+            ->with(['property.location', 'media', 'property.media'])
             ->orderByDesc('updated_at');
 
         if ($this->search !== '') {
@@ -75,11 +79,18 @@ class Units extends Component
             $query->where('rent_amount', '<=', $this->maxRent * 100);
         }
 
+        // Amenity filter: unit must have ALL selected amenities (AND).
+        $selectedAmenities = array_values(array_intersect($this->amenities, Unit::AMENITIES));
+        foreach ($selectedAmenities as $amenity) {
+            $query->whereJsonContains('amenities', $amenity);
+        }
+
         return view('livewire.public.units', [
             'units' => $query->paginate(12),
             'properties' => Property::query()->orderBy('name')->get(['id', 'name']),
             'locations' => Location::query()->orderBy('region')->get(['id', 'region', 'district']),
             'types' => ['room', 'apartment', 'business_frame', 'office', 'shop', 'warehouse'],
+            'amenityOptions' => Unit::amenityOptions(),
         ]);
     }
 }

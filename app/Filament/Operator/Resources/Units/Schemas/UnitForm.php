@@ -3,6 +3,8 @@
 namespace App\Filament\Operator\Resources\Units\Schemas;
 
 use App\Models\Property;
+use App\Models\Unit;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -126,6 +128,19 @@ class UnitForm
 
                         Textarea::make('description')
                             ->rows(3)
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Amenities')
+                    ->description('What does this unit offer? These show as tags on the public listing and detail page, and renters can filter by them.')
+                    ->collapsed()
+                    ->components([
+                        CheckboxList::make('amenities')
+                            ->label('')
+                            ->options(Unit::amenityOptions())
+                            ->columns(3)
+                            ->gridDirection('row')
+                            ->bulkToggleable()
                             ->columnSpanFull(),
                     ]),
 
