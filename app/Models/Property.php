@@ -46,8 +46,15 @@ class Property extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
+        // Photos are shown on the public CMS site, so they must live on a
+        // web-accessible disk. The B2 disk is also public (signed URLs),
+        // so we honour FILESYSTEM_DISK when it is set to b2, otherwise
+        // fall back to the `public` disk (storage/app/public — served via
+        // the public/storage symlink). Never `local` (private storage).
+        $disk = config('filesystems.default') === 'b2' ? 'b2' : 'public';
+
         $this->addMediaCollection('photos')
-            ->useDisk(config('filesystems.default'));
+            ->useDisk($disk);
     }
 
     public function registerMediaConversions(?Media $media = null): void
