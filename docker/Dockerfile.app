@@ -60,6 +60,12 @@ COPY docker/php.ini /usr/local/etc/php/conf.d/zz-pms.ini
 COPY docker/php-fpm.conf /usr/local/etc/php-fpm.d/zz-pms.conf
 COPY docker/nginx-internal.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# su-exec lets the entrypoint drop privileges from root → www-data when
+# running storage:link, so the resulting symlink ends up with the right owner.
+RUN apk add --no-cache su-exec
 
 WORKDIR /var/www/html
 
@@ -86,4 +92,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 # In-container nginx listens on 8080; host nginx proxy-passes here.
 EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
