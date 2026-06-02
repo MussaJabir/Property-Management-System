@@ -2,11 +2,14 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Operator\Widgets\BillingHealthWidget;
+use App\Filament\Operator\Pages\Auth\EditOperatorProfile;
+use App\Filament\Operator\Widgets\CollectionsChartWidget;
 use App\Filament\Operator\Widgets\GettingStartedWidget;
+use App\Filament\Operator\Widgets\OccupancyChartWidget;
 use App\Filament\Operator\Widgets\RecentPaymentsWidget;
 use App\Filament\Operator\Widgets\TopUnpaidInvoicesWidget;
 use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
+use App\Http\Middleware\ForceOperatorPasswordChange;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -15,7 +18,6 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -49,7 +51,7 @@ class OperatorPanelProvider extends PanelProvider
             ->id('operator')
             ->path('manage')
             ->login()
-            ->profile(\App\Filament\Operator\Pages\Auth\EditOperatorProfile::class)
+            ->profile(EditOperatorProfile::class)
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->brandName('PMS Operator')
@@ -63,9 +65,12 @@ class OperatorPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Operator/Widgets'), for: 'App\\Filament\\Operator\\Widgets')
             ->widgets([
-                AccountWidget::class,
+                // Row 1: compact KPI cards. Row 2: collections + occupancy
+                // charts side by side. Row 3: the two tables side by side.
+                // Getting-started only renders until the workspace is set up.
                 WorkspaceOverviewWidget::class,
-                BillingHealthWidget::class,
+                CollectionsChartWidget::class,
+                OccupancyChartWidget::class,
                 TopUnpaidInvoicesWidget::class,
                 RecentPaymentsWidget::class,
                 GettingStartedWidget::class,
@@ -83,7 +88,7 @@ class OperatorPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                \App\Http\Middleware\ForceOperatorPasswordChange::class,
+                ForceOperatorPasswordChange::class,
             ]);
     }
 }
