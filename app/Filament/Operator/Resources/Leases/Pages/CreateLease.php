@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Leases\Pages;
 
+use App\Filament\Operator\Concerns\RedirectsToIndex;
 use App\Filament\Operator\Resources\Leases\LeaseResource;
 use App\Filament\Operator\Resources\Leases\Schemas\LeaseForm;
 use App\Models\Lease;
@@ -21,6 +22,7 @@ use Filament\Schemas\Schema;
 class CreateLease extends CreateRecord
 {
     use HasWizard;
+    use RedirectsToIndex;
 
     protected static string $resource = LeaseResource::class;
 

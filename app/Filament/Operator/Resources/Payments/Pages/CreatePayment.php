@@ -2,11 +2,14 @@
 
 namespace App\Filament\Operator\Resources\Payments\Pages;
 
+use App\Filament\Operator\Concerns\RedirectsToIndex;
 use App\Filament\Operator\Resources\Payments\PaymentResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreatePayment extends CreateRecord
 {
+    use RedirectsToIndex;
+
     protected static string $resource = PaymentResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array
