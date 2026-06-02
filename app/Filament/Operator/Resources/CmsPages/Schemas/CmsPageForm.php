@@ -7,6 +7,7 @@ namespace App\Filament\Operator\Resources\CmsPages\Schemas;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Builder\Block;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -44,6 +45,15 @@ class CmsPageForm
                                     Textarea::make('subheading')->rows(2),
                                     TextInput::make('cta_label')->label('Call-to-action label'),
                                     TextInput::make('cta_link')->label('Call-to-action link (e.g. units)'),
+                                    FileUpload::make('background_image')
+                                        ->label('Background image')
+                                        ->helperText('Landscape, at least 1600×900 px works best. Leave empty to use the brand-color hero.')
+                                        ->image()
+                                        ->imageEditor()
+                                        ->disk('public')
+                                        ->directory('cms/hero')
+                                        ->maxSize(8192)
+                                        ->visibility('public'),
                                 ]),
 
                             Block::make('rich_text')
