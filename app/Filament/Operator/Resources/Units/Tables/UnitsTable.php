@@ -112,6 +112,9 @@ class UnitsTable
                     RestoreBulkAction::make(),
                 ]),
             ])
+            ->emptyStateIcon('heroicon-o-squares-2x2')
+            ->emptyStateHeading('No units yet')
+            ->emptyStateDescription('Add the rentable units inside your properties — rooms, apartments, shops, or business frames.')
             ->defaultSort('code');
     }
 }

@@ -82,6 +82,9 @@ class PropertiesTable
                     RestoreBulkAction::make(),
                 ]),
             ])
+            ->emptyStateIcon('heroicon-o-building-office-2')
+            ->emptyStateHeading('No properties yet')
+            ->emptyStateDescription('Add your first building or compound — then you can add the units inside it.')
             ->defaultSort('name');
     }
 }
