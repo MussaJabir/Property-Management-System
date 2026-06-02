@@ -132,8 +132,20 @@ class SeedDemoClient extends Command
             [$properties[2], ['Shop 1', 'Shop 2', 'Frame 1', 'Frame 2']],
         ];
 
+        // Curated amenity sets so the demo listing shows realistic, varied tags.
+        $amenitySets = [
+            ['air_conditioning', 'wifi', 'parking', 'security', 'water_247'],
+            ['wifi', 'hot_water', 'furnished', 'balcony', 'ensuite'],
+            ['parking', 'cctv', 'backup_power', 'fitted_kitchen', 'security'],
+            ['wifi', 'garden', 'servant_quarter', 'parking', 'water_247'],
+            ['air_conditioning', 'cctv', 'parking', 'security'],
+        ];
+        $amenityIndex = 0;
+
         foreach ($codes as [$property, $list]) {
             foreach ($list as $code) {
+                $isCommercial = str_starts_with($code, 'Shop') || str_starts_with($code, 'Frame');
+
                 $units[] = Unit::firstOrCreate(
                     ['property_id' => $property->id, 'code' => $code],
                     [
@@ -142,8 +154,9 @@ class SeedDemoClient extends Command
                         'rent_amount' => rand(150, 800) * 1000 * 100,
                         'rent_currency' => 'TZS',
                         'billing_cycle' => 'monthly',
-                        'bedrooms' => str_starts_with($code, 'Shop') || str_starts_with($code, 'Frame') ? null : rand(1, 3),
-                        'bathrooms' => str_starts_with($code, 'Shop') || str_starts_with($code, 'Frame') ? null : rand(1, 2),
+                        'bedrooms' => $isCommercial ? null : rand(1, 3),
+                        'bathrooms' => $isCommercial ? null : rand(1, 2),
+                        'amenities' => $amenitySets[$amenityIndex++ % count($amenitySets)],
                     ],
                 );
             }
