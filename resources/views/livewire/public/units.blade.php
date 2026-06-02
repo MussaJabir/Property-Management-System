@@ -71,6 +71,21 @@
                    class="min-h-[44px] rounded-lg border border-zinc-200 bg-white px-3 text-sm placeholder:text-zinc-400">
             <input wire:model.live.debounce.400ms="maxRent" type="number" placeholder="{{ __('Max rent') }}"
                    class="min-h-[44px] rounded-lg border border-zinc-200 bg-white px-3 text-sm placeholder:text-zinc-400">
+
+            {{-- Amenity filter (AND) --}}
+            <div class="sm:col-span-2 md:col-span-3">
+                <span class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">{{ __('amenities.heading') }}</span>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    @foreach ($amenityOptions as $key => $label)
+                        <label class="inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors
+                                      {{ in_array($key, $amenities, true) ? 'text-white' : 'bg-white text-zinc-700 ring-zinc-900/10 hover:ring-zinc-900/25' }}"
+                               style="{{ in_array($key, $amenities, true) ? 'background-color: var(--brand); --tw-ring-color: var(--brand);' : '' }}">
+                            <input type="checkbox" wire:model.live="amenities" value="{{ $key }}" class="sr-only">
+                            {{ $label }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </details>
 
@@ -128,11 +143,10 @@
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($units as $unit)
                 @php
-                    $thumb = $unit->property?->getFirstMediaUrl('photos', 'thumb');
-                    $full = $unit->property?->getFirstMediaUrl('photos');
-                    $img = $thumb ?: $full;
+                    $img = $unit->coverImageUrl('thumb') ?: $unit->coverImageUrl();
                 @endphp
-                <article class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-zinc-900/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_rgba(0,0,0,0.1)]">
+                <a href="{{ url('/'.tenant()->slug.'/units/'.$unit->id) }}"
+                   class="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-zinc-900/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_rgba(0,0,0,0.1)]">
                     {{-- Photo --}}
                     <div class="relative aspect-[4/3] overflow-hidden">
                         @if ($img)
@@ -215,11 +229,17 @@
                                 @endif
                             </div>
                         @endif
+
+                        @if (! empty($unit->amenityLabels()))
+                            <div class="mt-4">
+                                <x-cms.amenity-list :unit="$unit" :limit="3" compact />
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Brand-color underline that slides in on hover --}}
                     <div aria-hidden="true" class="absolute bottom-0 left-0 h-[3px] w-0 transition-all duration-500 group-hover:w-full" style="background-color: var(--brand);"></div>
-                </article>
+                </a>
             @endforeach
         </div>
 

@@ -16,7 +16,9 @@ class TopUnpaidInvoicesWidget extends TableWidget
 {
     protected static ?string $heading = 'Top 5 unpaid invoices';
 
-    protected int|string|array $columnSpan = 'full';
+    protected static ?int $sort = 3;
+
+    protected int|string|array $columnSpan = ['default' => 'full', 'md' => 1];
 
     protected function getTableQuery(): Builder
     {

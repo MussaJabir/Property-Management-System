@@ -4,86 +4,94 @@ namespace App\Filament\Operator\Widgets;
 
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\Property;
 use App\Models\Unit;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 /**
- * Top-of-dashboard stat cards for an operator's workspace.
+ * Single compact KPI row at the top of the operator dashboard. Merges the
+ * former inventory + billing-health widgets into four glanceable cards so
+ * the dashboard opens without scrolling:
  *
- * - Properties / Units / Occupancy come from Phase 3 inventory.
- * - "This month" pulls from Phase 5 billing:
- *      collected = sum of completed payments dated in the current month
- *      expected  = sum of total_amount on issued (non-draft, non-cancelled)
- *                  invoices whose billing_period_start falls in the current
- *                  month (i.e. invoices billing "for" this month — independent
- *                  of any grace window the due_date adds)
+ *   Occupancy · Collected this month (with 6-month sparkline) · Outstanding · Overdue
  *
  * All queries auto-scope by tenant via TenantScopedModel.
  */
 class WorkspaceOverviewWidget extends BaseWidget
 {
+    // Dashboard order: KPI row first. (Widget discovery would otherwise sort
+    // alphabetically and push this — "W…" — to the bottom.)
+    protected static ?int $sort = 0;
+
+    protected ?string $pollingInterval = null;
+
     protected function getStats(): array
     {
-        $propertyCount = Property::count();
-        $unitCount = Unit::count();
-        $occupiedCount = Unit::occupied()->count();
-
-        $occupancy = $unitCount > 0
-            ? round(($occupiedCount / $unitCount) * 100).'%'
-            : '—';
-
-        $occupancyColor = match (true) {
-            $unitCount === 0 => 'gray',
-            $occupiedCount / $unitCount >= 0.75 => 'success',
-            $occupiedCount / $unitCount >= 0.4 => 'warning',
-            default => 'danger',
-        };
-
-        $monthStart = now()->startOfMonth();
-        $monthEnd = now()->endOfMonth();
-
-        $collectedCents = (int) Payment::query()
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->whereBetween('payment_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
-            ->sum('amount');
-
-        $expectedCents = (int) Invoice::query()
-            ->whereNotIn('status', [Invoice::STATUS_DRAFT, Invoice::STATUS_CANCELLED])
-            ->whereBetween('billing_period_start', [$monthStart->toDateString(), $monthEnd->toDateString()])
-            ->sum('total_amount');
-
         $fmt = fn (int $cents): string => 'TZS '.number_format($cents / 100, 0, '.', ',');
 
-        // Color the money card by collection ratio — gray if nothing's expected.
-        $moneyColor = match (true) {
-            $expectedCents === 0 => 'gray',
-            $collectedCents >= $expectedCents => 'success',
-            $collectedCents >= ($expectedCents * 0.5) => 'warning',
+        /* ---- Occupancy ---- */
+        $unitCount = Unit::count();
+        $occupiedCount = Unit::occupied()->count();
+        $occupancyRatio = $unitCount > 0 ? $occupiedCount / $unitCount : 0;
+        $occupancy = $unitCount > 0 ? round($occupancyRatio * 100).'%' : '—';
+        $occupancyColor = match (true) {
+            $unitCount === 0 => 'gray',
+            $occupancyRatio >= 0.75 => 'success',
+            $occupancyRatio >= 0.4 => 'warning',
             default => 'danger',
         };
 
+        /* ---- This month collected + 6-month sparkline ---- */
+        $series = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $start = now()->subMonths($i)->startOfMonth();
+            $end = (clone $start)->endOfMonth();
+            $series[] = (int) Payment::query()
+                ->where('status', Payment::STATUS_COMPLETED)
+                ->whereBetween('payment_date', [$start->toDateString(), $end->toDateString()])
+                ->sum('amount');
+        }
+        $collectedThisMonth = end($series) ?: 0;
+
+        $expectedThisMonth = (int) Invoice::query()
+            ->whereNotIn('status', [Invoice::STATUS_DRAFT, Invoice::STATUS_CANCELLED])
+            ->whereBetween('billing_period_start', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()])
+            ->sum('total_amount');
+
+        $moneyColor = match (true) {
+            $expectedThisMonth === 0 => 'gray',
+            $collectedThisMonth >= $expectedThisMonth => 'success',
+            $collectedThisMonth >= ($expectedThisMonth * 0.5) => 'warning',
+            default => 'danger',
+        };
+
+        /* ---- Outstanding / overdue (point-in-time receivables) ---- */
+        $openInvoices = Invoice::query()->outstanding()->get();
+        $outstanding = $openInvoices->sum(fn (Invoice $i): int => $i->balanceDue());
+        $overdueInvoices = $openInvoices->where('status', Invoice::STATUS_OVERDUE);
+        $overdue = $overdueInvoices->sum(fn (Invoice $i): int => $i->balanceDue());
+
         return [
-            Stat::make('Properties', (string) $propertyCount)
-                ->description('Buildings / compounds you manage')
-                ->descriptionIcon('heroicon-m-building-office-2')
-                ->color($propertyCount > 0 ? 'success' : 'gray'),
-
-            Stat::make('Units', (string) $unitCount)
-                ->description('Rentable units across all properties')
-                ->descriptionIcon('heroicon-m-squares-2x2')
-                ->color($unitCount > 0 ? 'success' : 'gray'),
-
             Stat::make('Occupancy', $occupancy)
-                ->description($unitCount > 0 ? "{$occupiedCount} of {$unitCount} occupied" : 'Add units to see occupancy')
+                ->description($unitCount > 0 ? "{$occupiedCount} of {$unitCount} units occupied" : 'Add units to see occupancy')
                 ->descriptionIcon('heroicon-m-key')
                 ->color($occupancyColor),
 
-            Stat::make('This month', $fmt($collectedCents).' / '.$fmt($expectedCents))
-                ->description('Collected / billed for '.$monthStart->format('F'))
+            Stat::make('Collected this month', $fmt($collectedThisMonth))
+                ->description('Billed: '.$fmt($expectedThisMonth))
                 ->descriptionIcon('heroicon-m-banknotes')
+                ->chart(array_map(fn (int $c): float => round($c / 100), $series))
                 ->color($moneyColor),
+
+            Stat::make('Outstanding', $fmt($outstanding))
+                ->description($openInvoices->count().' open invoice(s)')
+                ->descriptionIcon('heroicon-m-clock')
+                ->color($outstanding > 0 ? 'warning' : 'success'),
+
+            Stat::make('Overdue', $fmt($overdue))
+                ->description($overdueInvoices->count().' past due')
+                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->color($overdue > 0 ? 'danger' : 'gray'),
         ];
     }
 }

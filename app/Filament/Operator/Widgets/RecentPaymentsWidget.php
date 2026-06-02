@@ -16,7 +16,9 @@ class RecentPaymentsWidget extends TableWidget
 {
     protected static ?string $heading = 'Recent payments';
 
-    protected int|string|array $columnSpan = 'full';
+    protected static ?int $sort = 4;
+
+    protected int|string|array $columnSpan = ['default' => 'full', 'md' => 1];
 
     protected function getTableQuery(): Builder|Relation|null
     {

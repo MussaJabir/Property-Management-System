@@ -2,12 +2,15 @@
 
 namespace App\Filament\Operator\Resources\MaintenanceRequests\Pages;
 
+use App\Filament\Operator\Concerns\RedirectsToIndex;
 use App\Filament\Operator\Resources\MaintenanceRequests\MaintenanceRequestResource;
 use App\Models\MaintenanceRequest;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateMaintenanceRequest extends CreateRecord
 {
+    use RedirectsToIndex;
+
     protected static string $resource = MaintenanceRequestResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array
