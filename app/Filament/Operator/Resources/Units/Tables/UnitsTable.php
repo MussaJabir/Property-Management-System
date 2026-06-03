@@ -23,6 +23,9 @@ class UnitsTable
                     ->label('')
                     ->collection('photos')
                     ->conversion('thumb')
+                    // Show only the cover (first) photo, not the whole gallery —
+                    // a unit may have many images but the list needs one thumbnail.
+                    ->limit(1)
                     ->imageWidth(56)
                     ->imageHeight(40)
                     ->extraImgAttributes(['class' => 'rounded-md object-cover'])
