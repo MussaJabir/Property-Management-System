@@ -35,12 +35,12 @@ class OperatorCredentialsIssuedNotification extends Notification
 
         return (new MailMessage)
             ->subject(__('Your :app workspace is ready', ['app' => $clientName]))
-            ->greeting(__('Welcome, :name', ['name' => $notifiable->name]))
-            ->line(__('Your :app workspace has been set up. You can now sign in to manage your properties, renters, leases and invoices.', ['app' => $clientName]))
-            ->line(__('Sign-in details:'))
-            ->line(__('Email: :email', ['email' => $notifiable->email]))
-            ->line(__('Temporary password: :password', ['password' => $this->temporaryPassword]))
-            ->action(__('Open the workspace'), $loginUrl)
-            ->line(__('You will be asked to choose a new password the first time you sign in.'));
+            ->view('emails.operator-credentials', [
+                'clientName' => $clientName,
+                'userName' => $notifiable->name,
+                'email' => $notifiable->email,
+                'temporaryPassword' => $this->temporaryPassword,
+                'loginUrl' => $loginUrl,
+            ]);
     }
 }

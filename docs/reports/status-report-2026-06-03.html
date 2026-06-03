@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS — Status Report — 3 June 2026</title>
+    <style>
+        @page { size: A4; margin: 14mm 12mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2937; line-height: 1.55; background: #f9fafb; font-size: 10.5pt; }
+        .page { max-width: 210mm; margin: 0 auto; padding: 18mm 14mm; background: #ffffff; }
+
+        .hero { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0f766e; padding-bottom: 16px; margin-bottom: 24px; }
+        .hero .brand { font-size: 22pt; font-weight: 800; color: #0f766e; letter-spacing: -0.5px; line-height: 1; }
+        .hero .brand-sub { font-size: 10pt; color: #6b7280; margin-top: 4px; font-weight: 500; }
+        .hero .meta { text-align: right; font-size: 9.5pt; color: #4b5563; }
+        .hero .meta strong { color: #1f2937; }
+        .hero .tag { display: inline-block; margin-top: 6px; padding: 3px 10px; background: #ccfbf1; color: #0f766e; border-radius: 9999px; font-size: 9pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        h2 { font-size: 14pt; color: #0f766e; margin: 26px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; font-weight: 700; letter-spacing: -0.2px; }
+        h3 { font-size: 11pt; color: #111827; margin: 14px 0 6px; font-weight: 700; }
+        p { margin-bottom: 8px; }
+
+        .summary { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid #99f6e4; border-radius: 8px; padding: 16px 18px; margin-bottom: 22px; }
+        .summary p { font-size: 10.5pt; color: #134e4a; }
+        .summary p:last-child { margin-bottom: 0; }
+
+        .feature { border: 1px solid #e5e7eb; border-left: 4px solid #0f766e; border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; background: #ffffff; }
+        .feature .title { font-weight: 700; font-size: 11pt; color: #111827; margin-bottom: 4px; }
+        .feature .body { font-size: 10pt; color: #374151; }
+        .feature ul { margin: 8px 0 0 18px; }
+        .feature li { font-size: 10pt; color: #374151; margin-bottom: 3px; }
+
+        .secure { border-left-color: #b45309; }
+        .secure .title { color: #92400e; }
+
+        .callout { background: #fef9c3; border: 1px solid #fde68a; border-radius: 6px; padding: 12px 14px; margin-top: 14px; font-size: 10pt; color: #713f12; }
+        .callout strong { display: block; color: #78350f; margin-bottom: 4px; }
+
+        /* Credentials table */
+        .creds { width: 100%; border-collapse: collapse; margin: 6px 0 8px; font-size: 10pt; }
+        .creds th { text-align: left; background: #f0fdfa; color: #134e4a; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 10px; border: 1px solid #99f6e4; }
+        .creds td { padding: 9px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+        .creds td.k { font-weight: 700; color: #111827; width: 30%; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9.5pt; color: #0f766e; }
+
+        ul.plain { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+        ul.plain li { padding-left: 18px; position: relative; font-size: 10pt; color: #1f2937; }
+        ul.plain li::before { content: "✓"; position: absolute; left: 0; color: #0f766e; font-weight: 700; }
+
+        footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 9pt; color: #6b7280; }
+        footer strong { color: #0f766e; }
+
+        @media print { body { background: #ffffff; } .page { padding: 0; box-shadow: none; } .feature, .summary, .callout, .creds, ul.plain { page-break-inside: avoid; } h2 { page-break-after: avoid; } }
+        @media screen { .page { box-shadow: 0 4px 14px rgba(0,0,0,0.06); margin: 24px auto; border-radius: 6px; } }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <header class="hero">
+        <div>
+            <div class="brand">PMS</div>
+            <div class="brand-sub">Property Management System &middot; BJP Technologies</div>
+        </div>
+        <div class="meta">
+            <strong>Status Report</strong><br>
+            Date: <strong>3 June 2026</strong><br>
+            <span class="tag">&bull; Live in production</span>
+        </div>
+    </header>
+
+    <section class="summary">
+        <p><strong>The system is live, stable, and now sends real email.</strong> Since the last update we connected the platform's email so new clients automatically receive their sign-in details, gave the BJP control panel a proper overview dashboard, polished the listings, and &mdash; most importantly &mdash; found and fixed a data-privacy issue so each landlord only ever sees their own data, backed by an automatic test that prevents it from ever coming back.</p>
+        <p>Access links and login details are below so you can review everything directly.</p>
+    </section>
+
+    <!-- ===== Access ===== -->
+    <h2>Access &amp; login details</h2>
+    <table class="creds">
+        <tr><th>What</th><th>Link</th><th>Login</th></tr>
+        <tr>
+            <td class="k">Marketing website</td>
+            <td class="mono">pms.bjptechnologies.co.tz</td>
+            <td>Public &mdash; no login</td>
+        </tr>
+        <tr>
+            <td class="k">BJP control panel<br>(super admin)</td>
+            <td class="mono">pms.bjptechnologies.co.tz/admin</td>
+            <td><span class="mono">admin@bjptechnologies.co.tz</span><br><span class="mono">admin1234</span></td>
+        </tr>
+        <tr>
+            <td class="k">Landlord staff sign-in</td>
+            <td class="mono">pms.bjptechnologies.co.tz/manage/login</td>
+            <td>Each landlord's own staff account</td>
+        </tr>
+        <tr>
+            <td class="k">Demo workspace<br>(landlord view)</td>
+            <td class="mono">pms.bjptechnologies.co.tz/manage/login</td>
+            <td><span class="mono">owner@demo.local</span><br><span class="mono">demo1234</span></td>
+        </tr>
+        <tr>
+            <td class="k">Demo public website</td>
+            <td class="mono">pms.bjptechnologies.co.tz/demo</td>
+            <td>Public &mdash; no login</td>
+        </tr>
+        <tr>
+            <td class="k">Demo renter portal</td>
+            <td class="mono">pms.bjptechnologies.co.tz/demo/portal/login</td>
+            <td>Renter accounts within the demo</td>
+        </tr>
+    </table>
+    <div class="callout">
+        <strong>Please change these passwords after review</strong>
+        The super-admin and demo passwords above are temporary handover credentials. We recommend changing the super-admin password from inside the panel once you've finished reviewing.
+    </div>
+
+    <!-- ===== What's new ===== -->
+    <h2>What we completed in this period</h2>
+
+    <div class="feature">
+        <div class="title">1. Email delivery is live</div>
+        <div class="body">
+            The platform now sends email through the official <strong>no-reply@bjptechnologies.co.tz</strong> address. When BJP creates a new landlord client, the landlord automatically receives a welcome email with their sign-in link and a temporary password.
+            <ul>
+                <li>Delivered straight to the inbox (not spam), using the company's own mail server.</li>
+                <li>The welcome email was redesigned with proper PMS branding &mdash; a clean header, a clear sign-in details card, and a one-click "Sign in" button.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="feature secure">
+        <div class="title">2. Data-privacy fix &mdash; each landlord sees only their own data</div>
+        <div class="body">
+            During testing we found that a landlord's staff panel could display another landlord's records. We traced the cause, fixed it, and confirmed the fix:
+            <ul>
+                <li>Every landlord workspace is now strictly separated &mdash; properties, units, renters, invoices and everything else are visible only to that landlord.</li>
+                <li>We added an <strong>automatic safety test</strong> that fails the build if this separation is ever weakened again, so it cannot silently return.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">3. BJP control-panel dashboard</div>
+        <div class="body">
+            The super-admin panel now opens to a real overview instead of a blank page: total clients, active clients, clients on trial, total units across the whole platform, a breakdown of clients by plan, and a list of the most recently added clients.
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">4. Listings &amp; panel polish</div>
+        <div class="body">
+            <ul>
+                <li>Each unit can now carry its own photo gallery, with a dedicated public page and a clean single-photo thumbnail in the staff list.</li>
+                <li>Units can be tagged with amenities (AC, Wi-Fi, water, parking, security, and more), which renters can filter by.</li>
+                <li>The landlord dashboard was reorganised to be glanceable, with quick status tabs and "return to the list after saving" for faster everyday work.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== Reliability ===== -->
+    <h2>How we keep it safe &amp; reliable</h2>
+    <ul class="plain">
+        <li>Strict separation between landlords' data</li>
+        <li>Automatic test guarding that separation</li>
+        <li>Email signed by the company domain</li>
+        <li>HTTPS with auto-renewing certificate</li>
+        <li>Nightly database backups</li>
+        <li>Sensitive tenant IDs stored encrypted</li>
+        <li>Every change reviewed before going live</li>
+        <li>Bilingual throughout (English &amp; Kiswahili)</li>
+    </ul>
+
+    <!-- ===== Next ===== -->
+    <h2>What's next</h2>
+    <p>With the core platform live and hardened, the next focus is the Version 2 integrations already prepared in the system: mobile-money payments (M-Pesa, Tigo Pesa, Airtel Money), SMS and WhatsApp reminders, phone-number login for renters, and automatic monthly invoice generation. We'll schedule these together based on priority.</p>
+
+    <footer>
+        Report prepared <strong>3 June 2026</strong> &middot; PMS &middot; BJP Technologies
+    </footer>
+
+</div>
+</body>
+</html>
