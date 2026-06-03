@@ -10,6 +10,7 @@ use App\Filament\Operator\Widgets\RecentPaymentsWidget;
 use App\Filament\Operator\Widgets\TopUnpaidInvoicesWidget;
 use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
 use App\Http\Middleware\ForceOperatorPasswordChange;
+use App\Http\Middleware\InitializeTenancyByUser;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -88,6 +89,14 @@ class OperatorPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                // Initialize stancl/tenancy from the authenticated operator's
+                // tenant_id. MUST be here: Filament panels use this explicit
+                // middleware list, NOT Laravel's `web` group, so the global
+                // web-append of this middleware in bootstrap/app.php does not
+                // reach panel page requests. Without it the TenantScopedModel
+                // global scope is inactive and operators see EVERY client's
+                // data. Runs after Authenticate so $request->user() is set.
+                InitializeTenancyByUser::class,
                 ForceOperatorPasswordChange::class,
             ]);
     }
