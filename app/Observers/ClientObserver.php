@@ -5,7 +5,11 @@ namespace App\Observers;
 use App\Models\Client;
 use App\Models\CmsPage;
 use App\Models\ExpenseCategory;
+use App\Models\User;
+use App\Notifications\ClientStatusChangedNotification;
 use App\Services\Cms\DefaultPageContent;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -57,6 +61,54 @@ class ClientObserver
                     'published_at' => now(),
                 ],
             );
+        }
+    }
+
+    /**
+     * On a status change to/from "suspended", email the client's operators so
+     * they know access was cut off (or restored). Sent synchronously; failures
+     * are logged but never block the admin save.
+     */
+    public function updated(Client $client): void
+    {
+        if (! $client->wasChanged('status')) {
+            return;
+        }
+
+        $now = $client->status;
+        $was = $client->getOriginal('status');
+
+        $suspended = $now === 'suspended';
+        $reactivated = $was === 'suspended' && $now === 'active';
+
+        if (! $suspended && ! $reactivated) {
+            return;
+        }
+
+        // Operators belong to the tenant; query without global scopes since
+        // this observer runs in the super-admin (central) context.
+        $operators = User::query()
+            ->withoutGlobalScopes()
+            ->where('tenant_id', $client->id)
+            ->where('type', User::TYPE_OPERATOR)
+            ->whereNotNull('email')
+            ->get();
+
+        $recipients = $operators->isNotEmpty()
+            ? $operators
+            : collect(array_filter([$client->contact_email]))
+                ->map(fn (string $email) => Notification::route('mail', $email));
+
+        try {
+            foreach ($recipients as $recipient) {
+                $recipient->notify(new ClientStatusChangedNotification($client, $suspended));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Client status-change notification failed', [
+                'client_id' => $client->id,
+                'suspended' => $suspended,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

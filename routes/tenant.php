@@ -6,6 +6,7 @@ use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\Portal\LogoutController;
 use App\Http\Controllers\Portal\ReceiptDownloadController;
 use App\Http\Middleware\EnsureRenterAuthenticated;
+use App\Http\Middleware\EnsureTenantActive;
 use App\Livewire\Portal\Auth\Login;
 use App\Livewire\Portal\Dashboard;
 use App\Livewire\Portal\Invoices\Index as InvoicesIndex;
@@ -35,6 +36,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 Route::middleware([
     'web',
     InitializeTenancyByPath::class,
+    EnsureTenantActive::class,
 ])->prefix('/{tenant}')->group(function () {
     /* ----- Public CMS site (Phase 9) ----- */
     Route::get('/', PublicPage::class)->defaults('slug', 'home')->name('public.home');
