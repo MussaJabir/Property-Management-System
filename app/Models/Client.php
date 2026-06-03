@@ -81,7 +81,8 @@ class Client extends BaseTenant implements TenantWithDatabase
 
     public function subscriptions(): HasMany
     {
-        return $this->hasMany(Subscription::class);
+        // FK column on subscriptions is tenant_id (not the default client_id).
+        return $this->hasMany(Subscription::class, 'tenant_id');
     }
 
     public function activeSubscription(): ?Subscription

@@ -3,23 +3,29 @@
 namespace App\Filament\Operator\Pages;
 
 use App\Models\Client;
+use App\Models\Subscription;
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Workspace Settings — Owner-only Filament page for editing client branding,
- * contact info, and language preference.
+ * Workspace Settings — Owner-only Filament page. Consolidates everything a
+ * landlord configures into one tabbed screen: business profile, branding,
+ * preferences, account security (password), and a read-only view of their
+ * PMS subscription.
  */
 class WorkspaceSettings extends Page implements HasForms
 {
@@ -38,6 +44,8 @@ class WorkspaceSettings extends Page implements HasForms
 
     public ?Client $client = null;
 
+    public ?Subscription $subscription = null;
+
     public static function canAccess(): bool
     {
         $user = auth()->user();
@@ -47,11 +55,7 @@ class WorkspaceSettings extends Page implements HasForms
         }
 
         // Defensive: ensure Spatie's team context is set before hasRole().
-        // The InitializeTenancyByUser middleware also does this, but canAccess
-        // can be called in places where middleware hasn't run yet (sidebar
-        // rendering, navigation tree building, etc.).
-        app(PermissionRegistrar::class)
-            ->setPermissionsTeamId($user->tenant_id);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($user->tenant_id);
 
         return $user->hasRole('owner');
     }
@@ -70,6 +74,11 @@ class WorkspaceSettings extends Page implements HasForms
             abort(404);
         }
 
+        $this->subscription = $this->client->subscriptions()
+            ->with('plan')
+            ->latest('started_at')
+            ->first();
+
         $this->form->fill([
             'name' => $this->client->name,
             'contact_email' => $this->client->contact_email,
@@ -85,55 +94,101 @@ class WorkspaceSettings extends Page implements HasForms
         return $schema
             ->statePath('data')
             ->components([
-                Section::make('About your business')
-                    ->columns(2)
-                    ->components([
-                        TextInput::make('name')
-                            ->label('Business name')
-                            ->required()
-                            ->maxLength(150),
-                    ]),
+                Tabs::make('Settings')
+                    ->columnSpanFull()
+                    ->tabs([
+                        Tab::make('Business')
+                            ->icon('heroicon-o-building-office-2')
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Business name')
+                                    ->required()
+                                    ->maxLength(150),
 
-                Section::make('Contact')
-                    ->columns(2)
-                    ->components([
-                        TextInput::make('contact_email')
-                            ->label('Email address')
-                            ->email()
-                            ->maxLength(150),
+                                TextInput::make('contact_email')
+                                    ->label('Email address')
+                                    ->email()
+                                    ->maxLength(150),
 
-                        TextInput::make('contact_phone')
-                            ->label('Phone number')
-                            ->tel()
-                            ->maxLength(20)
-                            ->helperText('Country code (+255…) or local (0712…).'),
-                    ]),
+                                TextInput::make('contact_phone')
+                                    ->label('Phone number')
+                                    ->tel()
+                                    ->maxLength(20)
+                                    ->helperText('Country code (+255…) or local (0712…).'),
+                            ]),
 
-                Section::make('Look & feel')
-                    ->columns(2)
-                    ->components([
-                        FileUpload::make('logo_path')
-                            ->label('Logo')
-                            ->image()
-                            ->disk('local')
-                            ->directory('client-logos')
-                            ->imageEditor()
-                            ->maxSize(2048),
+                        Tab::make('Branding')
+                            ->icon('heroicon-o-swatch')
+                            ->schema([
+                                FileUpload::make('logo_path')
+                                    ->label('Logo')
+                                    ->image()
+                                    ->disk('local')
+                                    ->directory('client-logos')
+                                    ->imageEditor()
+                                    ->maxSize(2048),
 
-                        ColorPicker::make('brand_primary_color')
-                            ->label('Brand colour'),
-                    ]),
+                                ColorPicker::make('brand_primary_color')
+                                    ->label('Brand colour')
+                                    ->helperText('Used across your public website and renter portal.'),
+                            ]),
 
-                Section::make('Defaults')
-                    ->components([
-                        Select::make('default_locale')
-                            ->label('Default language for your workspace')
-                            ->options([
-                                'en' => 'English',
-                                'sw' => 'Kiswahili',
-                            ])
-                            ->default('en')
-                            ->native(false),
+                        Tab::make('Preferences')
+                            ->icon('heroicon-o-language')
+                            ->schema([
+                                Select::make('default_locale')
+                                    ->label('Default language for your workspace')
+                                    ->options([
+                                        'en' => 'English',
+                                        'sw' => 'Kiswahili',
+                                    ])
+                                    ->default('en')
+                                    ->native(false),
+                            ]),
+
+                        Tab::make('Security')
+                            ->icon('heroicon-o-lock-closed')
+                            ->schema([
+                                Placeholder::make('security_note')
+                                    ->label('')
+                                    ->content('Change the password for your own account. Leave blank to keep your current password.'),
+
+                                TextInput::make('new_password')
+                                    ->label('New password')
+                                    ->password()
+                                    ->revealable()
+                                    ->minLength(8)
+                                    ->confirmed()
+                                    ->autocomplete('new-password')
+                                    ->dehydrated(false),
+
+                                TextInput::make('new_password_confirmation')
+                                    ->label('Confirm new password')
+                                    ->password()
+                                    ->revealable()
+                                    ->autocomplete('new-password')
+                                    ->dehydrated(false),
+                            ]),
+
+                        Tab::make('Subscription')
+                            ->icon('heroicon-o-credit-card')
+                            ->schema([
+                                Placeholder::make('plan')
+                                    ->label('Current plan')
+                                    ->content(fn (): string => $this->subscription?->plan?->name ?? '—'),
+
+                                Placeholder::make('sub_status')
+                                    ->label('Status')
+                                    ->content(fn (): string => ucfirst($this->subscription?->status ?? 'none')),
+
+                                Placeholder::make('renews')
+                                    ->label('Renews / expires')
+                                    ->content(fn (): string => $this->subscription?->ends_at?->format('d/m/Y') ?? '—'),
+
+                                Placeholder::make('sub_help')
+                                    ->label('')
+                                    ->content('To change your plan or settle your subscription, contact the BJP Technologies team.'),
+                            ]),
                     ]),
             ]);
     }
@@ -157,6 +212,20 @@ class WorkspaceSettings extends Page implements HasForms
             'brand_primary_color' => $data['brand_primary_color'],
             'settings' => $settings,
         ]);
+
+        // Security tab: update the signed-in user's password if a new one was
+        // entered. Fields are dehydrated(false), so read raw form state.
+        $newPassword = $this->data['new_password'] ?? null;
+        if (filled($newPassword)) {
+            $user = auth()->user();
+            $user->forceFill([
+                'password' => Hash::make($newPassword),
+                'must_change_password' => false,
+            ])->save();
+
+            $this->data['new_password'] = null;
+            $this->data['new_password_confirmation'] = null;
+        }
 
         Notification::make()
             ->title('Settings saved')
