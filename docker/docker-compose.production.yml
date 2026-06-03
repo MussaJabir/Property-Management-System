@@ -68,6 +68,13 @@ services:
       MAIL_MAILER: ${MAIL_MAILER:-resend}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-PMS}
+      # SMTP (e.g. cPanel mailbox). Only used when MAIL_MAILER=smtp.
+      MAIL_SCHEME: ${MAIL_SCHEME:-smtps}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-465}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      # Resend (only used when MAIL_MAILER=resend).
       RESEND_KEY: ${RESEND_KEY}
 
       SCOUT_DRIVER: collection
