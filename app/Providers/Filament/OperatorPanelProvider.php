@@ -9,6 +9,7 @@ use App\Filament\Operator\Widgets\OccupancyChartWidget;
 use App\Filament\Operator\Widgets\RecentPaymentsWidget;
 use App\Filament\Operator\Widgets\TopUnpaidInvoicesWidget;
 use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
+use App\Http\Middleware\EnsureTenantActive;
 use App\Http\Middleware\ForceOperatorPasswordChange;
 use App\Http\Middleware\InitializeTenancyByUser;
 use Filament\Http\Middleware\Authenticate;
@@ -97,6 +98,9 @@ class OperatorPanelProvider extends PanelProvider
                 // global scope is inactive and operators see EVERY client's
                 // data. Runs after Authenticate so $request->user() is set.
                 InitializeTenancyByUser::class,
+                // Block the panel when the client workspace is suspended
+                // (runs after tenancy is initialized above).
+                EnsureTenantActive::class,
                 ForceOperatorPasswordChange::class,
             ]);
     }
