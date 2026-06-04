@@ -55,6 +55,8 @@ class SeedDemoClient extends Command
             $owner = $this->ensureOwner($client);
             $this->info("Owner: {$owner->email} (password: demo1234)");
 
+            $this->seedRoleOperators($client);
+
             $properties = $this->seedProperties();
             $units = $this->seedUnits($properties);
             $renters = $this->seedRenters();
@@ -93,6 +95,35 @@ class SeedDemoClient extends Command
         }
 
         return $user;
+    }
+
+    /**
+     * Demo operators for each non-owner role so the RBAC matrix can be tried in
+     * the browser. All use password "demo1234".
+     */
+    protected function seedRoleOperators(Client $client): void
+    {
+        foreach (['manager', 'accountant', 'maintenance-staff'] as $role) {
+            $email = $role.'@'.Str::slug($client->slug).'.local';
+
+            $user = User::query()->where('email', $email)->first();
+
+            if (! $user) {
+                $user = User::create([
+                    'tenant_id' => $client->id,
+                    'type' => User::TYPE_OPERATOR,
+                    'name' => 'Demo '.Str::headline($role),
+                    'email' => $email,
+                    'password' => Hash::make('demo1234'),
+                    'status' => 'active',
+                    'locale' => 'en',
+                    'must_change_password' => false,
+                ]);
+                $user->assignRole($role);
+            }
+
+            $this->info(Str::headline($role).": {$email} (password: demo1234)");
+        }
     }
 
     /** @return array<int, Property> */
