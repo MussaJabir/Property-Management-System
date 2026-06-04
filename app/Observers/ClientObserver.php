@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Authorization\OperatorPermissions;
 use App\Models\Client;
 use App\Models\CmsPage;
 use App\Models\ExpenseCategory;
@@ -11,6 +12,7 @@ use App\Services\Cms\DefaultPageContent;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Seed sensible defaults whenever a new Client is created so the workspace
@@ -36,12 +38,18 @@ class ClientObserver
 
     public function created(Client $client): void
     {
+        // Roles are team-scoped to this client; give each its permission set.
+        // Permissions are global and seeded by migration.
+        app(PermissionRegistrar::class)->setPermissionsTeamId($client->id);
+
         foreach (self::DEFAULT_ROLES as $name) {
-            Role::firstOrCreate([
+            $role = Role::firstOrCreate([
                 'name' => $name,
                 'guard_name' => 'web',
                 'tenant_id' => $client->id,
             ]);
+
+            $role->syncPermissions(OperatorPermissions::forRole($name));
         }
 
         // tenant_id is set directly (forceFill): this observer runs in the

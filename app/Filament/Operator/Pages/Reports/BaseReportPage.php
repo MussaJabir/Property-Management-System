@@ -3,6 +3,7 @@
 namespace App\Filament\Operator\Pages\Reports;
 
 use App\Exports\ReportExcelExport;
+use App\Models\User;
 use App\Reports\Contracts\ReportBuilder;
 use App\Services\Reports\ReportPdfGenerator;
 use Filament\Actions\Action;
@@ -11,6 +12,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -33,6 +35,19 @@ abstract class BaseReportPage extends Page
      * @var array<string, mixed>
      */
     public array $data = [];
+
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof User || ! $user->tenant_id) {
+            return false;
+        }
+
+        app(PermissionRegistrar::class)->setPermissionsTeamId($user->tenant_id);
+
+        return $user->can('reports.view');
+    }
 
     public function mount(): void
     {
