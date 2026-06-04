@@ -17,7 +17,14 @@ class Location extends Model
 {
     use HasFactory, SoftDeletes, TenantScopedModel;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'region',
+        'district',
+        'ward',
+        'street',
+        'notes',
+    ];
 
     public function properties(): HasMany
     {

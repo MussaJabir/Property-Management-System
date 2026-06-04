@@ -33,7 +33,10 @@ class ExpenseCategory extends Model
         ['name' => 'Other', 'color' => '#6b7280'],
     ];
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'color',
+    ];
 
     public function expenses(): HasMany
     {

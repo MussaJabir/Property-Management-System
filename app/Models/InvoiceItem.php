@@ -33,7 +33,14 @@ class InvoiceItem extends Model
 
     public const TYPE_OTHER = 'other';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'invoice_id',
+        'description',
+        'quantity',
+        'unit_price',
+        'line_total',
+        'type',
+    ];
 
     protected function casts(): array
     {

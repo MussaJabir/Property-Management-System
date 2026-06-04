@@ -29,7 +29,20 @@ class Renter extends Model
 
     public const TYPE_BUSINESS = 'business';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'type',
+        'full_name',
+        'business_name',
+        'phone',
+        'alt_phone',
+        'email',
+        'nida_number',
+        'tin_number',
+        'address',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'notes',
+    ];
 
     protected function casts(): array
     {

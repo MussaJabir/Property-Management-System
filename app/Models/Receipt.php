@@ -26,7 +26,14 @@ class Receipt extends Model
 {
     use HasFactory, TenantScopedModel;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'payment_id',
+        'receipt_number',
+        'pdf_path',
+        'issued_at',
+        'sent_via_email_at',
+        'sent_via_whatsapp_at',
+    ];
 
     protected function casts(): array
     {
