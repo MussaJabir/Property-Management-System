@@ -68,19 +68,24 @@ parameters:
             message: '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$(id|name|slug|tenant_id)#'
             paths:
                 - app/Http/Controllers/Portal/*
-                - app/Notifications/PortalCredentialsIssuedNotification.php
         -
             message: '#Using nullsafe property access ".+" on left side of \?\? is#'
             paths:
                 - app/Http/Controllers/Portal/*
                 - app/Http/Middleware/EnsureRenterAuthenticated.php
                 - app/Livewire/Portal/*
-                - app/Notifications/PortalCredentialsIssuedNotification.php
 
         # provisionFor() returns User but Renter::user belongsTo is typed
         # at the Model contract.
         -
             message: '#Method App\\Services\\Portal\\RenterPortalAccountProvisioner::provisionFor\(\) should return#'
+            path: app/Services/Portal/RenterPortalAccountProvisioner.php
+
+        # Defensive ?-> on Client::find() when building the activation URL —
+        # Larastan types find() as non-null, but the row could be deleted
+        # out-of-band. Same convention as the Notifications/Reports blocks.
+        -
+            message: '#Using nullsafe property access ".+" on left side of \?\? is#'
             path: app/Services/Portal/RenterPortalAccountProvisioner.php
 
         # Filament EditRecord::$record is typed as Model|int|string until the

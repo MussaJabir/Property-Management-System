@@ -10,16 +10,19 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Welcome email for a freshly-provisioned renter portal account. Carries the
- * one-time default password so the renter can sign in; they are forced to
- * change it on first login (User::$must_change_password).
+ * Invites a freshly-provisioned renter to activate their portal account by
+ * setting their own password through a one-time, expiring link. No password
+ * is ever transmitted (see SECURITY: renter account takeover).
+ *
+ * Delivered by email when the renter has an address on file; the operator can
+ * also copy/share the same link via the "resend activation" action.
  *
  * Synchronous (no Horizon yet — Phase 11). The caller wraps dispatch in
- * try/catch so a flaky SMTP can't break Lease::activate().
+ * try/catch so a flaky SMTP can't break lease activation.
  */
-class PortalCredentialsIssuedNotification extends Notification
+class PortalActivationNotification extends Notification
 {
-    public function __construct(public string $defaultPassword) {}
+    public function __construct(public string $activationUrl) {}
 
     /**
      * @return array<int, string>
@@ -35,16 +38,12 @@ class PortalCredentialsIssuedNotification extends Notification
         $client = $notifiable->client ?? Client::find($notifiable->tenant_id);
         $clientName = $client?->name ?? 'your landlord';
 
-        $portalUrl = url('/'.($client?->slug ?? '').'/portal/login');
-
         return (new MailMessage)
-            ->subject(__('Your :app portal access', ['app' => $clientName]))
+            ->subject(__('Activate your :app portal account', ['app' => $clientName]))
             ->greeting(__('Hello :name,', ['name' => $notifiable->name]))
             ->line(__(':client has set up an online portal where you can view your lease, invoices, receipts and submit maintenance requests.', ['client' => $clientName]))
-            ->line(__('Your sign-in details:'))
-            ->line(__('Phone: :phone', ['phone' => $notifiable->phone]))
-            ->line(__('Temporary password: :password', ['password' => $this->defaultPassword]))
-            ->action(__('Open the portal'), $portalUrl)
-            ->line(__('You will be asked to set a new password the first time you sign in.'));
+            ->line(__('Click the button below to choose your password and activate your account.'))
+            ->action(__('Activate my account'), $this->activationUrl)
+            ->line(__('This link expires in 72 hours. If it has expired, contact :client for a new one.', ['client' => $clientName]));
     }
 }

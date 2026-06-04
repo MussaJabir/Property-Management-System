@@ -7,11 +7,19 @@ namespace App\Livewire\Portal\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 class Login extends Component
 {
+    /** Failed sign-in attempts allowed before the throttle kicks in. */
+    private const MAX_ATTEMPTS = 5;
+
+    /** How long (seconds) a failed attempt counts toward the limit. */
+    private const DECAY_SECONDS = 60;
+
     public string $phone = '';
 
     public string $password = '';
@@ -25,6 +33,16 @@ class Login extends Component
             'password' => ['required', 'string'],
         ]);
 
+        $throttleKey = $this->throttleKey();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_ATTEMPTS)) {
+            $this->addError('phone', __('Too many attempts. Please try again in :seconds seconds.', [
+                'seconds' => RateLimiter::availableIn($throttleKey),
+            ]));
+
+            return;
+        }
+
         $client = tenant();
 
         $normalizedPhone = $this->normalizePhone($this->phone);
@@ -32,15 +50,18 @@ class Login extends Component
         $user = User::query()
             ->where('tenant_id', $client?->getKey())
             ->where('type', User::TYPE_RENTER)
-            ->where('status', 'active')
+            ->where('status', User::STATUS_ACTIVE)
             ->whereIn('phone', array_unique([$this->phone, $normalizedPhone]))
             ->first();
 
         if (! $user || ! Hash::check($this->password, $user->password)) {
+            RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
             $this->addError('phone', __('We could not find an account with those details.'));
 
             return;
         }
+
+        RateLimiter::clear($throttleKey);
 
         Auth::guard('renter')->login($user, $this->remember);
 
@@ -49,6 +70,18 @@ class Login extends Component
         session()->regenerate();
 
         $this->redirect('/'.$client->slug.'/portal', navigate: false);
+    }
+
+    /**
+     * Per-client, per-phone, per-IP throttle key so brute-forcing one renter's
+     * portal login can't be parallelised across accounts or IPs.
+     */
+    private function throttleKey(): string
+    {
+        return 'portal-login:'
+            .(tenant()?->getKey() ?? 'none').':'
+            .Str::transliterate(Str::lower($this->phone)).':'
+            .request()->ip();
     }
 
     /**

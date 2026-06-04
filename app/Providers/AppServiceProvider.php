@@ -9,12 +9,13 @@ use App\Observers\ClientObserver;
 use App\Observers\MaintenanceRequestObserver;
 use App\Observers\PaymentObserver;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Telescope\TelescopeServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        if ($this->app->environment('local') && class_exists(\Laravel\Telescope\TelescopeServiceProvider::class)) {
+        if ($this->app->environment('local') && class_exists(TelescopeServiceProvider::class)) {
             $this->app->register(\App\Providers\TelescopeServiceProvider::class);
         }
     }

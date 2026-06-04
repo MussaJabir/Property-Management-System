@@ -4,79 +4,176 @@ declare(strict_types=1);
 
 namespace App\Services\Portal;
 
+use App\Models\Client;
 use App\Models\Renter;
 use App\Models\User;
-use App\Notifications\PortalCredentialsIssuedNotification;
+use App\Notifications\PortalActivationNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Idempotently provisions a renter portal user for a Renter.
+ * Idempotently provisions a renter portal account and drives the activation
+ * flow.
  *
- * Called from Lease::activate(). If the renter already has a linked user
- * (renter.user_id) we leave it alone. Otherwise we create a renter-type User
- * row, link it back to the renter, and dispatch a notification with the
- * temporary credentials.
+ * No password is ever generated or transmitted. The account is created in
+ * `pending_activation` with an unusable password; the renter sets their own
+ * password through a one-time, expiring activation link (delivered by email
+ * when present, or shared by the operator via the "resend activation" action).
  *
- * Default password: last 6 digits of the E.164 phone (no spaces). The user is
- * forced to change it on first login via the must_change_password flag.
+ * Replaces the Phase 8 phone-derived default-password scheme, which let anyone
+ * who knew a renter's phone number sign in — the phone is also the username.
  */
 class RenterPortalAccountProvisioner
 {
+    /** How long an activation link stays valid, in hours. */
+    public const TOKEN_TTL_HOURS = 72;
+
+    /**
+     * Create the portal user (if absent) and send an activation invite.
+     * Idempotent: an already-linked renter is returned untouched.
+     */
     public function provisionFor(Renter $renter): ?User
     {
         if ($renter->user_id) {
             return $renter->user;
         }
 
+        $user = $this->createPortalUser($renter);
+
+        if (! $user) {
+            return null;
+        }
+
+        $this->sendActivation($user);
+
+        return $user;
+    }
+
+    /**
+     * (Re)issue an activation link for a renter and return the URL so the
+     * operator can copy/share it. Creates the portal user first if needed,
+     * and always invalidates the current password until the link is used.
+     *
+     * Returns null only when no portal user can exist yet (renter has no
+     * phone number — the portal login identifier).
+     */
+    public function resendActivation(Renter $renter): ?string
+    {
+        $user = $renter->user;
+
+        if (! $user instanceof User) {
+            $user = $this->createPortalUser($renter);
+
+            if (! $user) {
+                return null;
+            }
+        } else {
+            $user->forceFill([
+                'password' => Hash::make(Str::random(40)),
+                'status' => User::STATUS_PENDING_ACTIVATION,
+            ])->save();
+        }
+
+        return $this->sendActivation($user);
+    }
+
+    /**
+     * Create the renter-type User row in `pending_activation` with an unusable
+     * password and link it back to the renter. Does not send anything.
+     */
+    protected function createPortalUser(Renter $renter): ?User
+    {
         $phone = (string) $renter->getRawOriginal('phone');
 
         if ($phone === '') {
             return null;
         }
 
-        $defaultPassword = $this->defaultPasswordFor($phone);
-
-        return DB::transaction(function () use ($renter, $phone, $defaultPassword): User {
+        return DB::transaction(function () use ($renter, $phone): User {
             $user = User::create([
                 'tenant_id' => $renter->tenant_id,
                 'type' => User::TYPE_RENTER,
                 'name' => $renter->full_name,
-                'email' => $renter->email,
+                'email' => $this->portalEmailFor($renter),
                 'phone' => $phone,
-                'password' => Hash::make($defaultPassword),
+                'password' => Hash::make(Str::random(40)), // unusable until activation
                 'locale' => 'en',
-                'status' => 'active',
-                'must_change_password' => true,
+                'status' => User::STATUS_PENDING_ACTIVATION,
+                'must_change_password' => false,
             ]);
 
             $renter->user_id = $user->id;
             $renter->save();
-
-            try {
-                $user->notify(new PortalCredentialsIssuedNotification($defaultPassword));
-            } catch (Throwable $e) {
-                // Don't fail the lease activation if mail is misconfigured.
-                Log::warning('Portal credentials email failed', [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
 
             return $user;
         });
     }
 
     /**
-     * The temporary password we ship to the renter — last 6 digits of phone.
-     * Always 6 digits for predictability (zero-padded if phone is too short).
+     * Email to stamp on the renter's portal User, or null.
+     *
+     * The users table enforces a platform-wide unique email, but a renter can
+     * legitimately share an address with an operator (or rent in more than one
+     * workspace). Renters sign in by phone — the email is only used to deliver
+     * the activation invite — so drop it when it's already taken rather than
+     * blow up on the unique constraint. The operator can still share the link.
      */
-    public function defaultPasswordFor(string $phone): string
+    protected function portalEmailFor(Renter $renter): ?string
     {
-        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+        $email = $renter->email;
 
-        return str_pad(substr($digits, -6), 6, '0', STR_PAD_LEFT);
+        if (! $email) {
+            return null;
+        }
+
+        return User::query()->where('email', $email)->exists() ? null : $email;
+    }
+
+    /**
+     * Issue a fresh token, build the link, email it (best effort) and return
+     * the URL so callers can surface it for manual sharing.
+     */
+    protected function sendActivation(User $user): string
+    {
+        $url = $this->buildActivationUrl($user, $this->issueToken($user));
+
+        try {
+            $user->notify(new PortalActivationNotification($url));
+        } catch (Throwable $e) {
+            // Don't fail lease activation if mail is misconfigured or the
+            // renter has no email — the operator can still share the link.
+            Log::warning('Portal activation email failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $url;
+    }
+
+    /**
+     * Store the hash of a new high-entropy token (and its expiry) on the user,
+     * returning the raw token to embed in the link.
+     */
+    protected function issueToken(User $user): string
+    {
+        $rawToken = Str::random(64);
+
+        $user->forceFill([
+            'activation_token' => Hash::make($rawToken),
+            'activation_token_expires_at' => now()->addHours(self::TOKEN_TTL_HOURS),
+        ])->save();
+
+        return $rawToken;
+    }
+
+    protected function buildActivationUrl(User $user, string $rawToken): string
+    {
+        $slug = Client::find($user->tenant_id)?->slug ?? '';
+
+        return url('/'.$slug.'/portal/activate/'.$user->id.'/'.$rawToken);
     }
 }

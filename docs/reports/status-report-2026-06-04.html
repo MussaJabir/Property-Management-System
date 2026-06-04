@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS — Status Report — 4 June 2026</title>
+    <style>
+        @page { size: A4; margin: 14mm 12mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2937; line-height: 1.55; background: #f9fafb; font-size: 10.5pt; }
+        .page { max-width: 210mm; margin: 0 auto; padding: 18mm 14mm; background: #ffffff; }
+
+        .hero { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0f766e; padding-bottom: 16px; margin-bottom: 24px; }
+        .hero .brand { font-size: 22pt; font-weight: 800; color: #0f766e; letter-spacing: -0.5px; line-height: 1; }
+        .hero .brand-sub { font-size: 10pt; color: #6b7280; margin-top: 4px; font-weight: 500; }
+        .hero .meta { text-align: right; font-size: 9.5pt; color: #4b5563; }
+        .hero .meta strong { color: #1f2937; }
+        .hero .tag { display: inline-block; margin-top: 6px; padding: 3px 10px; background: #ccfbf1; color: #0f766e; border-radius: 9999px; font-size: 9pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        h2 { font-size: 14pt; color: #0f766e; margin: 26px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; font-weight: 700; letter-spacing: -0.2px; }
+        p { margin-bottom: 8px; }
+
+        .summary { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid #99f6e4; border-radius: 8px; padding: 16px 18px; margin-bottom: 22px; }
+        .summary p { font-size: 10.5pt; color: #134e4a; }
+        .summary p:last-child { margin-bottom: 0; }
+
+        .feature { border: 1px solid #e5e7eb; border-left: 4px solid #0f766e; border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; background: #ffffff; }
+        .feature .title { font-weight: 700; font-size: 11pt; color: #111827; margin-bottom: 4px; }
+        .feature .body { font-size: 10pt; color: #374151; }
+        .feature ul { margin: 8px 0 0 18px; }
+        .feature li { font-size: 10pt; color: #374151; margin-bottom: 3px; }
+        .secure { border-left-color: #b45309; }
+        .secure .title { color: #92400e; }
+
+        .callout { background: #fef9c3; border: 1px solid #fde68a; border-radius: 6px; padding: 12px 14px; margin-top: 14px; font-size: 10pt; color: #713f12; }
+        .callout strong { display: block; color: #78350f; margin-bottom: 4px; }
+
+        ul.plain { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+        ul.plain li { padding-left: 18px; position: relative; font-size: 10pt; color: #1f2937; }
+        ul.plain li::before { content: "✓"; position: absolute; left: 0; color: #0f766e; font-weight: 700; }
+
+        footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 9pt; color: #6b7280; }
+        footer strong { color: #0f766e; }
+
+        @media print { body { background: #ffffff; } .page { padding: 0; box-shadow: none; } .feature, .summary, .callout, ul.plain { page-break-inside: avoid; } h2 { page-break-after: avoid; } }
+        @media screen { .page { box-shadow: 0 4px 14px rgba(0,0,0,0.06); margin: 24px auto; border-radius: 6px; } }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <header class="hero">
+        <div>
+            <div class="brand">PMS</div>
+            <div class="brand-sub">Property Management System &middot; BJP Technologies</div>
+        </div>
+        <div class="meta">
+            <strong>Status Report</strong><br>
+            Date: <strong>4 June 2026</strong><br>
+            <span class="tag">&bull; Live in production</span>
+        </div>
+    </header>
+
+    <section class="summary">
+        <p><strong>This period focused on running the business side of PMS: getting paid, controlling access, and giving each landlord a tidy place to manage their own account.</strong> We also closed an important data-privacy issue and confirmed the fix with an automatic test.</p>
+        <p>BJP can now suspend a non-paying client (which instantly cuts off their access and notifies them), record subscription payments in one place, and reactivate clients in a click. Landlords get a single, organised Settings screen, and the BJP control panel now opens to a real overview.</p>
+    </section>
+
+    <h2>What we completed in this period</h2>
+
+    <div class="feature secure">
+        <div class="title">1. Data-privacy fix — each landlord sees only their own data</div>
+        <div class="body">
+            We found and fixed an issue where a landlord's staff panel could display another landlord's records. Each workspace is now strictly separated, and an <strong>automatic test</strong> now guards this so it can never silently return.
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">2. Suspend &amp; reactivate clients (with notifications)</div>
+        <div class="body">
+            Suspending a client previously did nothing. Now it actually takes effect:
+            <ul>
+                <li>The client's staff panel and public website are immediately blocked, showing a polite "temporarily unavailable" page.</li>
+                <li>The client owner automatically receives an email when their workspace is suspended — and again when it is reactivated.</li>
+                <li>This is the enforcement behind billing: stop paying &rarr; suspended; pay &rarr; reactivated.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">3. Subscription billing — a place to track what clients pay us</div>
+        <div class="body">
+            A new <strong>Subscriptions</strong> area in the BJP control panel shows every client's plan, status, renewal date (overdue ones flagged), and total paid to date.
+            <ul>
+                <li>A "Record payment" button logs each payment (amount, date, method, reference) and automatically extends the client's paid period and reactivates them.</li>
+                <li>Every payment is kept on record per client. Manual for now; a self-service online-payment option can follow later.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">4. Email delivery &amp; branded welcome email</div>
+        <div class="body">
+            The platform now sends email through the company's own <strong>no-reply@bjptechnologies.co.tz</strong> address (straight to the inbox). The new-client welcome email was redesigned with proper PMS branding — a clean header, a clear sign-in details card, and a one-click button.
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">5. A single, organised Settings screen for landlords</div>
+        <div class="body">
+            Landlord settings used to be scattered. They are now in one place with clear tabs:
+            <ul>
+                <li><strong>Business</strong> (name, contact), <strong>Branding</strong> (logo, colour), <strong>Preferences</strong> (language).</li>
+                <li><strong>Security</strong> — change your own password here.</li>
+                <li><strong>Subscription</strong> — see your current plan, status and renewal date at a glance.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">6. BJP control-panel overview &amp; listing polish</div>
+        <div class="body">
+            The BJP super-admin panel now opens to a real dashboard (total clients, active, on trial, units across the platform, clients-by-plan, recent signups). On the landlord side, unit lists now show a single clean cover photo per unit instead of every image at once.
+        </div>
+    </div>
+
+    <h2>How we keep it safe &amp; reliable</h2>
+    <ul class="plain">
+        <li>Strict separation between landlords' data</li>
+        <li>Automatic tests guarding that separation</li>
+        <li>107 automatic tests run before each update</li>
+        <li>Suspension cuts off non-paying clients</li>
+        <li>Email signed by the company domain</li>
+        <li>HTTPS, nightly backups, encrypted IDs</li>
+        <li>Every change reviewed before going live</li>
+        <li>Bilingual throughout (English &amp; Kiswahili)</li>
+    </ul>
+
+    <h2>What's next</h2>
+    <p>With billing, access control and account settings in place, the next focus remains the Version 2 integrations already prepared in the system: mobile-money payments (M-Pesa, Tigo Pesa, Airtel Money), SMS and WhatsApp reminders, phone-number login for renters, and automatic monthly invoice generation. An optional online self-service payment flow for client subscriptions can also be scheduled.</p>
+
+    <footer>
+        Report prepared <strong>4 June 2026</strong> &middot; PMS &middot; BJP Technologies
+    </footer>
+
+</div>
+</body>
+</html>
