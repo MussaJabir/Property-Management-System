@@ -131,13 +131,12 @@ it('lets a renter sign in with phone + password', function () {
     $user = $renter->user;
     $user->forceFill(['password' => Hash::make('secret123'), 'status' => User::STATUS_ACTIVE])->save();
 
-    // Tenancy stays initialized for the duration of this test so Livewire's
-    // Login component can resolve tenant() the same way it does in production.
     Livewire::test(Login::class)
         ->set('phone', '+255712345678')
         ->set('password', 'secret123')
         ->call('submit')
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->assertRedirect('/'.$this->client->slug.'/portal');
 
     expect(Auth::guard('renter')->check())->toBeTrue();
     expect(Auth::guard('renter')->user()->id)->toBe($user->id);
@@ -194,7 +193,8 @@ it('activates a renter account through the one-time link', function () {
         ->set('password', 'sup3r-secret')
         ->set('password_confirmation', 'sup3r-secret')
         ->call('submit')
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->assertRedirect('/'.$this->client->slug.'/portal');
 
     $user = $renter->user->fresh();
     expect($user->status)->toBe(User::STATUS_ACTIVE);
