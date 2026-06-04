@@ -11,6 +11,7 @@ use App\Notifications\PortalActivationNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -47,7 +48,7 @@ class RenterPortalAccountProvisioner
             return null;
         }
 
-        $this->sendActivation($user);
+        $this->sendActivation($user, $renter);
 
         return $user;
     }
@@ -77,7 +78,7 @@ class RenterPortalAccountProvisioner
             ])->save();
         }
 
-        return $this->sendActivation($user);
+        return $this->sendActivation($user, $renter);
     }
 
     /**
@@ -136,19 +137,31 @@ class RenterPortalAccountProvisioner
      * Issue a fresh token, build the link, email it (best effort) and return
      * the URL so callers can surface it for manual sharing.
      */
-    protected function sendActivation(User $user): string
+    protected function sendActivation(User $user, Renter $renter): string
     {
-        $url = $this->buildActivationUrl($user, $this->issueToken($user));
+        $client = Client::find($renter->tenant_id);
+        $url = url('/'.($client?->slug ?? '').'/portal/activate/'.$user->id.'/'.$this->issueToken($user));
 
-        try {
-            $user->notify(new PortalActivationNotification($url));
-        } catch (Throwable $e) {
-            // Don't fail lease activation if mail is misconfigured or the
-            // renter has no email — the operator can still share the link.
-            Log::warning('Portal activation email failed', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+        // Deliver the invite straight to the renter's own email — not the portal
+        // User's, which may be null when the address collides with another user
+        // (platform-wide unique email). Same idea as OperatorOwnerProvisioner
+        // mailing the owner, but routed on-demand so a nulled User email can't
+        // swallow it. Operators can still copy the returned link to share.
+        if ($renter->email) {
+            try {
+                Notification::route('mail', $renter->email)->notify(
+                    new PortalActivationNotification(
+                        $url,
+                        $renter->full_name,
+                        $client?->name ?? 'your landlord',
+                    )
+                );
+            } catch (Throwable $e) {
+                Log::warning('Portal activation email failed', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return $url;
@@ -168,12 +181,5 @@ class RenterPortalAccountProvisioner
         ])->save();
 
         return $rawToken;
-    }
-
-    protected function buildActivationUrl(User $user, string $rawToken): string
-    {
-        $slug = Client::find($user->tenant_id)?->slug ?? '';
-
-        return url('/'.$slug.'/portal/activate/'.$user->id.'/'.$rawToken);
     }
 }
