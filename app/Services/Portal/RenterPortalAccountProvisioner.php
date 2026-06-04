@@ -97,7 +97,7 @@ class RenterPortalAccountProvisioner
                 'tenant_id' => $renter->tenant_id,
                 'type' => User::TYPE_RENTER,
                 'name' => $renter->full_name,
-                'email' => $renter->email,
+                'email' => $this->portalEmailFor($renter),
                 'phone' => $phone,
                 'password' => Hash::make(Str::random(40)), // unusable until activation
                 'locale' => 'en',
@@ -110,6 +110,26 @@ class RenterPortalAccountProvisioner
 
             return $user;
         });
+    }
+
+    /**
+     * Email to stamp on the renter's portal User, or null.
+     *
+     * The users table enforces a platform-wide unique email, but a renter can
+     * legitimately share an address with an operator (or rent in more than one
+     * workspace). Renters sign in by phone — the email is only used to deliver
+     * the activation invite — so drop it when it's already taken rather than
+     * blow up on the unique constraint. The operator can still share the link.
+     */
+    protected function portalEmailFor(Renter $renter): ?string
+    {
+        $email = $renter->email;
+
+        if (! $email) {
+            return null;
+        }
+
+        return User::query()->where('email', $email)->exists() ? null : $email;
     }
 
     /**

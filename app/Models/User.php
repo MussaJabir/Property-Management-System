@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -22,7 +23,7 @@ use Spatie\Permission\Traits\HasRoles;
  * is implemented so the operator panel knows which Client this user belongs to.
  *
  * @property string|null $activation_token
- * @property \Illuminate\Support\Carbon|null $activation_token_expires_at
+ * @property Carbon|null $activation_token_expires_at
  */
 class User extends Authenticatable implements FilamentUser, HasTenants
 {

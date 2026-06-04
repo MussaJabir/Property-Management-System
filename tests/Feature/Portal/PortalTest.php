@@ -228,3 +228,35 @@ it('throttles repeated failed portal logins', function () {
 
     expect(Auth::guard('renter')->check())->toBeFalse();
 });
+
+it('provisions a renter even when the email is already taken by another user', function () {
+    Notification::fake();
+    tenancy()->initialize($this->client);
+
+    // Another user (e.g. the operator testing with their own address) already
+    // owns this email — the users table enforces a platform-wide unique email.
+    User::create([
+        'tenant_id' => $this->client->getKey(),
+        'type' => User::TYPE_OPERATOR,
+        'name' => 'Owner',
+        'email' => 'shared@example.com',
+        'phone' => '+255700000001',
+        'password' => Hash::make('whatever'),
+        'status' => User::STATUS_ACTIVE,
+    ]);
+
+    $renter = Renter::create([
+        'tenant_id' => tenant('id'),
+        'type' => Renter::TYPE_INDIVIDUAL,
+        'full_name' => 'Shared Email Renter',
+        'phone' => '+255712345699',
+        'email' => 'shared@example.com',
+    ]);
+
+    $user = app(RenterPortalAccountProvisioner::class)->provisionFor($renter);
+
+    expect($user)->not->toBeNull();
+    expect($user->email)->toBeNull(); // dropped to avoid the unique-constraint clash
+    expect($user->status)->toBe(User::STATUS_PENDING_ACTIVATION);
+    expect($user->activation_token)->not->toBeNull();
+});
