@@ -44,23 +44,31 @@ class ClientObserver
             ]);
         }
 
+        // tenant_id is set directly (forceFill): this observer runs in the
+        // central super-admin context where there's no active tenant to
+        // auto-fill from, and tenant_id is excluded from these models' $fillable.
         foreach (ExpenseCategory::DEFAULT_CATEGORIES as $cat) {
-            ExpenseCategory::withoutGlobalScopes()->firstOrCreate(
-                ['tenant_id' => $client->id, 'name' => $cat['name']],
-                ['color' => $cat['color']],
-            );
+            $category = ExpenseCategory::withoutGlobalScopes()
+                ->firstOrNew(['tenant_id' => $client->id, 'name' => $cat['name']]);
+
+            if (! $category->exists) {
+                $category->forceFill(['tenant_id' => $client->id, 'color' => $cat['color']])->save();
+            }
         }
 
         foreach (DefaultPageContent::forClient($client->name) as $page) {
-            CmsPage::withoutGlobalScopes()->firstOrCreate(
-                ['tenant_id' => $client->id, 'slug' => $page['slug']],
-                [
+            $cmsPage = CmsPage::withoutGlobalScopes()
+                ->firstOrNew(['tenant_id' => $client->id, 'slug' => $page['slug']]);
+
+            if (! $cmsPage->exists) {
+                $cmsPage->forceFill([
+                    'tenant_id' => $client->id,
                     'title' => $page['title'],
                     'subtitle' => $page['subtitle'],
                     'blocks' => $page['blocks'],
                     'published_at' => now(),
-                ],
-            );
+                ])->save();
+            }
         }
     }
 

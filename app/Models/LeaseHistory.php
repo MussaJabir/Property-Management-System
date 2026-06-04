@@ -30,7 +30,14 @@ class LeaseHistory extends Model
 
     protected $table = 'lease_history';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'lease_id',
+        'user_id',
+        'action',
+        'before',
+        'after',
+        'reason',
+    ];
 
     protected function casts(): array
     {

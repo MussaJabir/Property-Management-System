@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\ContactSubmissionReceivedNotification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Throwable;
 
@@ -23,6 +24,18 @@ class ContactForm extends Component
     public string $message = '';
 
     public bool $sent = false;
+
+    /**
+     * Tenant key captured on page load — this public form's Livewire submit
+     * hits a central route where path-based tenancy isn't re-resolved.
+     */
+    #[Locked]
+    public string $clientKey = '';
+
+    public function mount(): void
+    {
+        $this->clientKey = tenant()?->getKey() ?? '';
+    }
 
     public function submit(): void
     {
@@ -39,10 +52,7 @@ class ContactForm extends Component
             return;
         }
 
-        $client = tenant();
-
-        $submission = ContactSubmission::create([
-            'tenant_id' => $client->getKey(),
+        $submission = new ContactSubmission([
             'name' => $this->name,
             'email' => $this->email ?: null,
             'phone' => $this->phone ?: null,
@@ -50,12 +60,14 @@ class ContactForm extends Component
             'status' => ContactSubmission::STATUS_NEW,
             'ip' => request()->ip(),
         ]);
+        $submission->tenant_id = $this->clientKey;
+        $submission->save();
 
         // Notify every active operator on this client. Failure to email
         // shouldn't lose the submission — it's already in the DB.
         try {
             User::query()
-                ->where('tenant_id', $client->getKey())
+                ->where('tenant_id', $this->clientKey)
                 ->where('type', User::TYPE_OPERATOR)
                 ->where('status', 'active')
                 ->get()

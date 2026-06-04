@@ -22,7 +22,13 @@ class CmsAnnouncement extends Model
 {
     use HasFactory, SoftDeletes, TenantScopedModel;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'slug',
+        'title',
+        'excerpt',
+        'body',
+        'published_at',
+    ];
 
     protected function casts(): array
     {

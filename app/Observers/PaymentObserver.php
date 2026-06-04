@@ -62,12 +62,13 @@ class PaymentObserver
             return;
         }
 
-        $receipt = Receipt::create([
-            'tenant_id' => $payment->tenant_id,
+        $receipt = new Receipt([
             'payment_id' => $payment->id,
             'receipt_number' => app(ReceiptNumberGenerator::class)->next($payment->tenant_id),
             'issued_at' => now(),
         ]);
+        $receipt->tenant_id = $payment->tenant_id;
+        $receipt->save();
 
         $this->maybeEmail($payment, $receipt);
         $this->maybeBellNotify($payment);

@@ -80,7 +80,21 @@ class Unit extends Model implements HasMedia
         'servant_quarter',
     ];
 
-    protected $guarded = [];
+    protected $fillable = [
+        'property_id',
+        'code',
+        'type',
+        'rent_amount',
+        'rent_currency',
+        'billing_cycle',
+        'billing_cycle_months',
+        'status',
+        'bedrooms',
+        'bathrooms',
+        'size_sqm',
+        'description',
+        'amenities',
+    ];
 
     protected function casts(): array
     {

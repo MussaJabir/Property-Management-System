@@ -62,7 +62,22 @@ class Invoice extends Model
 
     public const STATUS_CANCELLED = 'cancelled';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'lease_id',
+        'invoice_number',
+        'billing_period_start',
+        'billing_period_end',
+        'issued_at',
+        'due_date',
+        'subtotal',
+        'tax_amount',
+        'total_amount',
+        'amount_paid',
+        'currency',
+        'status',
+        'paid_at',
+        'notes',
+    ];
 
     protected function casts(): array
     {

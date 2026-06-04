@@ -25,7 +25,20 @@ class SubscriptionPayment extends Model
 
     public const METHOD_OTHER = 'other';
 
-    protected $guarded = [];
+    // Central (not tenant-scoped) — super-admin panel only, so tenant_id is
+    // set explicitly (no BelongsToTenant auto-fill).
+    protected $fillable = [
+        'subscription_id',
+        'tenant_id',
+        'amount_tzs',
+        'paid_at',
+        'period_start',
+        'period_end',
+        'method',
+        'reference',
+        'notes',
+        'recorded_by',
+    ];
 
     protected function casts(): array
     {

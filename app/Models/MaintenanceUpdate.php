@@ -25,7 +25,12 @@ class MaintenanceUpdate extends Model
 
     public $timestamps = false;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'maintenance_request_id',
+        'user_id',
+        'note',
+        'status_change',
+    ];
 
     protected function casts(): array
     {

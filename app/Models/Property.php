@@ -32,7 +32,14 @@ class Property extends Model implements HasMedia
 
     public const STATUS_INACTIVE = 'inactive';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'location_id',
+        'name',
+        'type',
+        'address',
+        'description',
+        'status',
+    ];
 
     public function location(): BelongsTo
     {

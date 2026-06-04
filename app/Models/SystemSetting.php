@@ -14,7 +14,11 @@ class SystemSetting extends Model
 
     public $timestamps = false;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'key',
+        'value',
+        'updated_at',
+    ];
 
     protected function casts(): array
     {

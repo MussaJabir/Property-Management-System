@@ -19,7 +19,15 @@ class ContactSubmission extends Model
 
     public const STATUS_ARCHIVED = 'archived';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'message',
+        'status',
+        'responded_at',
+        'ip',
+    ];
 
     protected function casts(): array
     {

@@ -64,7 +64,19 @@ class Payment extends Model
 
     public const PROVIDER_HALOPESA = 'halopesa';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'invoice_id',
+        'amount',
+        'currency',
+        'payment_date',
+        'method',
+        'reference_number',
+        'mobile_money_provider',
+        'transaction_id',
+        'received_by_user_id',
+        'status',
+        'notes',
+    ];
 
     protected function casts(): array
     {
