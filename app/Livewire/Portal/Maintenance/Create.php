@@ -8,6 +8,7 @@ use App\Models\Lease;
 use App\Models\MaintenanceRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -39,11 +40,18 @@ class Create extends Component
     {
         $user = Auth::guard('renter')->user();
 
+        // Authorisation: a renter may only file against a unit they hold (or
+        // held) a lease on — not any UUID they post. Same source as the unit
+        // dropdown in render(), so the form options and the rule stay in sync.
+        $allowedUnitIds = $user->renter
+            ? $user->renter->leases()->pluck('unit_id')->filter()->unique()->values()->all()
+            : [];
+
         $this->validate([
             'title' => ['required', 'string', 'max:120'],
             'description' => ['required', 'string', 'min:10'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
-            'unitId' => ['required', 'uuid'],
+            'unitId' => ['required', 'uuid', Rule::in($allowedUnitIds)],
             'photos.*' => ['nullable', 'image', 'max:5120'],
         ]);
 
