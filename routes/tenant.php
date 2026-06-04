@@ -7,6 +7,7 @@ use App\Http\Controllers\Portal\LogoutController;
 use App\Http\Controllers\Portal\ReceiptDownloadController;
 use App\Http\Middleware\EnsureRenterAuthenticated;
 use App\Http\Middleware\EnsureTenantActive;
+use App\Livewire\Portal\Auth\Activate;
 use App\Livewire\Portal\Auth\Login;
 use App\Livewire\Portal\Dashboard;
 use App\Livewire\Portal\Invoices\Index as InvoicesIndex;
@@ -50,6 +51,7 @@ Route::middleware([
     Route::prefix('portal')->name('portal.')->group(function () {
         // Guests
         Route::get('login', Login::class)->name('login');
+        Route::get('activate/{user}/{token}', Activate::class)->name('activate');
 
         // Authenticated renters
         Route::middleware([EnsureRenterAuthenticated::class])->group(function () {

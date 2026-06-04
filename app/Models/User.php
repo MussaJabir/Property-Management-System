@@ -20,6 +20,9 @@ use Spatie\Permission\Traits\HasRoles;
  *
  * Type column distinguishes operator vs renter. Filament's HasTenants contract
  * is implemented so the operator panel knows which Client this user belongs to.
+ *
+ * @property string|null $activation_token
+ * @property \Illuminate\Support\Carbon|null $activation_token_expires_at
  */
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
@@ -29,6 +32,12 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public const TYPE_OPERATOR = 'operator';
 
     public const TYPE_RENTER = 'renter';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_PENDING_ACTIVATION = 'pending_activation';
+
+    public const STATUS_DISABLED = 'disabled';
 
     protected static function booted(): void
     {
@@ -58,6 +67,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     protected $hidden = [
         'password',
         'remember_token',
+        'activation_token',
     ];
 
     protected function casts(): array
@@ -66,6 +76,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'activation_token_expires_at' => 'datetime',
             'password' => 'hashed',
             'must_change_password' => 'boolean',
         ];
@@ -89,6 +100,11 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function isRenter(): bool
     {
         return $this->type === self::TYPE_RENTER;
+    }
+
+    public function isPendingActivation(): bool
+    {
+        return $this->status === self::STATUS_PENDING_ACTIVATION;
     }
 
     /* ----- Filament panel access ----- */

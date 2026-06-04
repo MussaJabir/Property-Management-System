@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Portal\Auth\Activate;
 use App\Livewire\Portal\Auth\Login;
 use App\Models\Client;
 use App\Models\Lease;
@@ -8,7 +9,7 @@ use App\Models\Property;
 use App\Models\Renter;
 use App\Models\Unit;
 use App\Models\User;
-use App\Notifications\PortalCredentialsIssuedNotification;
+use App\Notifications\PortalActivationNotification;
 use App\Services\Portal\RenterPortalAccountProvisioner;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -88,10 +89,13 @@ it('provisions a portal user when a lease activates', function () {
     $user = $renter->user;
     expect($user)->not->toBeNull();
     expect($user->type)->toBe(User::TYPE_RENTER);
-    expect($user->must_change_password)->toBeTrue();
+    expect($user->status)->toBe(User::STATUS_PENDING_ACTIVATION);
+    expect($user->activation_token)->not->toBeNull();
+    // Regression: the old scheme set the password to the phone's last 6 digits.
+    expect(Hash::check('345678', $user->password))->toBeFalse();
     expect($user->tenant_id)->toBe($this->client->getKey());
 
-    Notification::assertSentTo($user, PortalCredentialsIssuedNotification::class);
+    Notification::assertSentTo($user, PortalActivationNotification::class);
 });
 
 it('does not double-provision when activating a lease for a renter who already has a portal user', function () {
@@ -124,7 +128,7 @@ it('lets a renter sign in with phone + password', function () {
     tenancy()->initialize($this->client);
     [$renter, $lease] = setupActiveLease();
     $user = $renter->user;
-    $user->forceFill(['password' => Hash::make('secret123')])->save();
+    $user->forceFill(['password' => Hash::make('secret123'), 'status' => User::STATUS_ACTIVE])->save();
 
     // Tenancy stays initialized for the duration of this test so Livewire's
     // Login component can resolve tenant() the same way it does in production.
@@ -174,9 +178,53 @@ it('keeps portal data isolated between clients', function () {
     expect($renterA->user_id)->not->toBe($renterB->user_id);
 });
 
-it('builds a 6-digit default password from the phone tail', function () {
-    $svc = app(RenterPortalAccountProvisioner::class);
-    expect($svc->defaultPasswordFor('+255712345678'))->toBe('345678');
-    expect($svc->defaultPasswordFor('0712345678'))->toBe('345678');
-    expect($svc->defaultPasswordFor('+25571'))->toBe('025571'); // pads short numbers
+it('activates a renter account through the one-time link', function () {
+    Notification::fake();
+    tenancy()->initialize($this->client);
+    [$renter, $lease] = setupActiveLease();
+
+    $url = app(RenterPortalAccountProvisioner::class)->resendActivation($renter->fresh());
+    expect($url)->not->toBeNull();
+
+    preg_match('#/portal/activate/([^/]+)/([^/?]+)$#', (string) $url, $m);
+
+    Livewire::test(Activate::class, ['user' => $m[1], 'token' => $m[2]])
+        ->assertSet('valid', true)
+        ->set('password', 'sup3r-secret')
+        ->set('password_confirmation', 'sup3r-secret')
+        ->call('submit')
+        ->assertHasNoErrors();
+
+    $user = $renter->user->fresh();
+    expect($user->status)->toBe(User::STATUS_ACTIVE);
+    expect($user->activation_token)->toBeNull();
+    expect(Hash::check('sup3r-secret', $user->password))->toBeTrue();
+    expect(Auth::guard('renter')->check())->toBeTrue();
+});
+
+it('rejects an invalid or expired activation token', function () {
+    Notification::fake();
+    tenancy()->initialize($this->client);
+    [$renter, $lease] = setupActiveLease();
+
+    Livewire::test(Activate::class, ['user' => $renter->user_id, 'token' => 'not-the-real-token'])
+        ->assertSet('valid', false);
+});
+
+it('throttles repeated failed portal logins', function () {
+    Notification::fake();
+    tenancy()->initialize($this->client);
+    [$renter, $lease] = setupActiveLease();
+    $renter->user->forceFill(['password' => Hash::make('correct-horse'), 'status' => User::STATUS_ACTIVE])->save();
+
+    $component = Livewire::test(Login::class)->set('phone', '+255712345678');
+
+    foreach (range(1, 5) as $i) {
+        $component->set('password', 'wrong-'.$i)->call('submit')->assertHasErrors('phone');
+    }
+
+    // 6th attempt is blocked by the throttle, not the credential check.
+    $component->set('password', 'wrong-again')->call('submit')->assertSee('Too many');
+
+    expect(Auth::guard('renter')->check())->toBeFalse();
 });

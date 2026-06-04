@@ -60,6 +60,7 @@ class SeedDemoClient extends Command
             $renters = $this->seedRenters();
             $leases = $this->seedLeases($renters, $units);
             $this->seedInvoices($leases);
+            $this->activateDemoRenterLogins($renters);
 
             $this->info('Done.');
         } finally {
@@ -186,6 +187,40 @@ class SeedDemoClient extends Command
         }
 
         return $renters;
+    }
+
+    /**
+     * For local demos only: flip the auto-provisioned renter portal accounts
+     * (created in `pending_activation` by the lease activation) to active with
+     * a known password, so /{slug}/portal is immediately usable without going
+     * through the activation-link email flow.
+     *
+     * @param  array<int, Renter>  $renters
+     */
+    protected function activateDemoRenterLogins(array $renters): void
+    {
+        $loginShown = false;
+
+        foreach ($renters as $renter) {
+            $user = $renter->fresh()?->user;
+
+            if (! $user instanceof User) {
+                continue;
+            }
+
+            $user->forceFill([
+                'password' => Hash::make('demo1234'),
+                'status' => User::STATUS_ACTIVE,
+                'must_change_password' => false,
+                'activation_token' => null,
+                'activation_token_expires_at' => null,
+            ])->save();
+
+            if (! $loginShown) {
+                $this->info("Renter portal login: {$user->phone} / demo1234");
+                $loginShown = true;
+            }
+        }
     }
 
     /**
