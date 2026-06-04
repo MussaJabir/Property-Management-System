@@ -10,7 +10,17 @@ class Plan extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'slug',
+        'price_tzs',
+        'billing_period',
+        'max_properties',
+        'max_units',
+        'max_operators',
+        'features',
+        'is_public',
+    ];
 
     protected function casts(): array
     {

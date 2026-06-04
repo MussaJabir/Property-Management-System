@@ -11,7 +11,15 @@ class Subscription extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    // Central (not tenant-scoped) — managed only from the super-admin panel,
+    // so tenant_id is set explicitly here (no BelongsToTenant auto-fill).
+    protected $fillable = [
+        'tenant_id',
+        'plan_id',
+        'started_at',
+        'ends_at',
+        'status',
+    ];
 
     protected function casts(): array
     {

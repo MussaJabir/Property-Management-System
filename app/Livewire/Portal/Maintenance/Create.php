@@ -47,8 +47,11 @@ class Create extends Component
             'photos.*' => ['nullable', 'image', 'max:5120'],
         ]);
 
-        $request = MaintenanceRequest::create([
-            'tenant_id' => $user->tenant_id,
+        // tenant_id is set directly (not mass-assigned): this is a renter-portal
+        // Livewire submit where path-based tenancy isn't active, so auto-fill
+        // can't run and tenant_id is excluded from $fillable. $user->tenant_id
+        // is the client slug, also used for the redirect (tenant() is null here).
+        $request = new MaintenanceRequest([
             'unit_id' => $this->unitId,
             'reported_by_user_id' => $user->id,
             'title' => $this->title,
@@ -57,6 +60,8 @@ class Create extends Component
             'status' => MaintenanceRequest::STATUS_PENDING,
             'reported_at' => now(),
         ]);
+        $request->tenant_id = $user->tenant_id;
+        $request->save();
 
         foreach ($this->photos as $photo) {
             $request->addMedia($photo->getRealPath())
@@ -66,9 +71,7 @@ class Create extends Component
 
         session()->flash('status', __('Maintenance request submitted.'));
 
-        $client = tenant();
-
-        return redirect()->to('/'.$client->slug.'/portal/maintenance/'.$request->id);
+        return redirect()->to('/'.$user->tenant_id.'/portal/maintenance/'.$request->id);
     }
 
     #[Layout('components.layouts.portal', ['authenticated' => true])]

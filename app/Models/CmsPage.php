@@ -48,7 +48,13 @@ class CmsPage extends Model
         self::SLUG_CONTACT,
     ];
 
-    protected $guarded = [];
+    protected $fillable = [
+        'slug',
+        'title',
+        'subtitle',
+        'blocks',
+        'published_at',
+    ];
 
     protected function casts(): array
     {

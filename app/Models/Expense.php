@@ -29,7 +29,15 @@ class Expense extends Model implements HasMedia
 {
     use HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'property_id',
+        'category_id',
+        'amount',
+        'currency',
+        'expense_date',
+        'description',
+        'recorded_by_user_id',
+    ];
 
     protected function casts(): array
     {

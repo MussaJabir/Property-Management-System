@@ -61,7 +61,19 @@ class MaintenanceRequest extends Model implements HasMedia
 
     public const STATUS_CANCELLED = 'cancelled';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'unit_id',
+        'reported_by_user_id',
+        'assigned_to_user_id',
+        'title',
+        'description',
+        'priority',
+        'status',
+        'reported_at',
+        'started_at',
+        'completed_at',
+        'cost',
+    ];
 
     protected function casts(): array
     {

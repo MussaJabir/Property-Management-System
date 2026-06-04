@@ -53,7 +53,20 @@ class Lease extends Model implements HasMedia
 
     public const BILLING_CUSTOM = 'custom';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'renter_id',
+        'unit_id',
+        'start_date',
+        'end_date',
+        'rent_amount',
+        'currency',
+        'deposit_amount',
+        'billing_cycle',
+        'billing_cycle_months',
+        'payment_due_day',
+        'status',
+        'terms_notes',
+    ];
 
     protected function casts(): array
     {
