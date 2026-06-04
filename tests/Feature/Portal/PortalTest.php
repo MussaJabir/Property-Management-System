@@ -37,7 +37,7 @@ afterEach(function () {
  *
  * @return array{0: Renter, 1: Lease}
  */
-function setupActiveLease(): array
+function setupActiveLease(?string $email = null): array
 {
     $location = Location::create(['name' => 'Test Loc', 'region' => 'Dar', 'district' => 'Kinondoni']);
     $property = Property::create([
@@ -60,6 +60,7 @@ function setupActiveLease(): array
         'type' => Renter::TYPE_INDIVIDUAL,
         'full_name' => 'Test Renter',
         'phone' => '+255712345678',
+        'email' => $email,
     ]);
     $lease = Lease::create([
         'tenant_id' => tenant('id'),
@@ -82,7 +83,7 @@ it('provisions a portal user when a lease activates', function () {
     Notification::fake();
     tenancy()->initialize($this->client);
 
-    [$renter, $lease] = setupActiveLease();
+    [$renter, $lease] = setupActiveLease('test-renter@example.com');
 
     expect($renter->user_id)->not->toBeNull();
 
@@ -95,7 +96,7 @@ it('provisions a portal user when a lease activates', function () {
     expect(Hash::check('345678', $user->password))->toBeFalse();
     expect($user->tenant_id)->toBe($this->client->getKey());
 
-    Notification::assertSentTo($user, PortalActivationNotification::class);
+    Notification::assertSentOnDemand(PortalActivationNotification::class);
 });
 
 it('does not double-provision when activating a lease for a renter who already has a portal user', function () {
@@ -259,4 +260,8 @@ it('provisions a renter even when the email is already taken by another user', f
     expect($user->email)->toBeNull(); // dropped to avoid the unique-constraint clash
     expect($user->status)->toBe(User::STATUS_PENDING_ACTIVATION);
     expect($user->activation_token)->not->toBeNull();
+
+    // The renter still receives the invite even though the address collides —
+    // it's delivered on-demand to the renter's email, not the nulled User one.
+    Notification::assertSentOnDemand(PortalActivationNotification::class);
 });
