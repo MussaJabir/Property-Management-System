@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -21,9 +22,19 @@ use Livewire\Component;
  */
 class Activate extends Component
 {
+    #[Locked]
     public string $userId = '';
 
+    #[Locked]
     public string $token = '';
+
+    /**
+     * Tenant slug captured on the initial (tenancy-initialized) page load —
+     * Livewire AJAX updates can't re-resolve path-based tenancy, so tenant()
+     * is null inside submit().
+     */
+    #[Locked]
+    public string $clientSlug = '';
 
     public bool $valid = false;
 
@@ -35,6 +46,7 @@ class Activate extends Component
     {
         $this->userId = $user;
         $this->token = $token;
+        $this->clientSlug = tenant()?->slug ?? '';
         $this->valid = $this->resolveUser() !== null;
     }
 
@@ -44,12 +56,11 @@ class Activate extends Component
      */
     protected function resolveUser(): ?User
     {
-        $client = tenant();
         $user = User::find($this->userId);
 
         if (! $user
             || ! $user->isRenter()
-            || ($client && $user->tenant_id !== $client->getKey())
+            || ($this->clientSlug !== '' && $user->tenant_id !== $this->clientSlug)
             || ! $user->isPendingActivation()
             || $user->activation_token === null
             || $user->activation_token_expires_at === null
@@ -89,8 +100,7 @@ class Activate extends Component
         Auth::guard('renter')->login($user);
         session()->regenerate();
 
-        $client = tenant();
-        $this->redirect('/'.($client?->slug ?? '').'/portal', navigate: false);
+        $this->redirect('/'.$user->tenant_id.'/portal', navigate: false);
     }
 
     #[Layout('components.layouts.portal')]
