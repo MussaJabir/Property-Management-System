@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Login extends Component
@@ -25,6 +26,19 @@ class Login extends Component
     public string $password = '';
 
     public bool $remember = false;
+
+    /**
+     * Tenant slug captured on the initial (tenancy-initialized) page load.
+     * Livewire AJAX updates hit a central /livewire route where path-based
+     * tenancy isn't re-resolved, so tenant() is null inside submit().
+     */
+    #[Locked]
+    public string $clientSlug = '';
+
+    public function mount(): void
+    {
+        $this->clientSlug = tenant()?->slug ?? '';
+    }
 
     public function submit(): void
     {
@@ -43,12 +57,10 @@ class Login extends Component
             return;
         }
 
-        $client = tenant();
-
         $normalizedPhone = $this->normalizePhone($this->phone);
 
         $user = User::query()
-            ->where('tenant_id', $client?->getKey())
+            ->where('tenant_id', $this->clientSlug)
             ->where('type', User::TYPE_RENTER)
             ->where('status', User::STATUS_ACTIVE)
             ->whereIn('phone', array_unique([$this->phone, $normalizedPhone]))
@@ -69,7 +81,7 @@ class Login extends Component
 
         session()->regenerate();
 
-        $this->redirect('/'.$client->slug.'/portal', navigate: false);
+        $this->redirect('/'.$this->clientSlug.'/portal', navigate: false);
     }
 
     /**
@@ -79,7 +91,7 @@ class Login extends Component
     private function throttleKey(): string
     {
         return 'portal-login:'
-            .(tenant()?->getKey() ?? 'none').':'
+            .($this->clientSlug ?: 'none').':'
             .Str::transliterate(Str::lower($this->phone)).':'
             .request()->ip();
     }
