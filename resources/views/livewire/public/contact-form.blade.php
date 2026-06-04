@@ -6,6 +6,12 @@
     @endif
 
     <form wire:submit="submit" class="mt-4 space-y-4">
+        {{-- Honeypot: hidden from humans; bots that fill it are dropped. --}}
+        <div aria-hidden="true" class="absolute -left-[9999px] h-0 w-0 overflow-hidden" tabindex="-1">
+            <label>{{ __('Website') }}</label>
+            <input wire:model="website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <label class="block text-sm font-medium">{{ __('Name') }}</label>
