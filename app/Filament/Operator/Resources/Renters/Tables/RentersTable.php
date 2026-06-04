@@ -3,11 +3,15 @@
 namespace App\Filament\Operator\Resources\Renters\Tables;
 
 use App\Models\Lease;
+use App\Models\Renter;
+use App\Services\Portal\RenterPortalAccountProvisioner;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -74,6 +78,34 @@ class RentersTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('resendActivation')
+                    ->label('Portal activation')
+                    ->icon('heroicon-o-key')
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->modalHeading('Send portal activation link')
+                    ->modalDescription('Issues a fresh activation link (and invalidates any previous one). The renter sets their own password through the link. Emailed automatically if an address is on file.')
+                    ->modalSubmitActionLabel('Send link')
+                    ->action(function (Renter $record): void {
+                        $url = app(RenterPortalAccountProvisioner::class)->resendActivation($record);
+
+                        if ($url === null) {
+                            Notification::make()
+                                ->title('Could not create a portal account')
+                                ->body('Add a phone number to this renter first — it is their portal sign-in identifier.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        Notification::make()
+                            ->title('Activation link issued')
+                            ->body('Emailed to the renter if an address is on file. To share it directly, copy this link:'."\n\n".$url)
+                            ->success()
+                            ->persistent()
+                            ->send();
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

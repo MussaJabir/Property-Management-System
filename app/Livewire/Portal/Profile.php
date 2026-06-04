@@ -50,7 +50,7 @@ class Profile extends Component
     {
         $this->validate([
             'currentPassword' => ['required', 'string'],
-            'newPassword' => ['required', 'confirmed', Password::min(6)],
+            'newPassword' => ['required', 'confirmed', Password::min(8)],
         ], attributes: [
             'newPassword' => __('new password'),
         ]);
