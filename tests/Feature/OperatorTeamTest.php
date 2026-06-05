@@ -6,7 +6,7 @@ use App\Filament\Operator\Pages\RolePermissions;
 use App\Filament\Operator\Resources\Operators\Pages\CreateOperator;
 use App\Models\Client;
 use App\Models\User;
-use App\Notifications\OperatorCredentialsIssuedNotification;
+use App\Notifications\OperatorActivationNotification;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -70,7 +70,7 @@ it('blocks a manager from Roles & Permissions', function () {
     test()->get('/manage/role-permissions')->assertForbidden();
 });
 
-it('invites a new operator with a role and emails credentials', function () {
+it('invites a new operator with a role and emails an activation link', function () {
     Notification::fake();
     test()->actingAs(teamOperator('owner'), 'web');
 
@@ -86,12 +86,13 @@ it('invites a new operator with a role and emails credentials', function () {
     $invited = User::query()->where('email', 'newacct@teamco.test')->first();
     expect($invited)->not->toBeNull();
     expect($invited->type)->toBe(User::TYPE_OPERATOR);
-    expect($invited->must_change_password)->toBeTrue();
+    expect($invited->status)->toBe(User::STATUS_PENDING_ACTIVATION);
+    expect($invited->activation_token)->not->toBeNull();
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($this->client->getKey());
     expect($invited->hasRole('accountant'))->toBeTrue();
 
-    Notification::assertSentTo($invited, OperatorCredentialsIssuedNotification::class);
+    Notification::assertSentTo($invited, OperatorActivationNotification::class);
 });
 
 it('lets the owner customise a role permission set', function () {

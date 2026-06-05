@@ -11,8 +11,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * When an operator user signs in with `must_change_password=true` (set by
- * OperatorOwnerProvisioner on auto-issued credentials), park them on the
+ * When an operator user signs in with `must_change_password=true` (legacy
+ * temp-password accounts predating the activation-link flow), park them on the
  * Filament profile page until they save a new password.
  *
  * Allowed-through routes: the profile page itself, logout, livewire AJAX

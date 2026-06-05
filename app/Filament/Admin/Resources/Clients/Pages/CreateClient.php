@@ -4,7 +4,7 @@ namespace App\Filament\Admin\Resources\Clients\Pages;
 
 use App\Filament\Admin\Resources\Clients\ClientResource;
 use App\Models\Client;
-use App\Services\Admin\OperatorOwnerProvisioner;
+use App\Services\Admin\OperatorProvisioner;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -46,13 +46,13 @@ class CreateClient extends CreateRecord
             return;
         }
 
-        $user = app(OperatorOwnerProvisioner::class)
-            ->provisionFor($client, $name, $email, $this->ownerData['phone'] ?? null);
+        $user = app(OperatorProvisioner::class)
+            ->provision($client, $name, $email, 'owner', $this->ownerData['phone'] ?? null);
 
         if ($user) {
             Notification::make()
                 ->title('Owner account created')
-                ->body('Welcome email with temporary password sent to '.$user->email.'.')
+                ->body('Activation link sent to '.$user->email.'.')
                 ->success()
                 ->send();
         }

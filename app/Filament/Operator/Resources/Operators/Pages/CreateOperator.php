@@ -5,54 +5,37 @@ declare(strict_types=1);
 namespace App\Filament\Operator\Resources\Operators\Pages;
 
 use App\Filament\Operator\Resources\Operators\OperatorResource;
+use App\Models\Client;
 use App\Models\User;
-use App\Notifications\OperatorCredentialsIssuedNotification;
+use App\Services\Admin\OperatorProvisioner;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Spatie\Permission\PermissionRegistrar;
-use Throwable;
 
 class CreateOperator extends CreateRecord
 {
     protected static string $resource = OperatorResource::class;
 
     /**
-     * Invite an operator: create the user with a temporary password, force a
-     * change on first sign-in, assign the chosen role, and email credentials.
+     * Invite an operator: provisions a pending_activation account with the
+     * chosen role and emails a one-time activation link (no password). The
+     * member sets their own password to activate.
      */
     protected function handleRecordCreation(array $data): Model
     {
-        /** @var User $actor */
         $actor = auth()->user();
-        $clientId = (string) $actor->tenant_id;
-        $role = $data['role'] ?? 'manager';
-        $tempPassword = Str::random(10);
+        abort_unless($actor instanceof User && $actor->tenant_id, 403);
 
-        $user = User::create([
-            'tenant_id' => $clientId,
-            'type' => User::TYPE_OPERATOR,
-            'name' => $data['name'],
-            'email' => Str::lower(trim((string) $data['email'])),
-            'password' => Hash::make($tempPassword),
-            'status' => 'active',
-            'locale' => 'en',
-            'must_change_password' => true,
-        ]);
+        $client = Client::find($actor->tenant_id);
+        abort_unless($client !== null, 403);
 
-        app(PermissionRegistrar::class)->setPermissionsTeamId($clientId);
-        $user->assignRole($role);
+        $user = app(OperatorProvisioner::class)->provision(
+            $client,
+            (string) $data['name'],
+            (string) $data['email'],
+            (string) ($data['role'] ?? 'manager'),
+        );
 
-        try {
-            $user->notify(new OperatorCredentialsIssuedNotification($tempPassword));
-        } catch (Throwable $e) {
-            Log::warning('Operator invite email failed', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        abort_unless($user !== null, 422);
 
         return $user;
     }
