@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS — Security &amp; Access Control Report — 5 June 2026</title>
+    <style>
+        @page { size: A4; margin: 14mm 12mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2937; line-height: 1.55; background: #f9fafb; font-size: 10.5pt; }
+        .page { max-width: 210mm; margin: 0 auto; padding: 18mm 14mm; background: #ffffff; }
+
+        .hero { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0f766e; padding-bottom: 16px; margin-bottom: 24px; }
+        .hero .brand { font-size: 22pt; font-weight: 800; color: #0f766e; letter-spacing: -0.5px; line-height: 1; }
+        .hero .brand-sub { font-size: 10pt; color: #6b7280; margin-top: 4px; font-weight: 500; }
+        .hero .meta { text-align: right; font-size: 9.5pt; color: #4b5563; }
+        .hero .meta strong { color: #1f2937; }
+        .hero .tag { display: inline-block; margin-top: 6px; padding: 3px 10px; background: #ccfbf1; color: #0f766e; border-radius: 9999px; font-size: 9pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        h2 { font-size: 14pt; color: #0f766e; margin: 26px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; font-weight: 700; letter-spacing: -0.2px; }
+        p { margin-bottom: 8px; }
+
+        .summary { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid #99f6e4; border-radius: 8px; padding: 16px 18px; margin-bottom: 22px; }
+        .summary p { font-size: 10.5pt; color: #134e4a; }
+        .summary p:last-child { margin-bottom: 0; }
+
+        .feature { border: 1px solid #e5e7eb; border-left: 4px solid #0f766e; border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; background: #ffffff; }
+        .feature .title { font-weight: 700; font-size: 11pt; color: #111827; margin-bottom: 4px; }
+        .feature .body { font-size: 10pt; color: #374151; }
+        .feature ul { margin: 8px 0 0 18px; }
+        .feature li { font-size: 10pt; color: #374151; margin-bottom: 3px; }
+        .feature .meaning { margin-top: 8px; font-size: 9.5pt; color: #134e4a; background: #f0fdfa; border-radius: 5px; padding: 7px 10px; }
+        .feature .meaning strong { color: #0f766e; }
+        .secure { border-left-color: #b45309; }
+        .secure .title { color: #92400e; }
+        .sev { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 9999px; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle; }
+        .sev-crit { background: #fee2e2; color: #991b1b; }
+        .sev-high { background: #ffedd5; color: #9a3412; }
+        .sev-med { background: #fef9c3; color: #854d0e; }
+        .sev-new { background: #cffafe; color: #155e75; }
+
+        table.roles { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 9pt; }
+        table.roles th, table.roles td { border: 1px solid #e5e7eb; padding: 5px 8px; text-align: left; }
+        table.roles th { background: #f0fdfa; color: #0f766e; font-weight: 700; }
+        table.roles td.c { text-align: center; }
+
+        ul.plain { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+        ul.plain li { padding-left: 18px; position: relative; font-size: 10pt; color: #1f2937; }
+        ul.plain li::before { content: "\2713"; position: absolute; left: 0; color: #0f766e; font-weight: 700; }
+
+        footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 9pt; color: #6b7280; }
+        footer strong { color: #0f766e; }
+
+        @media print { body { background: #ffffff; } .page { padding: 0; box-shadow: none; } .feature, .summary, ul.plain, table.roles { page-break-inside: avoid; } h2 { page-break-after: avoid; } }
+        @media screen { .page { box-shadow: 0 4px 14px rgba(0,0,0,0.06); margin: 24px auto; border-radius: 6px; } }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <header class="hero">
+        <div>
+            <div class="brand">PMS</div>
+            <div class="brand-sub">Property Management System &middot; BJP Technologies</div>
+        </div>
+        <div class="meta">
+            <strong>Security &amp; Access Control Report</strong><br>
+            Date: <strong>5 June 2026</strong><br>
+            <span class="tag">&bull; Security hardening</span>
+        </div>
+    </header>
+
+    <section class="summary">
+        <p><strong>We carried out a full security review of PMS and worked through a prioritised programme of fixes and improvements.</strong> This report summarises that work in plain language &mdash; what was found, what we changed, and what it means for you and your renters.</p>
+        <p>The headline: we closed a serious sign-in weakness in the renter portal, tightened how data is protected behind the scenes, blocked spam on public forms, and put landlords properly in control of their staff &mdash; who they are, what they can do, and how they get access. No passwords are emailed anywhere any more; everyone sets their own through a secure one-time link.</p>
+    </section>
+
+    <h2>What we reviewed and fixed</h2>
+
+    <div class="feature secure">
+        <div class="title">1. Renter portal sign-in security <span class="sev sev-crit">Critical</span></div>
+        <div class="body">
+            <strong>What we found:</strong> renter portal accounts were created with a password derived from the renter's own phone number &mdash; which is also their username &mdash; with no limit on repeated guessing. In practice, anyone who knew a renter's phone number could have signed in and seen their invoices, payment history and personal details.
+            <ul>
+                <li>Renters now receive a secure, one-time <strong>activation link</strong> and choose their own private password. No password is ever generated or emailed.</li>
+                <li>Repeated failed sign-in attempts are now automatically blocked (rate-limiting), defeating password guessing.</li>
+                <li>Any pre-existing accounts using the old weak password were invalidated and must re-activate.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> a renter's account can only be accessed by the renter, using a password only they know.</div>
+        </div>
+    </div>
+
+    <div class="feature secure">
+        <div class="title">2. Cross-account data protection <span class="sev sev-high">High</span></div>
+        <div class="body">
+            We hardened the system so that no submitted form or request can change which landlord a record belongs to. Every record (property, renter, lease, invoice, payment, and so on) is now locked to its owning workspace at the data layer, and an <strong>automatic test</strong> proves a tampered request cannot move data between landlords.
+            <div class="meaning"><strong>What it means:</strong> defence-in-depth &mdash; even a malformed or malicious request cannot misattribute one landlord's data to another.</div>
+        </div>
+    </div>
+
+    <div class="feature secure">
+        <div class="title">3. Spam &amp; abuse protection on public forms <span class="sev sev-med">Medium</span></div>
+        <div class="body">
+            The public &ldquo;Contact us&rdquo; form on each landlord's website could be used to flood the system and spam landlords with messages. We added two protections: a cap on how many messages one visitor can send in a short window, and a hidden anti-bot trap.
+            <div class="meaning"><strong>What it means:</strong> genuine enquiries get through; automated spam is blocked before it reaches the landlord's inbox.</div>
+        </div>
+    </div>
+
+    <div class="feature secure">
+        <div class="title">4. Access control &amp; authorisation gaps <span class="sev sev-med">Medium</span></div>
+        <div class="body">
+            We tightened who can do what across the system:
+            <ul>
+                <li>Renters can now only raise a maintenance request for a unit they actually rent (not any unit).</li>
+                <li>Access checks now &ldquo;fail safe&rdquo; &mdash; if anything is uncertain, access is denied rather than allowed.</li>
+                <li>We confirmed and locked, with automatic tests, the strict separation between BJP's control panel and each landlord's own panel.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">5. Staff roles &amp; permissions &mdash; landlords in control <span class="sev sev-new">New capability</span></div>
+        <div class="body">
+            Previously every staff member a landlord added could do everything. Staff now have proper, enforced roles, and landlords manage their own team from two new screens (<strong>Team</strong> and <strong>Roles &amp; Permissions</strong>):
+            <table class="roles">
+                <tr><th>Area</th><th>Owner</th><th>Manager</th><th>Accountant</th><th>Maintenance</th></tr>
+                <tr><td>Properties, units &amp; renters</td><td class="c">Full</td><td class="c">Full</td><td class="c">View</td><td class="c">View</td></tr>
+                <tr><td>Invoices &amp; payments</td><td class="c">Full</td><td class="c">Full</td><td class="c">Full</td><td class="c">&mdash;</td></tr>
+                <tr><td>Maintenance</td><td class="c">Full</td><td class="c">Full</td><td class="c">View</td><td class="c">Full</td></tr>
+                <tr><td>Website &amp; reports</td><td class="c">Full</td><td class="c">Full</td><td class="c">Reports</td><td class="c">&mdash;</td></tr>
+                <tr><td>Workspace settings</td><td class="c">Full</td><td class="c">&mdash;</td><td class="c">&mdash;</td><td class="c">&mdash;</td></tr>
+            </table>
+            <ul>
+                <li><strong>Team:</strong> invite staff, set each person's role, and deactivate anyone who leaves.</li>
+                <li><strong>Roles &amp; Permissions:</strong> the owner can fine-tune exactly what each role is allowed to do &mdash; these are the workspace's own settings, adjustable any time.</li>
+                <li><strong>Secure invites:</strong> invited staff receive a one-time activation link and set their own password &mdash; again, no passwords are emailed.</li>
+                <li>Built-in safeguards: only an owner can grant owner-level access, and no-one can accidentally lock themselves out.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> a landlord can safely add an accountant who only touches finances, or maintenance staff who only see maintenance &mdash; on their own terms, without involving us.</div>
+        </div>
+    </div>
+
+    <h2>How your data and accounts are protected now</h2>
+    <ul class="plain">
+        <li>No passwords are ever emailed &mdash; everyone sets their own</li>
+        <li>Secure one-time activation links for all new accounts</li>
+        <li>Sign-in guessing blocked by rate-limiting</li>
+        <li>Each landlord's data strictly isolated &amp; tested</li>
+        <li>Staff see and do only what their role permits</li>
+        <li>Landlords control their own team &amp; permissions</li>
+        <li>Public forms protected against spam and bots</li>
+        <li>Over 130 automatic tests run before every update</li>
+        <li>Every change peer-reviewed before going live</li>
+        <li>HTTPS, encrypted identifiers, nightly backups</li>
+    </ul>
+
+    <h2>What's next</h2>
+    <p>Two further hardening steps are planned to complete this programme: securing how uploaded files (photos, receipts) are handled and stored, and final production-environment hardening &mdash; including delivering account-activation links by <strong>SMS</strong> as well as email, so renters and staff without an email address can still be onboarded smoothly. These will be scheduled next.</p>
+
+    <footer>
+        Report prepared <strong>5 June 2026</strong> &middot; Security &amp; Access Control &middot; PMS &middot; BJP Technologies
+    </footer>
+
+</div>
+</body>
+</html>
