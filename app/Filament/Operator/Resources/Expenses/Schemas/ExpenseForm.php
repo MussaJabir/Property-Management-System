@@ -82,7 +82,7 @@ class ExpenseForm
                         SpatieMediaLibraryFileUpload::make('receipt')
                             ->hiddenLabel()
                             ->collection('receipt')
-                            ->image()
+                            ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                             ->imageEditor()
                             ->maxSize(5120)
                             ->columnSpanFull(),

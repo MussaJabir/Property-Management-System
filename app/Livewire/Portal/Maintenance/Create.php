@@ -8,6 +8,7 @@ use App\Models\Lease;
 use App\Models\MaintenanceRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -52,7 +53,8 @@ class Create extends Component
             'description' => ['required', 'string', 'min:10'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
             'unitId' => ['required', 'uuid', Rule::in($allowedUnitIds)],
-            'photos.*' => ['nullable', 'image', 'max:5120'],
+            // Restrict to safe raster types — no SVG (can carry scripts).
+            'photos.*' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ]);
 
         // tenant_id is set directly (not mass-assigned): this is a renter-portal
@@ -72,8 +74,9 @@ class Create extends Component
         $request->save();
 
         foreach ($this->photos as $photo) {
+            // Generated filename — never trust the client-supplied original name.
             $request->addMedia($photo->getRealPath())
-                ->usingFileName($photo->getClientOriginalName())
+                ->usingFileName(Str::random(40).'.'.$photo->getClientOriginalExtension())
                 ->toMediaCollection('photos');
         }
 

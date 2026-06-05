@@ -122,7 +122,7 @@ class WorkspaceSettings extends Page implements HasForms
                             ->schema([
                                 FileUpload::make('logo_path')
                                     ->label('Logo')
-                                    ->image()
+                                    ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                     ->disk('local')
                                     ->directory('client-logos')
                                     ->imageEditor()
