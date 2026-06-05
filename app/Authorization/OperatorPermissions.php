@@ -39,6 +39,7 @@ final class OperatorPermissions
         }
 
         $permissions[] = 'reports.view';
+        $permissions[] = 'team.manage';
 
         return $permissions;
     }
