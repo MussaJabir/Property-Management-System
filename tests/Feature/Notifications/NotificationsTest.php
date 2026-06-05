@@ -14,9 +14,9 @@ use App\Models\User;
 use App\Notifications\InvoiceIssuedNotification;
 use App\Notifications\InvoiceOverdueNotification;
 use App\Notifications\MaintenanceRequestSubmittedNotification;
-use App\Notifications\OperatorCredentialsIssuedNotification;
+use App\Notifications\OperatorActivationNotification;
 use App\Notifications\PaymentReceivedNotification;
-use App\Services\Admin\OperatorOwnerProvisioner;
+use App\Services\Admin\OperatorProvisioner;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\PermissionRegistrar;
 use Stancl\Tenancy\Facades\Tenancy;
@@ -83,26 +83,27 @@ function setupBilling(): array
     return [$renter->fresh(), $lease->fresh(), $renter->fresh()->user];
 }
 
-it('provisions an operator owner with role + welcome email when filled', function () {
+it('provisions an operator owner with role + activation invite when filled', function () {
     Notification::fake();
 
-    $user = app(OperatorOwnerProvisioner::class)
-        ->provisionFor($this->client, 'Owner Person', 'owner@notif.local', '+255712000000');
+    $user = app(OperatorProvisioner::class)
+        ->provision($this->client, 'Owner Person', 'owner@notif.local', 'owner', '+255712000000');
 
     expect($user)->not->toBeNull();
     expect($user->type)->toBe(User::TYPE_OPERATOR);
-    expect($user->must_change_password)->toBeTrue();
+    expect($user->status)->toBe(User::STATUS_PENDING_ACTIVATION);
+    expect($user->activation_token)->not->toBeNull();
     expect($user->tenant_id)->toBe($this->client->id);
 
-    Notification::assertSentTo($user, OperatorCredentialsIssuedNotification::class);
+    Notification::assertSentTo($user, OperatorActivationNotification::class);
 });
 
 it('is idempotent: re-provisioning the same email returns the existing user', function () {
     Notification::fake();
-    $svc = app(OperatorOwnerProvisioner::class);
+    $svc = app(OperatorProvisioner::class);
 
-    $first = $svc->provisionFor($this->client, 'Owner', 'owner@notif.local');
-    $second = $svc->provisionFor($this->client, 'Owner', 'owner@notif.local');
+    $first = $svc->provision($this->client, 'Owner', 'owner@notif.local', 'owner');
+    $second = $svc->provision($this->client, 'Owner', 'owner@notif.local', 'owner');
 
     expect($second->id)->toBe($first->id);
 });

@@ -9,12 +9,19 @@ use App\Models\User;
 use App\Notifications\ContactSubmissionReceivedNotification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Throwable;
 
 class ContactForm extends Component
 {
+    /** Valid submissions allowed per client+IP before throttling. */
+    private const MAX_SUBMISSIONS = 5;
+
+    /** Window (seconds) the submission count decays over. */
+    private const DECAY_SECONDS = 600;
+
     public string $name = '';
 
     public string $email = '';
@@ -22,6 +29,12 @@ class ContactForm extends Component
     public string $phone = '';
 
     public string $message = '';
+
+    /**
+     * Honeypot — hidden from humans via CSS. Bots fill it; those submissions
+     * are dropped silently. Deliberately NOT #[Locked] (it's a real input).
+     */
+    public string $website = '';
 
     public bool $sent = false;
 
@@ -39,6 +52,15 @@ class ContactForm extends Component
 
     public function submit(): void
     {
+        // Honeypot: a hidden field real users never see. Bots fill it — drop
+        // the submission silently (fake success so we don't teach evasion).
+        if ($this->website !== '') {
+            $this->reset(['name', 'email', 'phone', 'message']);
+            $this->sent = true;
+
+            return;
+        }
+
         $this->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['nullable', 'email', 'max:160'],
@@ -51,6 +73,18 @@ class ContactForm extends Component
 
             return;
         }
+
+        // Throttle genuine submissions per client + IP to blunt spam floods
+        // (each submission also fans out an email to every operator).
+        $throttleKey = 'contact-form:'.$this->clientKey.':'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_SUBMISSIONS)) {
+            $this->addError('message', __('You have sent several messages recently. Please try again in a little while.'));
+
+            return;
+        }
+
+        RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
 
         $submission = new ContactSubmission([
             'name' => $this->name,

@@ -8,6 +8,8 @@ use App\Models\Lease;
 use App\Models\MaintenanceRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -39,12 +41,20 @@ class Create extends Component
     {
         $user = Auth::guard('renter')->user();
 
+        // Authorisation: a renter may only file against a unit they hold (or
+        // held) a lease on — not any UUID they post. Same source as the unit
+        // dropdown in render(), so the form options and the rule stay in sync.
+        $allowedUnitIds = $user->renter
+            ? $user->renter->leases()->pluck('unit_id')->filter()->unique()->values()->all()
+            : [];
+
         $this->validate([
             'title' => ['required', 'string', 'max:120'],
             'description' => ['required', 'string', 'min:10'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
-            'unitId' => ['required', 'uuid'],
-            'photos.*' => ['nullable', 'image', 'max:5120'],
+            'unitId' => ['required', 'uuid', Rule::in($allowedUnitIds)],
+            // Restrict to safe raster types — no SVG (can carry scripts).
+            'photos.*' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ]);
 
         // tenant_id is set directly (not mass-assigned): this is a renter-portal
@@ -64,8 +74,9 @@ class Create extends Component
         $request->save();
 
         foreach ($this->photos as $photo) {
+            // Generated filename — never trust the client-supplied original name.
             $request->addMedia($photo->getRealPath())
-                ->usingFileName($photo->getClientOriginalName())
+                ->usingFileName(Str::random(40).'.'.$photo->getClientOriginalExtension())
                 ->toMediaCollection('photos');
         }
 

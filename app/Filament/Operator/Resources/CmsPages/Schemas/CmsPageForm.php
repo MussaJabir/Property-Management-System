@@ -48,7 +48,7 @@ class CmsPageForm
                                     FileUpload::make('background_image')
                                         ->label('Background image')
                                         ->helperText('Landscape, at least 1600×900 px works best. Leave empty to use the brand-color hero.')
-                                        ->image()
+                                        ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                         ->imageEditor()
                                         ->disk('public')
                                         ->directory('cms/hero')

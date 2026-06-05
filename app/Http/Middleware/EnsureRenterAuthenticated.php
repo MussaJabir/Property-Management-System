@@ -23,7 +23,10 @@ class EnsureRenterAuthenticated
         $user = Auth::guard('renter')->user();
         $client = tenant();
 
-        if (! $user || ! $user->isRenter() || $user->status !== 'active' || ($client && $user->tenant_id !== $client->getKey())) {
+        // Fail closed: a null $client (no tenant resolved) is rejected, not
+        // skipped — these routes always run InitializeTenancyByPath first, so
+        // a missing tenant means something is wrong and access must be denied.
+        if (! $user || ! $user->isRenter() || $user->status !== 'active' || ! $client || $user->tenant_id !== $client->getKey()) {
             Auth::guard('renter')->logout();
             $request->session()->invalidate();
 

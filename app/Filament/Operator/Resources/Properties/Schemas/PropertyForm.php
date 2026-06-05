@@ -77,7 +77,7 @@ class PropertyForm
                             ->collection('photos')
                             ->multiple()
                             ->reorderable()
-                            ->image()
+                            ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                             ->imageEditor()
                             ->maxSize(5120)
                             ->columnSpanFull(),
