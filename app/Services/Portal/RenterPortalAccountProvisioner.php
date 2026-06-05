@@ -144,9 +144,8 @@ class RenterPortalAccountProvisioner
 
         // Deliver the invite straight to the renter's own email — not the portal
         // User's, which may be null when the address collides with another user
-        // (platform-wide unique email). Same idea as OperatorOwnerProvisioner
-        // mailing the owner, but routed on-demand so a nulled User email can't
-        // swallow it. Operators can still copy the returned link to share.
+        // (platform-wide unique email). Routed on-demand so a nulled User email
+        // can't swallow it. Operators can still copy the returned link to share.
         if ($renter->email) {
             try {
                 Notification::route('mail', $renter->email)->notify(
