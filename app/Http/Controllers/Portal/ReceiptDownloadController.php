@@ -9,6 +9,7 @@ use App\Models\Receipt;
 use App\Services\ReceiptPdfGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -28,12 +29,15 @@ class ReceiptDownloadController
             throw new NotFoundHttpException;
         }
 
-        $bytes = app(ReceiptPdfGenerator::class)->render($receipt);
+        // Serve the stored PDF; render (headless Chromium) only once, on first
+        // access, then reuse the cached copy on every later download.
+        $disk = Storage::disk(config('filesystems.default'));
 
-        return response()->streamDownload(
-            fn () => print ($bytes),
-            'receipt-'.$receipt->receipt_number.'.pdf',
-            ['Content-Type' => 'application/pdf'],
-        );
+        if (! $receipt->pdf_path || ! $disk->exists($receipt->pdf_path)) {
+            app(ReceiptPdfGenerator::class)->store($receipt);
+            $receipt->refresh();
+        }
+
+        return $disk->download((string) $receipt->pdf_path, 'receipt-'.$receipt->receipt_number.'.pdf');
     }
 }

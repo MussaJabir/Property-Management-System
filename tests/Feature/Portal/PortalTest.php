@@ -13,6 +13,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Notifications\PortalActivationNotification;
 use App\Services\Portal\RenterPortalAccountProvisioner;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -324,4 +325,25 @@ it('accepts a maintenance request for the renter own unit', function () {
         ->assertHasNoErrors();
 
     expect(MaintenanceRequest::query()->count())->toBe(1);
+});
+
+it('rejects an SVG maintenance photo upload', function () {
+    Notification::fake();
+    tenancy()->initialize($this->client);
+    [$renter, $lease] = setupActiveLease('renter@example.com');
+
+    $user = $renter->user;
+    $user->forceFill(['status' => User::STATUS_ACTIVE])->save();
+    test()->actingAs($user, 'renter');
+
+    Livewire::test(MaintenanceCreate::class)
+        ->set('title', 'Water leak')
+        ->set('description', 'There is a leak in the bathroom.')
+        ->set('priority', 'high')
+        ->set('unitId', $lease->unit_id)
+        ->set('photos', [UploadedFile::fake()->create('evil.svg', 12, 'image/svg+xml')])
+        ->call('submit')
+        ->assertHasErrors('photos.0');
+
+    expect(MaintenanceRequest::query()->count())->toBe(0);
 });

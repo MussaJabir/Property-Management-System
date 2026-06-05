@@ -153,7 +153,7 @@ class UnitForm
                             ->multiple()
                             ->reorderable()
                             ->appendFiles()
-                            ->image()
+                            ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                             ->imageEditor()
                             ->maxSize(5120)
                             ->panelLayout('grid')
