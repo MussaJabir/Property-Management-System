@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS — Security &amp; Access Control Report (Part 2) — 6 June 2026</title>
+    <style>
+        @page { size: A4; margin: 14mm 12mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2937; line-height: 1.55; background: #f9fafb; font-size: 10.5pt; }
+        .page { max-width: 210mm; margin: 0 auto; padding: 18mm 14mm; background: #ffffff; }
+
+        .hero { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0f766e; padding-bottom: 16px; margin-bottom: 24px; }
+        .hero .brand { font-size: 22pt; font-weight: 800; color: #0f766e; letter-spacing: -0.5px; line-height: 1; }
+        .hero .brand-sub { font-size: 10pt; color: #6b7280; margin-top: 4px; font-weight: 500; }
+        .hero .meta { text-align: right; font-size: 9.5pt; color: #4b5563; }
+        .hero .meta strong { color: #1f2937; }
+        .hero .tag { display: inline-block; margin-top: 6px; padding: 3px 10px; background: #ccfbf1; color: #0f766e; border-radius: 9999px; font-size: 9pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        h2 { font-size: 14pt; color: #0f766e; margin: 26px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; font-weight: 700; letter-spacing: -0.2px; }
+        p { margin-bottom: 8px; }
+
+        .summary { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid #99f6e4; border-radius: 8px; padding: 16px 18px; margin-bottom: 22px; }
+        .summary p { font-size: 10.5pt; color: #134e4a; }
+        .summary p:last-child { margin-bottom: 0; }
+
+        .recap { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 22px; }
+        .recap .recap-title { font-weight: 700; font-size: 10.5pt; color: #334155; margin-bottom: 8px; }
+        .recap ul { margin: 0 0 0 18px; }
+        .recap li { font-size: 9.7pt; color: #475569; margin-bottom: 3px; }
+
+        .feature { border: 1px solid #e5e7eb; border-left: 4px solid #0f766e; border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; background: #ffffff; }
+        .feature .title { font-weight: 700; font-size: 11pt; color: #111827; margin-bottom: 4px; }
+        .feature .body { font-size: 10pt; color: #374151; }
+        .feature ul { margin: 8px 0 0 18px; }
+        .feature li { font-size: 10pt; color: #374151; margin-bottom: 3px; }
+        .feature .meaning { margin-top: 8px; font-size: 9.5pt; color: #134e4a; background: #f0fdfa; border-radius: 5px; padding: 7px 10px; }
+        .feature .meaning strong { color: #0f766e; }
+        .secure { border-left-color: #b45309; }
+        .secure .title { color: #92400e; }
+        .sev { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 9999px; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle; }
+        .sev-crit { background: #fee2e2; color: #991b1b; }
+        .sev-high { background: #ffedd5; color: #9a3412; }
+        .sev-med { background: #fef9c3; color: #854d0e; }
+        .sev-new { background: #cffafe; color: #155e75; }
+        .sev-perf { background: #ede9fe; color: #5b21b6; }
+
+        ul.plain { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+        ul.plain li { padding-left: 18px; position: relative; font-size: 10pt; color: #1f2937; }
+        ul.plain li::before { content: "\2713"; position: absolute; left: 0; color: #0f766e; font-weight: 700; }
+
+        .done { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid #99f6e4; border-radius: 8px; padding: 16px 18px; margin-top: 6px; }
+        .done p { font-size: 10.5pt; color: #134e4a; margin-bottom: 0; }
+
+        footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 9pt; color: #6b7280; }
+        footer strong { color: #0f766e; }
+
+        @media print { body { background: #ffffff; } .page { padding: 0; box-shadow: none; } .feature, .summary, .recap, .done, ul.plain { page-break-inside: avoid; } h2 { page-break-after: avoid; } }
+        @media screen { .page { box-shadow: 0 4px 14px rgba(0,0,0,0.06); margin: 24px auto; border-radius: 6px; } }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <header class="hero">
+        <div>
+            <div class="brand">PMS</div>
+            <div class="brand-sub">Property Management System &middot; BJP Technologies</div>
+        </div>
+        <div class="meta">
+            <strong>Security &amp; Access Control Report &mdash; Part 2</strong><br>
+            Date: <strong>6 June 2026</strong><br>
+            <span class="tag">&bull; Programme complete</span>
+        </div>
+    </header>
+
+    <section class="summary">
+        <p><strong>This report completes the security programme we began on 5 June.</strong> The first report (Part 1) covered the renter portal sign-in fix, data isolation between landlords, spam protection on public forms, and putting landlords in control of their staff. This part covers the final two areas and confirms the whole programme is now finished.</p>
+        <p>The headline for Part 2: uploaded photos and documents are now handled and stored securely, receipts download faster, the production server can no longer accidentally leak its internal details, and account-activation links can now be delivered by <strong>SMS</strong> as well as email &mdash; so renters and staff without an email address can still be onboarded smoothly.</p>
+    </section>
+
+    <section class="recap">
+        <div class="recap-title">Recap &mdash; Part 1 (5 June 2026)</div>
+        <ul>
+            <li><strong>Renter portal sign-in</strong> &mdash; closed a serious weakness; renters now set their own password via a one-time activation link.</li>
+            <li><strong>Cross-account data protection</strong> &mdash; each landlord's data locked to its workspace and proven isolated by automatic tests.</li>
+            <li><strong>Spam &amp; bot protection</strong> &mdash; public &ldquo;Contact us&rdquo; forms protected against flooding.</li>
+            <li><strong>Staff roles &amp; permissions</strong> &mdash; landlords now control who their staff are and exactly what each can do.</li>
+        </ul>
+    </section>
+
+    <h2>What we completed in Part 2</h2>
+
+    <div class="feature secure">
+        <div class="title">5. Secure handling of uploaded files <span class="sev sev-med">Medium</span></div>
+        <div class="body">
+            Renters and staff upload photos and documents (for example, maintenance-request photos). We tightened how every upload is checked and stored:
+            <ul>
+                <li>Uploads are now strictly validated &mdash; only genuine image files (JPEG, PNG, WebP) are accepted, and each is capped at 5&nbsp;MB.</li>
+                <li>Every file is saved under a randomised, unguessable name &mdash; one renter cannot guess or reach another renter's file by its name, and a new upload can never overwrite an existing file.</li>
+                <li>Files being uploaded are now held in a private area during transfer. Previously this could default to a publicly readable location on the server; that is now closed.</li>
+                <li>All stored files live in private cloud storage (Backblaze&nbsp;B2), never on the web server's public disk.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> the photos and documents your renters upload stay private, cannot be guessed at by outsiders, and cannot be tampered with or overwritten.</div>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">6. Faster, more reliable receipts <span class="sev sev-perf">Performance</span></div>
+        <div class="body">
+            Payment receipts (PDFs) used to be rebuilt from scratch every single time a renter downloaded one. They are now generated once and re-served from storage, so a repeat download is instant.
+            <div class="meaning"><strong>What it means:</strong> renters get their receipts faster, the result is always identical, and the server does far less work under load.</div>
+        </div>
+    </div>
+
+    <div class="feature secure">
+        <div class="title">7. Production-environment hardening <span class="sev sev-high">High</span></div>
+        <div class="body">
+            <strong>What we guarded against:</strong> if the live server were ever misconfigured with &ldquo;debug mode&rdquo; left switched on, it could expose internal technical details &mdash; stack traces, configuration, and environment information &mdash; to the public, handing an attacker a map of the system.
+            <ul>
+                <li>The application now <strong>forces debug mode off</strong> in production automatically, even if the server is misconfigured.</li>
+                <li>If it ever has to do this, it raises an internal alert in the logs so the misconfiguration gets noticed and fixed.</li>
+                <li>The production configuration template now sets this safely by default.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> a simple configuration slip on the server can no longer leak the system's internals to the outside world.</div>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">8. Account-activation links by SMS <span class="sev sev-new">New capability</span></div>
+        <div class="body">
+            Account-activation links are now delivered by <strong>SMS</strong> (via Beem Africa) in addition to email. This was the planned follow-up from Part 1.
+            <ul>
+                <li>Covers renters and staff who have <strong>no email address</strong>, or whose email is already used by another account.</li>
+                <li>SMS sits alongside email &mdash; it is best-effort by design: if SMS is not configured or a message fails to send, email delivery still works and nothing in the onboarding breaks.</li>
+                <li>Still no passwords are ever sent &mdash; the SMS carries only the secure, one-time link, and the person sets their own password.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> anyone can be onboarded smoothly &mdash; well suited to the Tanzanian market, where many renters are reliably reachable by phone rather than email.</div>
+        </div>
+    </div>
+
+    <h2>How your data and accounts are protected now</h2>
+    <ul class="plain">
+        <li>No passwords are ever sent &mdash; everyone sets their own</li>
+        <li>Activation links delivered by email <em>and</em> SMS</li>
+        <li>Sign-in guessing blocked by rate-limiting</li>
+        <li>Each landlord's data strictly isolated &amp; tested</li>
+        <li>Staff see and do only what their role permits</li>
+        <li>Landlords control their own team &amp; permissions</li>
+        <li>Uploaded files validated, private &amp; unguessable</li>
+        <li>Public forms protected against spam and bots</li>
+        <li>Server can't leak its internals in production</li>
+        <li>Over 135 automatic tests run before every update</li>
+        <li>Every change peer-reviewed before going live</li>
+        <li>HTTPS, encrypted identifiers, nightly backups</li>
+    </ul>
+
+    <h2>Programme complete</h2>
+    <div class="done">
+        <p>All six areas of the security programme are now finished and live: the renter portal sign-in fix, cross-account data protection, spam &amp; bot protection, staff roles &amp; permissions, secure file handling, and production hardening with SMS onboarding. PMS has moved from a working build to one that is secure-by-default, with each landlord firmly in control of their own workspace, staff, and renters. Security is an ongoing discipline &mdash; we will keep monitoring, testing, and hardening as the system grows, but the planned remediation work identified in the review is complete.</p>
+    </div>
+
+    <footer>
+        Report prepared <strong>6 June 2026</strong> &middot; Security &amp; Access Control (Part 2) &middot; PMS &middot; BJP Technologies
+    </footer>
+
+</div>
+</body>
+</html>
