@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Renter;
 use App\Models\User;
 use App\Notifications\PortalActivationNotification;
+use App\Services\Sms\BeemSmsSender;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -161,6 +162,16 @@ class RenterPortalAccountProvisioner
                     'error' => $e->getMessage(),
                 ]);
             }
+        }
+
+        // Also deliver the link by SMS (Beem) — covers renters with no email, or
+        // an email that collides with another user. Best-effort; never throws.
+        $phone = (string) $renter->getRawOriginal('phone');
+        if ($phone !== '') {
+            app(BeemSmsSender::class)->send(
+                $phone,
+                (string) __('Activate your :app account: :url', ['app' => $client?->name ?? 'PMS', 'url' => $url]),
+            );
         }
 
         return $url;

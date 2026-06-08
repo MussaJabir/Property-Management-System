@@ -88,6 +88,11 @@ nano .env   # fill in real secrets
 chmod 600 .env
 ```
 
+> **Security:** keep `APP_DEBUG=false` in production (the app also forces it off
+> as a safety net so a misconfigured server can never leak stack traces or
+> Ignition). Set `BEEM_API_KEY`/`BEEM_SECRET` to deliver activation links by SMS
+> as well as email — optional; email-only works without them.
+
 Then on the server, copy the compose file in place:
 
 ```bash
