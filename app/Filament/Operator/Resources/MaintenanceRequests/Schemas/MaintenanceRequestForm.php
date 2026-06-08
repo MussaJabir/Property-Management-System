@@ -67,12 +67,18 @@ class MaintenanceRequestForm
                     ->components([
                         Select::make('assigned_to_user_id')
                             ->label('Assigned to')
+                            // Scope to THIS client's operators. User has no global
+                            // tenant scope (it authenticates from the central
+                            // context), so filter by tenant_id explicitly or the
+                            // list leaks every client's staff.
                             ->options(fn () => User::query()
+                                ->where('tenant_id', tenant('id'))
                                 ->where('type', 'operator')
                                 ->where('status', 'active')
                                 ->orderBy('name')
                                 ->pluck('name', 'id'))
                             ->searchable()
+                            ->preload()
                             ->placeholder('Leave empty — assign later'),
                     ]),
 

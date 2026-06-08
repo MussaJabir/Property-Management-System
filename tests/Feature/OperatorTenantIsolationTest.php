@@ -46,6 +46,26 @@ beforeEach(function () {
     ]);
     $this->operatorB->assignRole('owner');
 
+    // Assignable technicians (never sign in) — distinct from the owners above so
+    // assertions about the "Assigned to" dropdown can't be satisfied by the
+    // logged-in owner's name appearing in the panel topbar.
+    User::create([
+        'tenant_id' => $this->clientA->id,
+        'type' => User::TYPE_OPERATOR,
+        'name' => 'Alpha Technician',
+        'email' => 'tech@alpha.local',
+        'password' => 'password',
+        'status' => 'active',
+    ]);
+    User::create([
+        'tenant_id' => $this->clientB->id,
+        'type' => User::TYPE_OPERATOR,
+        'name' => 'Bravo Technician',
+        'email' => 'tech@bravo.local',
+        'password' => 'password',
+        'status' => 'active',
+    ]);
+
     // Seed a property for Client A only.
     Tenancy::initialize($this->clientA);
     $location = Location::create(['name' => 'Alpha Area', 'region' => 'Dar es Salaam', 'district' => 'Ilala']);
@@ -87,4 +107,23 @@ it("does not leak another client's locations to an operator", function () {
         ->get('/manage/locations')
         ->assertOk()
         ->assertDontSee('Alpha Area');
+});
+
+it("does not leak another client's operators in the maintenance assignment list", function () {
+    // The "Assigned to" select had no tenant_id filter (User has no global
+    // tenant scope), so it offered every client's staff. Drive the real create
+    // page (preloaded options) and confirm Client B can't see Client A's tech.
+    $this->actingAs($this->operatorB, 'web')
+        ->get('/manage/maintenance-requests/create')
+        ->assertOk()
+        ->assertSee('Bravo Technician')
+        ->assertDontSee('Alpha Technician');
+});
+
+it("shows an operator their own client's staff in the maintenance assignment list", function () {
+    $this->actingAs($this->operatorA, 'web')
+        ->get('/manage/maintenance-requests/create')
+        ->assertOk()
+        ->assertSee('Alpha Technician')
+        ->assertDontSee('Bravo Technician');
 });

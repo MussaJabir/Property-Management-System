@@ -101,7 +101,11 @@ class MaintenanceRequestsTable
                     ->schema([
                         Select::make('assignee')
                             ->label('Assign to (optional)')
+                            // Scope to THIS client's operators — User has no global
+                            // tenant scope, so filter by tenant_id or it leaks
+                            // every client's staff (see the form schema).
                             ->options(fn () => User::query()
+                                ->where('tenant_id', tenant('id'))
                                 ->where('type', 'operator')
                                 ->where('status', 'active')
                                 ->pluck('name', 'id')),
