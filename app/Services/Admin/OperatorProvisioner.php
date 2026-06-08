@@ -7,6 +7,7 @@ namespace App\Services\Admin;
 use App\Models\Client;
 use App\Models\User;
 use App\Notifications\OperatorActivationNotification;
+use App\Services\Sms\BeemSmsSender;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -101,6 +102,14 @@ class OperatorProvisioner
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
+        }
+
+        // Also send the link by SMS (Beem) when a phone is on file. Best-effort.
+        if ($user->phone) {
+            app(BeemSmsSender::class)->send(
+                (string) $user->phone,
+                (string) __('Activate your account: :url', ['url' => $url]),
+            );
         }
 
         return $url;

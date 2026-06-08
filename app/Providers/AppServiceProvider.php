@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Observers\ClientObserver;
 use App\Observers\MaintenanceRequestObserver;
 use App\Observers\PaymentObserver;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Telescope\TelescopeServiceProvider;
 
@@ -22,6 +23,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Safety net: never expose debug output (stack traces, environment,
+        // Ignition) in production, even if APP_DEBUG is misconfigured on the
+        // server. Force it off and flag the misconfiguration loudly.
+        if ($this->app->environment('production') && config('app.debug')) {
+            config(['app.debug' => false]);
+            Log::critical('APP_DEBUG was enabled in production and has been forced off — fix the server environment.');
+        }
+
         Client::observe(ClientObserver::class);
         Payment::observe(PaymentObserver::class);
         MaintenanceRequest::observe(MaintenanceRequestObserver::class);
