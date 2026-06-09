@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS — Fixes &amp; Improvements Report — 8 June 2026</title>
+    <style>
+        @page { size: A4; margin: 14mm 12mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2937; line-height: 1.55; background: #f9fafb; font-size: 10.5pt; }
+        .page { max-width: 210mm; margin: 0 auto; padding: 18mm 14mm; background: #ffffff; }
+
+        .hero { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0f766e; padding-bottom: 16px; margin-bottom: 24px; }
+        .hero .brand { font-size: 22pt; font-weight: 800; color: #0f766e; letter-spacing: -0.5px; line-height: 1; }
+        .hero .brand-sub { font-size: 10pt; color: #6b7280; margin-top: 4px; font-weight: 500; }
+        .hero .meta { text-align: right; font-size: 9.5pt; color: #4b5563; }
+        .hero .meta strong { color: #1f2937; }
+        .hero .tag { display: inline-block; margin-top: 6px; padding: 3px 10px; background: #ccfbf1; color: #0f766e; border-radius: 9999px; font-size: 9pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        h2 { font-size: 14pt; color: #0f766e; margin: 26px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; font-weight: 700; letter-spacing: -0.2px; }
+        p { margin-bottom: 8px; }
+
+        .summary { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid #99f6e4; border-radius: 8px; padding: 16px 18px; margin-bottom: 22px; }
+        .summary p { font-size: 10.5pt; color: #134e4a; }
+        .summary p:last-child { margin-bottom: 0; }
+
+        .feature { border: 1px solid #e5e7eb; border-left: 4px solid #0f766e; border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; background: #ffffff; }
+        .feature .title { font-weight: 700; font-size: 11pt; color: #111827; margin-bottom: 4px; }
+        .feature .body { font-size: 10pt; color: #374151; }
+        .feature ul { margin: 8px 0 0 18px; }
+        .feature li { font-size: 10pt; color: #374151; margin-bottom: 3px; }
+        .feature .meaning { margin-top: 8px; font-size: 9.5pt; color: #134e4a; background: #f0fdfa; border-radius: 5px; padding: 7px 10px; }
+        .feature .meaning strong { color: #0f766e; }
+        .secure { border-left-color: #b45309; }
+        .secure .title { color: #92400e; }
+        .sev { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 9999px; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle; }
+        .sev-med { background: #fef9c3; color: #854d0e; }
+        .sev-new { background: #cffafe; color: #155e75; }
+
+        ul.plain { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+        ul.plain li { padding-left: 18px; position: relative; font-size: 10pt; color: #1f2937; }
+        ul.plain li::before { content: "\2713"; position: absolute; left: 0; color: #0f766e; font-weight: 700; }
+
+        footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 9pt; color: #6b7280; }
+        footer strong { color: #0f766e; }
+
+        @media print { body { background: #ffffff; } .page { padding: 0; box-shadow: none; } .feature, .summary, ul.plain { page-break-inside: avoid; } h2 { page-break-after: avoid; } }
+        @media screen { .page { box-shadow: 0 4px 14px rgba(0,0,0,0.06); margin: 24px auto; border-radius: 6px; } }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <header class="hero">
+        <div>
+            <div class="brand">PMS</div>
+            <div class="brand-sub">Property Management System &middot; BJP Technologies</div>
+        </div>
+        <div class="meta">
+            <strong>Fixes &amp; Improvements Report</strong><br>
+            Date: <strong>8 June 2026</strong><br>
+            <span class="tag">&bull; Fixes &amp; improvements</span>
+        </div>
+    </header>
+
+    <section class="summary">
+        <p><strong>This report covers two changes delivered after the security programme: a data-privacy fix in the maintenance area, and an upgrade to how subscription plans are set up.</strong></p>
+        <p>In short: when assigning a maintenance job, the staff list now shows only your own team &mdash; never another landlord's &mdash; and setting up a plan's features is now a simple tick-list instead of free-form typing.</p>
+    </section>
+
+    <h2>What we changed</h2>
+
+    <div class="feature secure">
+        <div class="title">1. Maintenance &mdash; assign only to your own staff <span class="sev sev-med">Privacy fix</span></div>
+        <div class="body">
+            <strong>What we found:</strong> when a landlord assigned a maintenance request to a staff member, the &ldquo;Assign to&rdquo; list mistakenly showed staff belonging to <em>every</em> landlord on the platform, not just their own. No-one outside PMS could see this, but one landlord could see the names of another landlord's team and (in theory) pick them.
+            <ul>
+                <li>The assignment list now shows <strong>only your own workspace's staff</strong> &mdash; everywhere a maintenance job can be assigned.</li>
+                <li>We added automatic tests that prove one landlord can never see or select another landlord's staff in that list.</li>
+                <li>As a small bonus, your team now appears in the list immediately, without having to type to search.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> staff names stay private to each landlord, and maintenance jobs can only ever be assigned to your own people.</div>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">2. Subscription plans &mdash; pick features with checkboxes <span class="sev sev-new">Improvement</span></div>
+        <div class="body">
+            On the BJP control panel, creating and editing subscription plans (Starter, Pro, Enterprise, and any new ones) is now faster and less error-prone. Instead of typing each plan's features as free-form text, you now <strong>tick the features</strong> a plan includes from a standard list:
+            <ul>
+                <li>Renter portal, website / CMS pages, maintenance tracking, reports &amp; Excel export, email / SMS / WhatsApp notifications, priority support, and uptime SLA.</li>
+                <li>This works the same way as the landlord &ldquo;Roles &amp; Permissions&rdquo; screen &mdash; consistent and quick.</li>
+                <li>You can still create brand-new plans and edit existing ones at any time.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> plan setup is quicker and consistent. (For now these features are descriptive labels for the pricing page &mdash; they don't yet switch capabilities on or off; that can be added later if wanted.)</div>
+        </div>
+    </div>
+
+    <h2>Quality &amp; assurance</h2>
+    <ul class="plain">
+        <li>Maintenance staff list scoped to your workspace</li>
+        <li>Cross-landlord leak closed &amp; tested</li>
+        <li>Plan features now a standard tick-list</li>
+        <li>Plan create &amp; edit unchanged and working</li>
+        <li>Over 140 automatic tests run before release</li>
+        <li>Both changes peer-reviewed before going live</li>
+    </ul>
+
+    <footer>
+        Report prepared <strong>8 June 2026</strong> &middot; Fixes &amp; Improvements &middot; PMS &middot; BJP Technologies
+    </footer>
+
+</div>
+</body>
+</html>
