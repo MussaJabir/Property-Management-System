@@ -2,7 +2,8 @@
 
 namespace App\Filament\Admin\Resources\Plans\Schemas;
 
-use Filament\Forms\Components\KeyValue;
+use App\Models\Plan;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -67,12 +68,14 @@ class PlanForm
                     ]),
 
                 Section::make('Features')
-                    ->description('Free-form key/value pairs surfaced on the pricing page.')
+                    ->description('Tick what this plan includes. Shown on the pricing page.')
                     ->components([
-                        KeyValue::make('features')
-                            ->keyLabel('Feature key')
-                            ->valueLabel('Value')
-                            ->reorderable(),
+                        CheckboxList::make('features')
+                            ->hiddenLabel()
+                            ->options(Plan::FEATURES)
+                            ->columns(2)
+                            ->bulkToggleable()
+                            ->searchable(),
                     ]),
             ]);
     }
