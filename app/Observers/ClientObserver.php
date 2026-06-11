@@ -8,6 +8,7 @@ use App\Models\CmsPage;
 use App\Models\ExpenseCategory;
 use App\Models\User;
 use App\Notifications\ClientStatusChangedNotification;
+use App\Services\Clients\ClientPurger;
 use App\Services\Cms\DefaultPageContent;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -78,6 +79,20 @@ class ClientObserver
                 ])->save();
             }
         }
+    }
+
+    /**
+     * Before a client is permanently force-deleted, remove the things the
+     * database FK cascade can't reach — B2 files and Spatie roles. The cascade
+     * then wipes every tenant-scoped row when the `tenants` row is deleted.
+     *
+     * This fires for every force-delete path (the Filament purge action, bulk
+     * force-delete, tinker). A plain soft delete (archive) does NOT trigger it,
+     * so archived clients keep all their data and remain fully restorable.
+     */
+    public function forceDeleting(Client $client): void
+    {
+        app(ClientPurger::class)->cleanExternalArtifacts($client);
     }
 
     /**
