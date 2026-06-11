@@ -7,7 +7,7 @@
             {{ __('You do not have an active lease on file. Please contact your landlord if you believe this is a mistake.') }}
         </div>
     @else
-        <div class="mt-6 grid gap-4 sm:grid-cols-3">
+        <div class="mt-6 grid gap-4 sm:grid-cols-3" data-tour="renter-summary">
             <div class="rounded-xl bg-white p-5 shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
                 <p class="text-xs font-medium uppercase tracking-wider text-zinc-500">{{ __('Unit') }}</p>
                 <p class="mt-2 text-lg font-semibold">{{ $lease->unit?->code ?? '—' }}</p>

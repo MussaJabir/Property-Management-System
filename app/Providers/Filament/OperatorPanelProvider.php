@@ -16,10 +16,14 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -64,6 +68,18 @@ class OperatorPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Operator/Pages'), for: 'App\\Filament\\Operator\\Pages')
             ->pages([
                 Dashboard::class,
+            ])
+            // First-login onboarding tour (driver.js). Injected at body end so
+            // the sidebar nav it spotlights is already in the DOM.
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): Htmlable => view('filament.operator.onboarding-tour'),
+            )
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label(__('common.onboarding.replay'))
+                    ->icon(Heroicon::OutlinedMap)
+                    ->url(fn (): string => Dashboard::getUrl().'?tour=replay'),
             ])
             ->discoverWidgets(in: app_path('Filament/Operator/Widgets'), for: 'App\\Filament\\Operator\\Widgets')
             ->widgets([

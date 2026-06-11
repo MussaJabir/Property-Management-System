@@ -9,6 +9,65 @@
     $user = auth('renter')->user();
     $renter = $user?->renter;
     $clientSlug = $client?->slug;
+
+    // Onboarding tour config (driver.js). Built here so all copy is
+    // translatable; the tour accent matches the client's brand colour.
+    $portalTourConfig = ($authenticated && $user) ? [
+        'autostart' => $user->needsOnboarding(),
+        'completeUrl' => url('/'.$clientSlug.'/portal/onboarding/complete'),
+        'csrf' => csrf_token(),
+        'labels' => [
+            'next' => __('common.onboarding.next'),
+            'previous' => __('common.onboarding.previous'),
+            'done' => __('common.onboarding.done'),
+            'progress' => __('common.onboarding.progress'),
+        ],
+        'steps' => [
+            [
+                'title' => __('common.onboarding.renter.welcome_title'),
+                'description' => __('common.onboarding.renter.welcome_body'),
+            ],
+            [
+                'element' => '[data-tour="renter-summary"]',
+                'title' => __('common.onboarding.renter.summary_title'),
+                'description' => __('common.onboarding.renter.summary_body'),
+                'side' => 'bottom',
+                'align' => 'center',
+            ],
+            [
+                'element' => '[data-tour="renter-invoices"]',
+                'title' => __('common.onboarding.renter.invoices_title'),
+                'description' => __('common.onboarding.renter.invoices_body'),
+                'side' => 'bottom',
+                'align' => 'center',
+            ],
+            [
+                'element' => '[data-tour="renter-maintenance"]',
+                'title' => __('common.onboarding.renter.maintenance_title'),
+                'description' => __('common.onboarding.renter.maintenance_body'),
+                'side' => 'bottom',
+                'align' => 'center',
+            ],
+            [
+                'element' => '[data-tour="renter-notifications"]',
+                'title' => __('common.onboarding.renter.notifications_title'),
+                'description' => __('common.onboarding.renter.notifications_body'),
+                'side' => 'bottom',
+                'align' => 'end',
+            ],
+            [
+                'element' => '[data-tour="renter-profile"]',
+                'title' => __('common.onboarding.renter.profile_title'),
+                'description' => __('common.onboarding.renter.profile_body'),
+                'side' => 'bottom',
+                'align' => 'center',
+            ],
+            [
+                'title' => __('common.onboarding.renter.finish_title'),
+                'description' => __('common.onboarding.renter.finish_body'),
+            ],
+        ],
+    ] : null;
 @endphp
 
 <!DOCTYPE html>
@@ -20,7 +79,7 @@
     <title>{{ $title ? $title.' · ' : '' }}{{ $client?->name ?? 'Portal' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
-    <style>:root { --brand: {{ $brand }}; }</style>
+    <style>:root { --brand: {{ $brand }}; --pms-tour-accent: {{ $brand }}; --pms-tour-accent-hover: {{ $brand }}; }</style>
 </head>
 <body class="min-h-screen bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
 
@@ -35,23 +94,29 @@
             </a>
             <nav class="hidden gap-1 md:flex">
                 @foreach ([
-                    ['portal', __('Dashboard')],
-                    ['portal/invoices', __('Invoices')],
-                    ['portal/maintenance', __('Maintenance')],
-                    ['portal/profile', __('Profile')],
-                ] as [$path, $label])
+                    ['portal', __('Dashboard'), null],
+                    ['portal/invoices', __('Invoices'), 'renter-invoices'],
+                    ['portal/maintenance', __('Maintenance'), 'renter-maintenance'],
+                    ['portal/profile', __('Profile'), 'renter-profile'],
+                ] as [$path, $label, $tourKey])
                     @php
                         $href = url('/'.$clientSlug.'/'.$path);
                         $active = request()->is($clientSlug.'/'.$path) || ($path === 'portal' && request()->is($clientSlug.'/portal'));
                     @endphp
                     <a href="{{ $href }}"
+                       @if ($tourKey) data-tour="{{ $tourKey }}" @endif
                        class="rounded-md px-3 py-1.5 text-sm {{ $active ? 'bg-zinc-100 font-semibold dark:bg-zinc-800' : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800' }}">
                         {{ $label }}
                     </a>
                 @endforeach
             </nav>
             <div class="flex items-center gap-3 text-sm">
-                <livewire:portal.notifications-bell />
+                <button type="button" onclick="window.pmsStartTour && window.pmsStartTour()"
+                        title="{{ __('common.onboarding.replay') }}"
+                        class="hidden rounded-md border border-zinc-300 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 md:inline-flex dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                    {{ __('common.onboarding.replay') }}
+                </button>
+                <span data-tour="renter-notifications"><livewire:portal.notifications-bell /></span>
                 <form method="POST" action="{{ url('/'.$clientSlug.'/portal/locale') }}" class="hidden md:block">
                     @csrf
                     <select name="locale" onchange="this.form.submit()" class="rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs dark:border-zinc-700 dark:bg-zinc-900">
@@ -93,6 +158,13 @@
 
     {{ $slot }}
 </main>
+
+@if ($portalTourConfig)
+    <script>
+        window.pmsOnboarding = @json($portalTourConfig, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+    </script>
+    @vite('resources/js/onboarding.js')
+@endif
 
 @fluxScripts
 </body>
