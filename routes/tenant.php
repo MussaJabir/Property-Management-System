@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\Portal\LogoutController;
 use App\Http\Controllers\Portal\ReceiptDownloadController;
@@ -64,6 +65,11 @@ Route::middleware([
             Route::get('profile', Profile::class)->name('profile');
             Route::post('locale', LocaleController::class)->name('locale.switch');
             Route::post('logout', LogoutController::class)->name('logout');
+
+            // Onboarding tour: mark finished/skipped for the signed-in renter.
+            Route::post('onboarding/complete', [OnboardingController::class, 'complete'])
+                ->defaults('guard', 'renter')
+                ->name('onboarding.complete');
         });
     });
 });
