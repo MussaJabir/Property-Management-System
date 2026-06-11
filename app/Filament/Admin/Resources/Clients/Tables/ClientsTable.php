@@ -11,7 +11,6 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class ClientsTable
@@ -67,7 +66,8 @@ class ClientsTable
                         'cancelled' => 'Cancelled',
                     ]),
 
-                TrashedFilter::make(),
+                // Archived clients are reached via the Active/Archived/All tabs
+                // on the list page, not a trashed filter.
             ])
             ->recordActions([
                 EditAction::make(),

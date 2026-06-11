@@ -151,11 +151,12 @@ it('the purge action requires the exact client name, then permanently deletes', 
     $this->actingAs($admin, 'super_admin');
     Filament::setCurrentPanel(Filament::getPanel('admin'));
 
-    // Must archive before purge is even offered.
+    // Must archive before purge is even offered; purge lives on the Archived tab.
     $this->clientA->delete();
 
     // Wrong name → validation error, client survives.
     Livewire::test(ListClients::class)
+        ->set('activeTab', 'archived')
         ->callTableAction('purge', $this->clientA, data: ['confirmation' => 'Not The Name'])
         ->assertHasTableActionErrors(['confirmation']);
 
@@ -163,8 +164,31 @@ it('the purge action requires the exact client name, then permanently deletes', 
 
     // Exact name → permanently purged.
     Livewire::test(ListClients::class)
+        ->set('activeTab', 'archived')
         ->callTableAction('purge', $this->clientA, data: ['confirmation' => $this->clientA->name])
         ->assertHasNoTableActionErrors();
 
     expect(Client::withTrashed()->whereKey($this->clientA->id)->exists())->toBeFalse();
+});
+
+it('splits live and archived clients across the Active and Archived tabs', function () {
+    $admin = SuperAdminUser::create([
+        'name' => 'Tab Admin',
+        'email' => 'tab-admin@pms.local',
+        'password' => 'password',
+    ]);
+    $this->actingAs($admin, 'super_admin');
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+
+    $this->clientB->delete(); // archive B; A stays live
+
+    Livewire::test(ListClients::class)
+        ->set('activeTab', 'active')
+        ->assertCanSeeTableRecords([$this->clientA])
+        ->assertCanNotSeeTableRecords([$this->clientB]);
+
+    Livewire::test(ListClients::class)
+        ->set('activeTab', 'archived')
+        ->assertCanSeeTableRecords([$this->clientB])
+        ->assertCanNotSeeTableRecords([$this->clientA]);
 });
