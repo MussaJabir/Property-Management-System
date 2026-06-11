@@ -35,7 +35,7 @@ When you see `tenant_id` in a migration or `BelongsToTenant` in a model, mentall
 - **Backend**: Laravel 12 LTS + PHP 8.4
 - **Database**: PostgreSQL 16
 - **Cache / queue / sessions / broadcasting**: Redis 7
-- **Operator + super admin panel**: Filament v4
+- **Operator + super admin panel**: Filament v5
 - **Marketing site + renter portal + tenant CMS public pages**: Livewire 3 + Flux UI
 - **Auth**: Laravel Sanctum (web sessions + API tokens for future mobile)
 - **Multi-tenancy**: `stancl/tenancy` (latest v3.x) — single-database mode, `tenant_id` scoping, **path-based** URLs (`pms.bjptechnologies.co.tz/{tenant}/…`); switchable to subdomain later

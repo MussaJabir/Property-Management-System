@@ -78,9 +78,19 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'activation_token_expires_at' => 'datetime',
+            'onboarding_completed_at' => 'datetime',
             'password' => 'hashed',
             'must_change_password' => 'boolean',
         ];
+    }
+
+    /**
+     * Whether this user still needs the first-login onboarding tour.
+     * Null timestamp = never finished/skipped it, so it auto-starts.
+     */
+    public function needsOnboarding(): bool
+    {
+        return $this->onboarding_completed_at === null;
     }
 
     public function client(): BelongsTo

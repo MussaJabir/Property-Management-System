@@ -2,15 +2,15 @@
 
 namespace App\Filament\Admin\Resources\Clients\Tables;
 
+use App\Filament\Admin\Resources\Clients\Actions\PurgeClientAction;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class ClientsTable
@@ -66,7 +66,8 @@ class ClientsTable
                         'cancelled' => 'Cancelled',
                     ]),
 
-                TrashedFilter::make(),
+                // Archived clients are reached via the Active/Archived/All tabs
+                // on the list page, not a trashed filter.
             ])
             ->recordActions([
                 EditAction::make(),
@@ -84,11 +85,18 @@ class ClientsTable
                     ->requiresConfirmation()
                     ->visible(fn ($record) => $record->status === 'suspended' || $record->status === 'trial')
                     ->action(fn ($record) => $record->update(['status' => 'active'])),
+
+                RestoreAction::make(),
+
+                // Permanent wipe — typed-name confirmation, archived clients only.
+                PurgeClientAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    // Soft archive + restore only. Permanent deletion is a
+                    // deliberate, per-client, typed-confirmation purge — never a
+                    // bulk one-click action.
                     DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
             ])

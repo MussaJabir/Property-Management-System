@@ -68,6 +68,12 @@ Thumbs.db
 *.swp
 *.swo
 
+# ---- Local testing screenshots / browser-automation artifacts ----
+Screenshots/
+Screenshots*/
+/Screenshots*
+/.playwright-mcp
+
 # ---- Backups / temp / logs ----
 *.bak
 *~
