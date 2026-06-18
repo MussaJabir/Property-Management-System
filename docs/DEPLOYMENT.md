@@ -24,7 +24,9 @@ PMS app container  (in-container nginx → php-fpm)
 - Horizon worker — notifications are sync, no queue worker needed yet
 - Meilisearch — use Postgres `ilike` for search
 - Reverb websockets — no real-time features in demo
-- Browsershot/Chromium — PDF generation will fail; UI returns a "Not available in demo" toast (already wrapped in try/catch in the codebase)
+
+**Now enabled (RAM upgraded — 2026-06-18):**
+- Browsershot/Chromium — PDF generation for receipts, invoices, leases, reports. The runtime image bundles Node + the Alpine `chromium` package; Puppeteer targets it via `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`. The `app` service gets `shm_size: 256m` and its memory limit was raised 350M → 1024M to fit a render. Image is ~400 MB larger.
 
 ## One-time host prep
 
