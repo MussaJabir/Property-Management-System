@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMS — PDF Document Generation Restored — 18 June 2026</title>
+    <style>
+        @page { size: A4; margin: 14mm 12mm; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2937; line-height: 1.55; background: #f9fafb; font-size: 10.5pt; }
+        .page { max-width: 210mm; margin: 0 auto; padding: 18mm 14mm; background: #ffffff; }
+
+        .hero { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0f766e; padding-bottom: 16px; margin-bottom: 24px; }
+        .hero .brand { font-size: 22pt; font-weight: 800; color: #0f766e; letter-spacing: -0.5px; line-height: 1; }
+        .hero .brand-sub { font-size: 10pt; color: #6b7280; margin-top: 4px; font-weight: 500; }
+        .hero .meta { text-align: right; font-size: 9.5pt; color: #4b5563; }
+        .hero .meta strong { color: #1f2937; }
+        .hero .tag { display: inline-block; margin-top: 6px; padding: 3px 10px; background: #ccfbf1; color: #0f766e; border-radius: 9999px; font-size: 9pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+
+        h2 { font-size: 14pt; color: #0f766e; margin: 26px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; font-weight: 700; letter-spacing: -0.2px; }
+        p { margin-bottom: 8px; }
+
+        .summary { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid #99f6e4; border-radius: 8px; padding: 16px 18px; margin-bottom: 22px; }
+        .summary p { font-size: 10.5pt; color: #134e4a; }
+        .summary p:last-child { margin-bottom: 0; }
+
+        .feature { border: 1px solid #e5e7eb; border-left: 4px solid #0f766e; border-radius: 6px; padding: 14px 16px; margin-bottom: 14px; background: #ffffff; }
+        .feature .title { font-weight: 700; font-size: 11pt; color: #111827; margin-bottom: 4px; }
+        .feature .body { font-size: 10pt; color: #374151; }
+        .feature ul { margin: 8px 0 0 18px; }
+        .feature li { font-size: 10pt; color: #374151; margin-bottom: 3px; }
+        .feature .meaning { margin-top: 8px; font-size: 9.5pt; color: #134e4a; background: #f0fdfa; border-radius: 5px; padding: 7px 10px; }
+        .feature .meaning strong { color: #0f766e; }
+        .fix { border-left-color: #b45309; }
+        .fix .title { color: #92400e; }
+        .sev { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 9999px; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle; }
+        .sev-fix { background: #fed7aa; color: #9a3412; }
+        .sev-infra { background: #cffafe; color: #155e75; }
+        .sev-live { background: #dcfce7; color: #166534; }
+
+        ul.plain { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+        ul.plain li { padding-left: 18px; position: relative; font-size: 10pt; color: #1f2937; }
+        ul.plain li::before { content: "\2713"; position: absolute; left: 0; color: #0f766e; font-weight: 700; }
+
+        footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 9pt; color: #6b7280; }
+        footer strong { color: #0f766e; }
+
+        @media print { body { background: #ffffff; } .page { padding: 0; box-shadow: none; } .feature, .summary, ul.plain { page-break-inside: avoid; } h2 { page-break-after: avoid; } }
+        @media screen { .page { box-shadow: 0 4px 14px rgba(0,0,0,0.06); margin: 24px auto; border-radius: 6px; } }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <header class="hero">
+        <div>
+            <div class="brand">PMS</div>
+            <div class="brand-sub">Property Management System &middot; BJP Technologies</div>
+        </div>
+        <div class="meta">
+            <strong>Production Fix Report</strong><br>
+            Date: <strong>18 June 2026</strong><br>
+            <span class="tag">&bull; PDF document generation</span>
+        </div>
+    </header>
+
+    <section class="summary">
+        <p><strong>PDF document generation is now fully working on the live system.</strong> Landlords and renters can download official receipts, invoices, lease contracts and reports as clean, professional PDF files &mdash; directly from the live site, on phone or computer.</p>
+        <p>This had previously been switched off while the system ran on a small starter server. With the server now upgraded, we have restored it, given it the resources it needs to run reliably, and changed the release process so it stays in place permanently.</p>
+    </section>
+
+    <h2>What we changed</h2>
+
+    <div class="feature fix">
+        <div class="title">1. Restored PDF document generation on the live system <span class="sev sev-fix">Fix</span></div>
+        <div class="body">
+            <strong>What we found:</strong> when PMS was first put online, document generation was deliberately turned off because the small starter server did not have enough memory to run it. After the server&rsquo;s memory was upgraded, two things on the live server still needed attention before PDFs could be produced: the production server was missing the engine that turns a document into a PDF, and the amount of memory set aside for the application was too low to run that engine.
+            <ul>
+                <li><strong>The PDF engine is now installed</strong> on the production server, so the system can render documents into finished PDF files.</li>
+                <li><strong>It now applies to every document type:</strong> receipts, invoices, lease contracts and exported reports.</li>
+                <li><strong>Confirmed on the live site</strong> &mdash; a real receipt was generated and downloaded successfully end to end.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> the paperwork landlords and renters actually need &mdash; proof of payment, bills, signed contracts, financial reports &mdash; can now be produced and shared as proper documents straight from the system.</div>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">2. Gave it the resources to run reliably <span class="sev sev-infra">Performance</span></div>
+        <div class="body">
+            Producing a PDF is a heavier task than a normal screen, so we increased the application&rsquo;s memory allowance on the upgraded server. This lets a document render comfortably without slowing down or interrupting the rest of the system.
+            <ul>
+                <li>The memory available to the application was raised so PDF rendering has the headroom it needs.</li>
+                <li>Tested under the real production setup, not just in development &mdash; the document generated cleanly.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> downloads are dependable rather than hit-or-miss, and the rest of the system keeps running smoothly while a document is being prepared.</div>
+        </div>
+    </div>
+
+    <div class="feature">
+        <div class="title">3. Made the fix permanent and self-sustaining <span class="sev sev-live">Reliability</span></div>
+        <div class="body">
+            We also improved the way updates are released so this configuration is kept in place <strong>automatically on every future update</strong>. Previously, server settings could drift out of step with the master copy and a routine update could quietly undo a fix. That gap is now closed.
+            <ul>
+                <li>The live server&rsquo;s configuration now always matches the official master copy.</li>
+                <li>Future improvements to settings roll out automatically with each release &mdash; no manual adjustments on the server.</li>
+                <li>This particular fix &mdash; and others like it &mdash; can no longer be accidentally reversed by a later update.</li>
+            </ul>
+            <div class="meaning"><strong>What it means:</strong> a problem we solve once stays solved. The system becomes steadier and cheaper to maintain over time, with fewer surprises after updates.</div>
+        </div>
+    </div>
+
+    <h2>Quality &amp; assurance</h2>
+    <ul class="plain">
+        <li>Verified live on the production server</li>
+        <li>Real receipt generated &amp; downloaded</li>
+        <li>Covers receipts, invoices, leases &amp; reports</li>
+        <li>Works on phone and computer</li>
+        <li>Memory raised for reliable rendering</li>
+        <li>Release process hardened against drift</li>
+        <li>Fix kept in place automatically on updates</li>
+        <li>All changes peer-reviewed before going live</li>
+    </ul>
+
+    <footer>
+        Report prepared <strong>18 June 2026</strong> &middot; Production Fix &middot; PDF document generation &middot; PMS &middot; BJP Technologies
+    </footer>
+
+</div>
+</body>
+</html>
