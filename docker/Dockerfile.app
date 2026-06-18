@@ -41,7 +41,8 @@ RUN set -eux; \
     apk add --no-cache \
         bash curl unzip ca-certificates tzdata supervisor nginx \
         icu-libs libpq libpng libjpeg-turbo libwebp freetype libzip oniguruma \
-        postgresql-client; \
+        postgresql-client \
+        nodejs npm chromium nss harfbuzz ttf-freefont font-noto; \
     apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS icu-dev postgresql-dev libpng-dev libjpeg-turbo-dev \
         libwebp-dev freetype-dev libzip-dev oniguruma-dev linux-headers; \
@@ -66,6 +67,14 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # su-exec lets the entrypoint optionally drop privileges to www-data for any
 # artisan housekeeping it runs at boot.
 RUN apk add --no-cache su-exec
+
+# ─── Headless Chromium for Browsershot PDFs (receipts, invoices, leases, reports) ───
+# Alpine is musl, so Puppeteer's bundled glibc Chromium won't run — use the
+# system chromium installed above and point Puppeteer at it. A global puppeteer
+# gives Browsershot the Node module it resolves via `npm root -g`.
+ENV PUPPETEER_SKIP_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+RUN npm install -g puppeteer@^25.1.0
 
 WORKDIR /var/www/html
 
