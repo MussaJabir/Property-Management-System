@@ -95,13 +95,14 @@ chmod 600 .env
 > Ignition). Set `BEEM_API_KEY`/`BEEM_SECRET` to deliver activation links by SMS
 > as well as email — optional; email-only works without them.
 
-Then on the server, copy the compose file in place:
+The deploy workflow syncs the compose file to `/opt/pms/` automatically on every
+run (the `scp` step in `.github/workflows/deploy.yml`), so you don't copy it by
+hand and the server always matches `main`. For a one-off manual sync before the
+very first deploy, scp it from your machine:
 
 ```bash
-sudo cp /opt/pms/repo/docker/docker-compose.production.yml /opt/pms/
+scp docker/docker-compose.production.yml <user>@<host>:/opt/pms/
 ```
-
-(or `git clone` the repo to `/opt/pms/repo` so updates are easy.)
 
 ## First deploy
 

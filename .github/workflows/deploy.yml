@@ -63,6 +63,28 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      # Check out the repo on the runner so we can push the production compose
+      # file to the server. The deploy box has no git clone of its own, so this
+      # is how infra (compose) changes reach it — same idea as the image.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+
+      # Sync the compose file to the server BEFORE `up -d`, so compose/resource
+      # changes in the repo actually take effect on deploy instead of silently
+      # diverging. strip_components drops the `docker/` prefix so the file lands
+      # at /opt/pms/docker-compose.production.yml.
+      - name: Sync production compose to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          source: docker/docker-compose.production.yml
+          target: /opt/pms/
+          strip_components: 1
+
       - name: SSH deploy
         uses: appleboy/ssh-action@v1.2.0
         with:
