@@ -29,6 +29,9 @@ services:
   app:
     image: ghcr.io/mussajabir/pms:${PMS_TAG:-latest}
     restart: unless-stopped
+    # Headless Chromium (Browsershot PDFs) needs more than Docker's default 64 MB
+    # /dev/shm, or larger renders crash with "Target closed".
+    shm_size: 256m
     # Host nginx proxy-passes HTTP to this on localhost — in-container nginx
     # listens on 8080. NOT exposed publicly; loopback only.
     ports:
@@ -89,7 +92,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 350M
+          # Raised from 350M now PDF is on: a render spawns headless Chromium
+          # (~150-250 MB) on top of PHP-FPM + nginx. Safe on the upgraded box;
+          # tune down only if PDF concurrency is capped.
+          memory: 1024M
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/up || exit 1"]
       interval: 30s
