@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMS — Demo Script for the Boss (EN / SW)</title>
+<style>
+    @page { size: A4; margin: 14mm 13mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2937; background: #e5e7eb; font-size: 10pt; line-height: 1.45; }
+    .page { width: 210mm; margin: 0 auto; background: #fff; padding: 16mm 14mm; page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+
+    .head { border-bottom: 3px solid #0f766e; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: baseline; }
+    .head .brand { font-size: 20pt; font-weight: 800; color: #0f766e; letter-spacing: -0.5px; }
+    .head .brand small { font-size: 9pt; color: #6b7280; font-weight: 500; }
+    .head .ttl { text-align: right; font-size: 11pt; font-weight: 700; color: #111827; }
+    .head .ttl small { display: block; font-size: 8.5pt; color: #6b7280; font-weight: 500; }
+
+    .note { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 7px; padding: 11px 14px; margin-bottom: 16px; font-size: 9.4pt; color: #134e4a; }
+    .note b { color: #0f766e; }
+
+    h2 { font-size: 11.5pt; color: #0f766e; font-weight: 800; margin: 0 0 10px; }
+
+    .step { display: flex; gap: 11px; padding: 9px 0; border-bottom: 1px dashed #e5e7eb; }
+    .step .n { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #0f766e; color: #fff; font-weight: 800; font-size: 9.5pt; display: flex; align-items: center; justify-content: center; }
+    .step .c { flex: 1; }
+    .step .do { font-size: 9.6pt; }
+    .step .do b { color: #0f766e; }
+    .step .say { margin-top: 3px; font-size: 9.4pt; color: #374151; font-style: italic; padding-left: 10px; border-left: 3px solid #ccfbf1; }
+    .step .say::before { content: "🗣 "; font-style: normal; }
+
+    .tips { margin-top: 14px; background: #fffbeb; border-left: 4px solid #d97706; border-radius: 5px; padding: 10px 14px; }
+    .tips .t { font-weight: 800; color: #92400e; font-size: 9.6pt; margin-bottom: 4px; }
+    .tips li { margin-left: 16px; font-size: 9.2pt; color: #78350f; }
+
+    footer { margin-top: 16px; padding-top: 10px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 8.5pt; color: #6b7280; }
+
+    @media screen { .page { box-shadow: 0 6px 22px rgba(0,0,0,0.12); margin: 22px auto; } }
+</style>
+</head>
+<body>
+
+<!-- ============ ENGLISH ============ -->
+<div class="page">
+    <div class="head">
+        <div class="brand">PMS <small>/ BJP Technologies</small></div>
+        <div class="ttl">Demo Script <small>How to show PMS to a landlord</small></div>
+    </div>
+
+    <div class="note">
+        <b>Before you start:</b> open the demo workspace and sign in as the landlord beforehand, so you begin on the dashboard. Keep it under <b>10 minutes</b>. Let the prospect hold the phone if they want. Talk about <em>their</em> problem, not the software. Goal of the demo isn&rsquo;t to explain every button — it&rsquo;s to make them say &ldquo;I want this.&rdquo;
+    </div>
+
+    <h2>The walkthrough</h2>
+
+    <div class="step"><div class="n">1</div><div class="c">
+        <div class="do"><b>Show the dashboard.</b> Point to the summary cards.</div>
+        <div class="say">&ldquo;This is your control center. At a glance: how many properties and units you have, how many are occupied, the rent expected this month, and how much you&rsquo;ve already collected.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">2</div><div class="c">
+        <div class="do"><b>Open Properties &amp; Units.</b> Show occupied vs vacant.</div>
+        <div class="say">&ldquo;All your buildings and units in one place — homes, business frames, shops, warehouses. You can see instantly which are occupied and which are empty.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">3</div><div class="c">
+        <div class="do"><b>Open a tenant&rsquo;s lease, download the contract PDF.</b></div>
+        <div class="say">&ldquo;Every tenant has a full record. And with one click, the system gives you a professional lease contract as a PDF — ready to print and sign. No more typing contracts by hand.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">4</div><div class="c">
+        <div class="do"><b>Record a payment, then download the receipt PDF.</b></div>
+        <div class="say">&ldquo;When a tenant pays — cash, bank or mobile money — you record it here, and the system instantly produces a numbered receipt you can print or send to them. Every shilling tracked.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">5</div><div class="c">
+        <div class="do"><b>Open the Outstanding Rent view.</b></div>
+        <div class="say">&ldquo;Here&rsquo;s everyone who still owes you, and exactly how much. No more guessing or flipping through a notebook — you know in seconds who to follow up.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">6</div><div class="c">
+        <div class="do"><b>Open Maintenance.</b> Show a request assigned to staff.</div>
+        <div class="say">&ldquo;A tenant reported a leaking tap. You assign it to your fundi and track it until it&rsquo;s done — nothing gets forgotten.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">7</div><div class="c">
+        <div class="do"><b>Open Reports, export one to PDF.</b></div>
+        <div class="say">&ldquo;At month-end, one click gives you rent collection, occupancy, and profit per property — as PDF or Excel, for your own records or the bank.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">8</div><div class="c">
+        <div class="do"><b>Show the tenant portal &amp; the public website.</b></div>
+        <div class="say">&ldquo;Your tenants get their own login to check bills and pay history. And you get a web page that advertises your empty units automatically — all in Swahili or English, on any phone.&rdquo;</div>
+    </div></div>
+
+    <div class="tips">
+        <div class="t">Close strong</div>
+        <ul>
+            <li>End with a question: &ldquo;Shall we set up your properties this week so you can try it with your real tenants?&rdquo;</li>
+            <li>Ask what they use now and what frustrates them most — listen more than you talk.</li>
+            <li>Note which &ldquo;coming soon&rdquo; feature excites them (WhatsApp reminders, mobile-money payments) — that tells us what to build next.</li>
+        </ul>
+    </div>
+
+    <footer>PMS &middot; BJP Technologies &middot; Demo script (English)</footer>
+</div>
+
+<!-- ============ SWAHILI ============ -->
+<div class="page">
+    <div class="head">
+        <div class="brand">PMS <small>/ BJP Technologies</small></div>
+        <div class="ttl">Mwongozo wa Onyesho <small>Jinsi ya kumwonyesha mwenye nyumba PMS</small></div>
+    </div>
+
+    <div class="note">
+        <b>Kabla ya kuanza:</b> fungua eneo la onyesho na uingie kama mwenye nyumba mapema, ili uanze kwenye dashibodi. Tumia chini ya <b>dakika 10</b>. Mruhusu mteja ashike simu kama anataka. Zungumza kuhusu <em>tatizo lake</em>, si programu. Lengo si kueleza kila kitufe — ni kumfanya aseme &ldquo;Hii naitaka.&rdquo;
+    </div>
+
+    <h2>Hatua za onyesho</h2>
+
+    <div class="step"><div class="n">1</div><div class="c">
+        <div class="do"><b>Onyesha dashibodi.</b> Onyesha kadi za muhtasari.</div>
+        <div class="say">&ldquo;Hapa ndio kituo chako cha kuongoza. Kwa mtazamo mmoja: una majengo na vyumba vingapi, vingapi vimepangwa, kodi inayotarajiwa mwezi huu, na umeshakusanya kiasi gani.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">2</div><div class="c">
+        <div class="do"><b>Fungua Majengo &amp; Vyumba.</b> Onyesha vilivyopangwa na vilivyo wazi.</div>
+        <div class="say">&ldquo;Majengo na vyumba vyako vyote sehemu moja — nyumba, vyumba vya biashara, maduka, maghala. Unaona papo hapo kipi kimepangwa na kipi ki wazi.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">3</div><div class="c">
+        <div class="do"><b>Fungua mkataba wa mpangaji, pakua PDF ya mkataba.</b></div>
+        <div class="say">&ldquo;Kila mpangaji ana kumbukumbu kamili. Na kwa mbofyo mmoja, mfumo unakupa mkataba wa kitaalamu kama PDF — tayari kuchapa na kusaini. Hakuna tena kuandika mikataba kwa mkono.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">4</div><div class="c">
+        <div class="do"><b>Rekodi malipo, kisha pakua PDF ya risiti.</b></div>
+        <div class="say">&ldquo;Mpangaji akilipa — cash, benki au simu — unarekodi hapa, na mfumo unatengeneza risiti yenye namba papo hapo unayoweza kuchapa au kumtumia. Kila shilingi inafuatiliwa.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">5</div><div class="c">
+        <div class="do"><b>Fungua orodha ya Wanaodaiwa Kodi.</b></div>
+        <div class="say">&ldquo;Hapa ni kila anayekudai, na kiasi kamili. Hakuna tena kubahatisha au kupekua daftari — unajua sekunde chache nani wa kumfuatilia.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">6</div><div class="c">
+        <div class="do"><b>Fungua Matengenezo.</b> Onyesha ombi lililopewa mfanyakazi.</div>
+        <div class="say">&ldquo;Mpangaji ameripoti bomba linalovuja. Unampa fundi wako na unalifuatilia mpaka limekamilika — hakuna linalosahaulika.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">7</div><div class="c">
+        <div class="do"><b>Fungua Ripoti, hamisha moja kwa PDF.</b></div>
+        <div class="say">&ldquo;Mwisho wa mwezi, mbofyo mmoja unakupa ukusanyaji wa kodi, ujazo, na faida ya kila jengo — kama PDF au Excel, kwa kumbukumbu zako au benki.&rdquo;</div>
+    </div></div>
+
+    <div class="step"><div class="n">8</div><div class="c">
+        <div class="do"><b>Onyesha tovuti ya mpangaji &amp; tovuti ya umma.</b></div>
+        <div class="say">&ldquo;Wapangaji wako wanapata kuingia kwao kuangalia bili na historia ya malipo. Na wewe unapata ukurasa wa wavuti unaotangaza vyumba vyako vilivyo wazi kiotomatiki — yote kwa Kiswahili au Kiingereza, kwa simu yoyote.&rdquo;</div>
+    </div></div>
+
+    <div class="tips">
+        <div class="t">Funga kwa nguvu</div>
+        <ul>
+            <li>Maliza kwa swali: &ldquo;Tukuwekee majengo yako wiki hii ili ujaribu na wapangaji wako halisi?&rdquo;</li>
+            <li>Uliza anatumia nini sasa na kinachomuudhi zaidi — sikiliza zaidi kuliko kuongea.</li>
+            <li>Angalia kipengele cha &ldquo;kinakuja hivi karibuni&rdquo; kinachomvutia (vikumbusho vya WhatsApp, malipo ya simu) — hicho kinatuonyesha tujenge nini baadaye.</li>
+        </ul>
+    </div>
+
+    <footer>PMS &middot; BJP Technologies &middot; Mwongozo wa onyesho (Kiswahili)</footer>
+</div>
+
+</body>
+</html>

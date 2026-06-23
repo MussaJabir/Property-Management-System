@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMS — Property Management Brochure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root{
+        --teal:#0f766e; --teal-deep:#0c4a45; --teal-ink:#08332e;
+        --cream:#f6f1e7; --paper:#faf7f0; --ink:#15302c; --muted:#5c6f6a;
+        --brass:#bf8638; --brass-lt:#d8a957; --line:#d9d0bf;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    @page{size:A4;margin:0;}
+    body{font-family:'Archivo',sans-serif;color:var(--ink);background:#cfcabd;font-size:10.5pt;line-height:1.5;}
+
+    .page{
+        position:relative;width:210mm;height:297mm;margin:0 auto;overflow:hidden;
+        background:var(--paper);page-break-after:always;
+    }
+    .page:last-child{page-break-after:auto;}
+    /* film-grain texture overlay */
+    .page::after{
+        content:"";position:absolute;inset:0;pointer-events:none;opacity:.04;mix-blend-mode:multiply;
+        background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+
+    .kick{font-family:'Archivo';font-size:8pt;font-weight:600;letter-spacing:.34em;text-transform:uppercase;}
+    .num{font-family:'Fraunces';font-weight:600;}
+    h1,h2{font-family:'Fraunces';font-weight:700;line-height:1.02;letter-spacing:-.01em;}
+    .serif-it{font-family:'Fraunces';font-style:italic;font-weight:500;}
+
+    /* ---------- shared top bar ---------- */
+    .bar{position:absolute;top:13mm;left:15mm;right:15mm;display:flex;justify-content:space-between;align-items:center;z-index:5;}
+    .brand{font-family:'Fraunces';font-weight:900;font-size:13pt;letter-spacing:.02em;}
+    .brand small{font-family:'Archivo';font-weight:500;font-size:7.5pt;letter-spacing:.16em;text-transform:uppercase;opacity:.7;display:block;margin-top:1px;}
+    .idx{font-family:'Fraunces';font-size:10pt;font-weight:600;letter-spacing:.05em;}
+
+    /* ============ PAGE 1 — COVER ============ */
+    .cover{background:var(--teal-ink);}
+    .cover .hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+    .cover .veil{position:absolute;inset:0;background:
+        linear-gradient(180deg, rgba(8,51,46,.55) 0%, rgba(8,51,46,.15) 32%, rgba(8,51,46,.72) 78%, rgba(8,51,46,.95) 100%);}
+    .cover .bar{color:#f3ede0;}
+    .cover .brand small{opacity:.85;color:#bfe3da;}
+    .cover .edge{position:absolute;top:50%;right:9mm;transform:translateY(-50%) rotate(90deg);transform-origin:center;
+        font-family:'Archivo';font-size:7.5pt;letter-spacing:.42em;text-transform:uppercase;color:#bfe3da;white-space:nowrap;z-index:5;}
+    .cover .lede{position:absolute;left:15mm;right:15mm;bottom:26mm;color:#fbf8f1;z-index:5;}
+    .cover .tagpill{display:inline-block;border:1px solid rgba(216,169,87,.7);color:var(--brass-lt);
+        font-size:7.5pt;font-weight:600;letter-spacing:.22em;text-transform:uppercase;padding:4px 12px;border-radius:40px;margin-bottom:14px;}
+    .cover h1{font-size:43pt;max-width:165mm;}
+    .cover h1 em{font-style:italic;font-weight:600;color:var(--brass-lt);}
+    .cover .sub{font-size:12.5pt;color:#d8e8e3;margin-top:14px;max-width:130mm;line-height:1.4;}
+    .cover .rule{width:54px;height:3px;background:var(--brass);margin:18px 0 0;}
+    .cover .foot{position:absolute;left:15mm;right:15mm;bottom:12mm;display:flex;justify-content:space-between;
+        color:#bfe3da;font-size:8pt;letter-spacing:.12em;text-transform:uppercase;z-index:5;}
+
+    /* ============ shared content page ============ */
+    .content{padding:30mm 15mm 18mm;}
+    .head-block{margin-bottom:9mm;}
+    .head-block .kick{color:var(--brass);margin-bottom:9px;}
+    .head-block h2{font-size:31pt;color:var(--teal-deep);max-width:160mm;}
+    .head-block h2 em{font-style:italic;font-weight:600;color:var(--ink);}
+    .intro{font-size:11.5pt;color:var(--muted);max-width:135mm;margin-top:11px;font-weight:400;}
+    .page-foot{position:absolute;left:15mm;right:15mm;bottom:11mm;display:flex;justify-content:space-between;
+        font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+        border-top:1px solid var(--line);padding-top:7px;}
+
+    /* ---------- PAGE 2 — PROBLEM ---------- */
+    .ghost{position:absolute;right:-6mm;top:60mm;font-family:'Fraunces';font-weight:900;font-style:italic;
+        font-size:150pt;color:var(--teal);opacity:.06;letter-spacing:-.04em;z-index:0;}
+    .pains{position:relative;z-index:2;margin-top:4mm;}
+    .pain{display:grid;grid-template-columns:24mm 1fr;gap:6mm;align-items:baseline;
+        padding:7mm 0;border-top:1px solid var(--line);}
+    .pain:last-child{border-bottom:1px solid var(--line);}
+    .pain .pn{font-family:'Fraunces';font-size:23pt;font-weight:700;color:var(--brass);}
+    .pain .pt{font-family:'Fraunces';font-size:15pt;font-weight:600;color:var(--teal-deep);margin-bottom:3px;}
+    .pain .pd{font-size:10pt;color:var(--muted);max-width:120mm;}
+
+    /* ---------- PAGE 3 — FEATURES (dark) ---------- */
+    .dark{background:var(--teal-deep);color:#eef4f1;}
+    .dark::after{opacity:.07;}
+    .dark .bar{color:#eef4f1;}
+    .dark .head-block .kick{color:var(--brass-lt);}
+    .dark .head-block h2{color:#fbf8f1;}
+    .dark .head-block h2 em{color:var(--brass-lt);}
+    .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6mm 9mm;margin-top:3mm;}
+    .feat{border-top:1px solid rgba(216,169,87,.35);padding-top:6px;}
+    .feat .fi{display:block;margin-bottom:8px;height:24px;}
+    .feat .fi svg{width:23px;height:23px;fill:none;stroke:var(--brass-lt);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+    .feat .ft{font-family:'Fraunces';font-size:12.5pt;font-weight:600;color:#fff;margin-bottom:3px;}
+    .feat .fd{font-size:9pt;color:#bcd3cd;line-height:1.45;}
+    .gallery{position:absolute;left:15mm;right:15mm;bottom:20mm;}
+    .gallery .gcap{font-size:8pt;letter-spacing:.2em;text-transform:uppercase;color:var(--brass-lt);margin-bottom:6px;display:flex;justify-content:space-between;}
+    .gallery .strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5mm;}
+    .gallery img{width:100%;height:34mm;object-fit:cover;border-radius:3px;border:1px solid rgba(255,255,255,.14);
+        box-shadow:0 8px 22px rgba(0,0,0,.35);}
+    .dark .page-foot{color:#8fb3ab;border-top-color:rgba(255,255,255,.14);}
+
+    /* ---------- PAGE 4 — TANZANIA ---------- */
+    .checks{display:grid;grid-template-columns:1fr 1fr;gap:5mm 10mm;margin-top:3mm;}
+    .chk{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:4mm 0;border-bottom:1px solid var(--line);}
+    .chk .ck{width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;}
+    .chk .ct{font-size:10.5pt;color:var(--ink);font-weight:500;line-height:1.35;}
+    .soon{margin-top:10mm;background:linear-gradient(110deg,var(--teal) 0%,var(--teal-deep) 100%);border-radius:8px;padding:7mm 8mm;color:#eef4f1;position:relative;overflow:hidden;}
+    .soon .slbl{font-size:7.5pt;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--brass-lt);}
+    .soon h3{font-family:'Fraunces';font-size:16pt;font-weight:600;margin:4px 0 9px;color:#fff;}
+    .soon .schips{display:flex;gap:8px;flex-wrap:wrap;}
+    .soon .chip{font-size:9pt;background:rgba(255,255,255,.1);border:1px solid rgba(216,169,87,.4);border-radius:30px;padding:5px 13px;}
+
+    /* ---------- PAGE 5 — PRICING / CTA ---------- */
+    .plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5mm;margin-top:2mm;}
+    .plan{border:1px solid var(--line);border-radius:8px;padding:7mm 6mm;background:#fff;position:relative;}
+    .plan.fav{background:var(--teal-deep);color:#eef4f1;border-color:var(--teal-deep);box-shadow:0 14px 34px rgba(12,74,69,.28);}
+    .plan .pname{font-family:'Fraunces';font-size:14pt;font-weight:700;color:var(--teal-deep);}
+    .plan.fav .pname{color:#fff;}
+    .plan .ptag{font-size:7.5pt;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);margin-bottom:9px;}
+    .plan.fav .ptag{color:var(--brass-lt);}
+    .plan .pdesc{font-size:9pt;color:var(--muted);margin:8px 0 11px;line-height:1.45;min-height:20mm;}
+    .plan.fav .pdesc{color:#bcd3cd;}
+    .plan ul{list-style:none;font-size:8.8pt;}
+    .plan li{padding:3px 0 3px 15px;position:relative;color:var(--ink);}
+    .plan.fav li{color:#dcebe6;}
+    .plan li::before{content:"›";position:absolute;left:0;color:var(--brass);font-weight:700;}
+    .plan .badge{position:absolute;top:-10px;left:6mm;background:var(--brass);color:#fff;font-size:7pt;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:20px;}
+    .cta{margin-top:8mm;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:8mm;display:flex;justify-content:space-between;align-items:center;gap:8mm;}
+    .cta h3{font-family:'Fraunces';font-size:21pt;font-weight:700;color:var(--teal-deep);max-width:95mm;line-height:1.05;}
+    .cta h3 em{font-style:italic;color:var(--brass);}
+    .cta .contact{font-size:9.5pt;line-height:1.85;text-align:right;white-space:nowrap;}
+    .cta .contact .fill{color:var(--teal);font-weight:600;border-bottom:1px dashed var(--brass);}
+    .cta .contact .lbl{color:var(--muted);}
+
+    @media screen{
+        body{background:#37413f;padding:26px 0;}
+        .page{box-shadow:0 18px 50px rgba(0,0,0,.4);margin-bottom:26px;border-radius:2px;}
+        .page,.page *{animation:rise .7s cubic-bezier(.2,.7,.2,1) both;}
+        @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+    }
+    @media print{ .page,.page *{animation:none!important;} }
+</style>
+</head>
+<body>
+
+<!-- ========================= PAGE 1 · COVER ========================= -->
+<section class="page cover">
+    <img class="hero-img" src="assets/hero-building.jpg" alt="">
+    <div class="veil"></div>
+    <div class="bar">
+        <div class="brand">PMS<small>by BJP Technologies</small></div>
+        <div class="idx">01 — 05</div>
+    </div>
+    <div class="edge">Property Management Software</div>
+    <div class="lede">
+        <span class="tagpill">Sales Brochure · 2026</span>
+        <h1>Manage every rental from <em>one place.</em></h1>
+        <div class="sub">Property management software, built for Tanzanian landlords — properties, tenants, rent, receipts and reports, all in one.</div>
+        <div class="rule"></div>
+    </div>
+    <div class="foot">
+        <span>pms.bjptechnologies.co.tz</span>
+        <span>Dar es Salaam · Tanzania</span>
+    </div>
+</section>
+
+<!-- ========================= PAGE 2 · PROBLEM ========================= -->
+<section class="page content">
+    <div class="bar"><div class="brand">PMS<small>by BJP Technologies</small></div><div class="idx">02</div></div>
+    <div class="ghost">kodi?</div>
+    <div class="head-block">
+        <div class="kick">02 — The Problem</div>
+        <h2>Running rentals <em>the hard way.</em></h2>
+        <p class="intro">Most landlords still manage millions of shillings with a pen, a notebook, and a great many phone calls. It works — until it doesn't.</p>
+    </div>
+    <div class="pains">
+        <div class="pain"><div class="pn">01</div><div><div class="pt">The notebook</div><div class="pd">Rent tracked in exercise books, Excel and WhatsApp chats that no one can properly audit or trust.</div></div></div>
+        <div class="pain"><div class="pn">02</div><div><div class="pt">The chase</div><div class="pd">Calling tenants one by one at month-end, never quite sure who has actually paid and who hasn't.</div></div></div>
+        <div class="pain"><div class="pn">03</div><div><div class="pt">The empty room</div><div class="pd">Vacant units sit idle for weeks because no one outside knows they are even available.</div></div></div>
+        <div class="pain"><div class="pn">04</div><div><div class="pt">The blur</div><div class="pd">Income and expenses scattered everywhere, so the real profit of each property is only ever a guess.</div></div></div>
+    </div>
+    <div class="page-foot"><span>PMS · Property Management</span><span>The problem</span></div>
+</section>
+
+<!-- ========================= PAGE 3 · FEATURES ========================= -->
+<section class="page content dark">
+    <div class="bar"><div class="brand">PMS<small>by BJP Technologies</small></div><div class="idx">03</div></div>
+    <div class="head-block">
+        <div class="kick">03 — What it does</div>
+        <h2>Everything you need, <em>in one place.</em></h2>
+    </div>
+    <div class="feat-grid">
+        <div class="feat"><span class="fi"><svg viewBox="0 0 24 24"><path d="M4 21V4.5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1V21"/><path d="M13 9.5h6a1 1 0 0 1 1 1V21"/><path d="M2.5 21h19"/><path d="M7 8h2M7 12h2M7 16h2M16.5 13.5h1M16.5 17.5h1"/></svg></span><div class="ft">Properties &amp; units</div><div class="fd">Every building and unit on one dashboard, with live occupancy at a glance.</div></div>
+        <div class="feat"><span class="fi"><svg viewBox="0 0 24 24"><path d="M6 3h8l5 5v12.5a.5.5 0 0 1-.5.5h-12a.5.5 0 0 1-.5-.5v-17A.5.5 0 0 1 6 3z"/><path d="M14 3v5h5"/><path d="M8.5 13h7M8.5 16.5h5"/></svg></span><div class="ft">Tenants &amp; leases</div><div class="fd">Full tenant records and professional lease contracts generated as PDFs.</div></div>
+        <div class="feat"><span class="fi"><svg viewBox="0 0 24 24"><path d="M7 3h10v18l-2.5-1.7L12 21l-2.5-1.7L7 21z"/><path d="M10 8.5h4M10 12.5h4"/></svg></span><div class="ft">Rent &amp; receipts</div><div class="fd">Record cash, bank or mobile-money payments; numbered receipts produced instantly.</div></div>
+        <div class="feat"><span class="fi"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5.5" y="11" width="3" height="7"/><rect x="10.5" y="7" width="3" height="11"/><rect x="15.5" y="3.5" width="3" height="14.5"/></svg></span><div class="ft">Reports</div><div class="fd">Collection, occupancy and profit per property — exported to PDF or Excel.</div></div>
+        <div class="feat"><span class="fi"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></span><div class="ft">Tenant portal</div><div class="fd">Tenants check their bills and payment history themselves — far fewer calls to you.</div></div>
+        <div class="feat"><span class="fi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg></span><div class="ft">Your own website</div><div class="fd">A branded public page that advertises your vacant units automatically.</div></div>
+    </div>
+    <div class="gallery">
+        <div class="gcap"><span>Real listings from a live PMS website</span><span>— Bejundas Properties</span></div>
+        <div class="strip">
+            <img src="assets/unit1.jpg" alt="">
+            <img src="assets/unit2.jpg" alt="">
+            <img src="assets/unit3.jpg" alt="">
+        </div>
+    </div>
+    <div class="page-foot"><span>PMS · Property Management</span><span>What it does</span></div>
+</section>
+
+<!-- ========================= PAGE 4 · TANZANIA ========================= -->
+<section class="page content">
+    <div class="bar"><div class="brand">PMS<small>by BJP Technologies</small></div><div class="idx">04</div></div>
+    <div class="head-block">
+        <div class="kick">04 — Built for Tanzania</div>
+        <h2>Made for the way <em>Tanzania rents.</em></h2>
+        <p class="intro">Not a foreign tool bent to fit. PMS speaks the language, the currency and the payment methods landlords here already use.</p>
+    </div>
+    <div class="checks">
+        <div class="chk"><div class="ck">✓</div><div class="ct">Full Swahili &amp; English — switch anytime</div></div>
+        <div class="chk"><div class="ck">✓</div><div class="ct">Prices in TZS; records M-Pesa, Tigo Pesa &amp; Airtel Money</div></div>
+        <div class="chk"><div class="ck">✓</div><div class="ct">Homes, business frames, shops &amp; warehouses</div></div>
+        <div class="chk"><div class="ck">✓</div><div class="ct">Local support from BJP Technologies</div></div>
+        <div class="chk"><div class="ck">✓</div><div class="ct">Works on any phone or computer</div></div>
+        <div class="chk"><div class="ck">✓</div><div class="ct">Your data kept private &amp; secure</div></div>
+    </div>
+    <div class="soon">
+        <div class="slbl">On the roadmap</div>
+        <h3>Coming soon to PMS</h3>
+        <div class="schips">
+            <span class="chip">WhatsApp &amp; SMS rent reminders</span>
+            <span class="chip">Pay rent by mobile money</span>
+            <span class="chip">Landlord &amp; tenant mobile app</span>
+        </div>
+    </div>
+    <div class="page-foot"><span>PMS · Property Management</span><span>Built for Tanzania</span></div>
+</section>
+
+<!-- ========================= PAGE 5 · PRICING / CTA ========================= -->
+<section class="page content">
+    <div class="bar"><div class="brand">PMS<small>by BJP Technologies</small></div><div class="idx">05</div></div>
+    <div class="head-block">
+        <div class="kick">05 — Get started</div>
+        <h2>See it <em>in action.</em></h2>
+        <p class="intro">Plans that grow with your portfolio — from a single house to hundreds of units.</p>
+    </div>
+    <div class="plans">
+        <div class="plan">
+            <div class="ptag">Starter</div>
+            <div class="pname">For one property</div>
+            <div class="pdesc">Everything a single landlord needs to get organised from day one.</div>
+            <ul><li>Units &amp; tenants</li><li>Rent &amp; receipts</li><li>Core reports</li></ul>
+        </div>
+        <div class="plan fav">
+            <div class="badge">Most popular</div>
+            <div class="ptag">Pro</div>
+            <div class="pname">For growing portfolios</div>
+            <div class="pdesc">Multiple properties, a team, and your own public rental website.</div>
+            <ul><li>Multi-property &amp; team roles</li><li>Tenant portal</li><li>Public website &amp; listings</li><li>Full reports &amp; exports</li></ul>
+        </div>
+        <div class="plan">
+            <div class="ptag">Enterprise</div>
+            <div class="pname">For large landlords</div>
+            <div class="pdesc">Everything in Pro, with priority support and onboarding.</div>
+            <ul><li>Unlimited scale</li><li>Priority support</li><li>Guided onboarding</li></ul>
+        </div>
+    </div>
+    <div class="cta">
+        <h3>Book a free, <em>no-commitment</em> demo this week.</h3>
+        <div class="contact">
+            <div><span class="lbl">Call&nbsp;&nbsp;</span><span class="fill">+255 764 764 011</span></div>
+            <div><span class="lbl">WhatsApp&nbsp;&nbsp;</span><span class="fill">+255 764 764 011</span></div>
+            <div><span class="lbl">Email&nbsp;&nbsp;</span><span class="fill">info@bjptechnologies.co.tz</span></div>
+            <div><span class="lbl">Web&nbsp;&nbsp;</span><span class="fill">pms.bjptechnologies.co.tz</span></div>
+        </div>
+    </div>
+    <div class="page-foot"><span>PMS · Property Management · BJP Technologies</span><span>Get started</span></div>
+</section>
+
+</body>
+</html>
