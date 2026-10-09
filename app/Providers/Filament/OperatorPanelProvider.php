@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\Login;
 use App\Filament\Operator\Pages\Auth\EditOperatorProfile;
 use App\Filament\Operator\Widgets\CollectionsChartWidget;
 use App\Filament\Operator\Widgets\GettingStartedWidget;
@@ -56,7 +57,7 @@ class OperatorPanelProvider extends PanelProvider
         return $panel
             ->id('operator')
             ->path('manage')
-            ->login()
+            ->login(Login::class)
             ->profile(EditOperatorProfile::class)
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
