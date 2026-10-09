@@ -26,7 +26,6 @@ jobs:
   laravel-ci:
     name: Laravel CI
     runs-on: ubuntu-latest
-    if: hashFiles('composer.json') != ''
 
     services:
       pgsql:
@@ -86,6 +85,20 @@ jobs:
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # Also downloads Puppeteer's Chrome, which the Browsershot PDF tests need.
+      - name: Install front-end dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Views rendered in tests resolve assets through the Vite manifest.
+      - name: Build assets
+        run: npm run build
 
       - name: Copy .env
         run: cp .env.example .env
