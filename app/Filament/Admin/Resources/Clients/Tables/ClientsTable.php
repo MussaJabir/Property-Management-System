@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Clients\Tables;
 
 use App\Filament\Admin\Resources\Clients\Actions\PurgeClientAction;
+use App\Filament\Admin\Resources\Clients\Actions\ResendOwnerInviteAction;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -71,6 +72,8 @@ class ClientsTable
             ])
             ->recordActions([
                 EditAction::make(),
+
+                ResendOwnerInviteAction::make(),
 
                 Action::make('suspend')
                     ->icon('heroicon-o-no-symbol')

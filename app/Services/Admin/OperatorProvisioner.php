@@ -29,6 +29,17 @@ class OperatorProvisioner
     /** How long an activation link stays valid, in hours. */
     public const TOKEN_TTL_HOURS = 72;
 
+    protected ?OperatorInvite $lastInvite = null;
+
+    /**
+     * The invite issued by the most recent provision()/resend() call on this
+     * instance, or null when none was issued (e.g. the operator already existed).
+     */
+    public function lastInvite(): ?OperatorInvite
+    {
+        return $this->lastInvite;
+    }
+
     /**
      * Create an operator in `pending_activation` with the given role and send
      * an activation invite. Idempotent: an existing operator with this email
@@ -36,6 +47,8 @@ class OperatorProvisioner
      */
     public function provision(Client $client, string $name, string $email, string $role, ?string $phone = null): ?User
     {
+        $this->lastInvite = null;
+
         $email = trim(Str::lower($email));
         $name = trim($name);
 
@@ -94,10 +107,13 @@ class OperatorProvisioner
     protected function sendActivation(User $user): string
     {
         $url = $this->buildActivationUrl($user, $this->issueToken($user));
+        $emailSent = true;
 
         try {
             $user->notify(new OperatorActivationNotification($url));
         } catch (Throwable $e) {
+            $emailSent = false;
+
             Log::warning('Operator activation email failed', [
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
@@ -111,6 +127,8 @@ class OperatorProvisioner
                 (string) __('Activate your account: :url', ['url' => $url]),
             );
         }
+
+        $this->lastInvite = new OperatorInvite($url, $emailSent);
 
         return $url;
     }
