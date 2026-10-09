@@ -61,9 +61,9 @@ jobs:
       DB_PASSWORD: password
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
-      CACHE_STORE: redis
-      QUEUE_CONNECTION: redis
-      SESSION_DRIVER: redis
+      # Cache, queue and session drivers are deliberately not set here: a real
+      # environment variable would override the in-memory drivers phpunit.xml
+      # sets, and state such as rate-limit counters would leak between tests.
       FILESYSTEM_DISK: local
       APP_ENV: testing
 
