@@ -37,6 +37,7 @@ services:
     ports:
       - "127.0.0.1:9080:8080"
     environment:
+      APP_NAME: ${APP_NAME:-PMS}
       APP_ENV: production
       APP_DEBUG: "false"
       APP_URL: https://pms.bjptechnologies.co.tz
@@ -68,7 +69,7 @@ services:
       AWS_ENDPOINT: ${B2_ENDPOINT}
       AWS_USE_PATH_STYLE_ENDPOINT: "true"
 
-      MAIL_MAILER: ${MAIL_MAILER:-resend}
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-PMS}
       # SMTP (e.g. cPanel mailbox). Only used when MAIL_MAILER=smtp.
@@ -78,7 +79,7 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       # Resend (only used when MAIL_MAILER=resend).
-      RESEND_KEY: ${RESEND_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
 
       SCOUT_DRIVER: collection
 
@@ -112,6 +113,7 @@ services:
         sleep 60;
       done"
     environment:
+      APP_NAME: ${APP_NAME:-PMS}
       APP_ENV: production
       APP_KEY: ${APP_KEY}
       DB_CONNECTION: pgsql
