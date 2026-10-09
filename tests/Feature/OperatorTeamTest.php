@@ -81,7 +81,8 @@ it('invites a new operator with a role and emails an activation link', function 
             'role' => 'accountant',
         ])
         ->call('create')
-        ->assertHasNoFormErrors();
+        ->assertHasNoFormErrors()
+        ->assertNotified('Activation invite emailed');
 
     $invited = User::query()->where('email', 'newacct@teamco.test')->first();
     expect($invited)->not->toBeNull();

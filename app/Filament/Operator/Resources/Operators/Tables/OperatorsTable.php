@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Operator\Resources\Operators\Tables;
 
+use App\Filament\Support\InviteNotice;
 use App\Models\User;
 use App\Services\Admin\OperatorProvisioner;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
@@ -63,14 +63,14 @@ class OperatorsTable
                     ->modalHeading('Resend activation invite')
                     ->modalDescription('Issues a fresh activation link and emails it again. Any previous link stops working.')
                     ->action(function (User $record): void {
-                        $url = app(OperatorProvisioner::class)->resend($record);
+                        $provisioner = app(OperatorProvisioner::class);
+                        $provisioner->resend($record);
 
-                        Notification::make()
-                            ->title('Invite resent')
-                            ->body('Emailed to '.$record->email.'. To share directly, copy this link:'."\n\n".$url)
-                            ->success()
-                            ->persistent()
-                            ->send();
+                        $invite = $provisioner->lastInvite();
+
+                        if ($invite !== null) {
+                            InviteNotice::send($record, $invite);
+                        }
                     }),
             ])
             ->defaultSort('name');

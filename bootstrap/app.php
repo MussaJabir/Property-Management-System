@@ -32,6 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Any unknown first URL segment (bots probing /sitemap.xml, /wp-login.php…)
+        // lands here; it is an ordinary 404, not an error worth a stack trace.
+        $exceptions->dontReport(TenantCouldNotBeIdentifiedException::class);
+
         // Unknown tenant slug → friendly 404 with link back to the PMS landing.
         $exceptions->render(function (TenantCouldNotBeIdentifiedException $e, $request) {
             return response()->view('errors.client-not-found', [

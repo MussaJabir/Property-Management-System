@@ -3,9 +3,9 @@
 namespace App\Filament\Admin\Resources\Clients\Pages;
 
 use App\Filament\Admin\Resources\Clients\ClientResource;
+use App\Filament\Support\InviteNotice;
 use App\Models\Client;
 use App\Services\Admin\OperatorProvisioner;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateClient extends CreateRecord
@@ -46,15 +46,12 @@ class CreateClient extends CreateRecord
             return;
         }
 
-        $user = app(OperatorProvisioner::class)
-            ->provision($client, $name, $email, 'owner', $this->ownerData['phone'] ?? null);
+        $provisioner = app(OperatorProvisioner::class);
+        $user = $provisioner->provision($client, $name, $email, 'owner', $this->ownerData['phone'] ?? null);
+        $invite = $provisioner->lastInvite();
 
-        if ($user) {
-            Notification::make()
-                ->title('Owner account created')
-                ->body('Activation link sent to '.$user->email.'.')
-                ->success()
-                ->send();
+        if ($user && $invite) {
+            InviteNotice::send($user, $invite);
         }
     }
 }

@@ -1,7 +1,10 @@
 <?php
 
+use App\Filament\Auth\Login;
 use App\Models\Client;
 use App\Models\User;
+use Filament\Facades\Filament;
+use Livewire\Livewire;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
@@ -62,4 +65,26 @@ it('blocks disabled operators from the panel', function () {
     $this->actingAs($this->operator->fresh(), 'web')
         ->get('/manage')
         ->assertForbidden();
+});
+
+it('signs an operator in regardless of the letter case they type their email in', function () {
+    Filament::setCurrentPanel(Filament::getPanel('operator'));
+
+    Livewire::test(Login::class)
+        ->fillForm(['email' => 'Alice@Acme.Local', 'password' => 'password'])
+        ->call('authenticate')
+        ->assertHasNoFormErrors();
+
+    expect(auth('web')->id())->toBe($this->operator->id);
+});
+
+it('still rejects a wrong password after normalising the email', function () {
+    Filament::setCurrentPanel(Filament::getPanel('operator'));
+
+    Livewire::test(Login::class)
+        ->fillForm(['email' => 'Alice@Acme.Local', 'password' => 'not-the-password'])
+        ->call('authenticate')
+        ->assertHasFormErrors(['email']);
+
+    expect(auth('web')->check())->toBeFalse();
 });

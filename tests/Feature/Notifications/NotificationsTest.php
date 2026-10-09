@@ -252,3 +252,25 @@ it('persists database notifications so the bell can read them later', function (
     expect($renterUser->notifications()->count())->toBe(1);
     expect($renterUser->unreadNotifications()->count())->toBe(1);
 });
+
+it('brands notification emails with the app name instead of the Laravel logo', function () {
+    config(['app.name' => 'PMS']);
+
+    $user = User::create([
+        'tenant_id' => $this->client->id,
+        'type' => User::TYPE_OPERATOR,
+        'name' => 'Brand Check',
+        'email' => 'brand-check@example.com',
+        'password' => bcrypt('secret-password'),
+        'status' => User::STATUS_PENDING_ACTIVATION,
+    ]);
+
+    $html = (string) (new OperatorActivationNotification('https://example.test/activate'))
+        ->toMail($user)
+        ->render();
+
+    expect($html)
+        ->toContain('>PMS</td>')
+        ->toContain('Regards,')
+        ->not->toContain('laravel.com/img/notification-logo');
+});
