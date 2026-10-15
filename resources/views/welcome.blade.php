@@ -49,6 +49,9 @@
         <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
             <a href="#features" class="transition-colors hover:text-slate-900">{{ __('landing.nav_features') }}</a>
             <a href="#how" class="transition-colors hover:text-slate-900">{{ __('landing.nav_how') }}</a>
+            @if (isset($plans) && $plans->isNotEmpty())
+                <a href="#pricing" class="transition-colors hover:text-slate-900">{{ __('landing.nav_pricing') }}</a>
+            @endif
             <a href="#faq" class="transition-colors hover:text-slate-900">{{ __('landing.nav_faq') }}</a>
         </nav>
 
@@ -661,6 +664,90 @@
     </div>
 </section>
 
+{{-- ═════════════════════════════════════════════════════════════ PRICING ══ --}}
+@if (isset($plans) && $plans->isNotEmpty())
+<section id="pricing" class="border-t border-slate-100 bg-white py-20 sm:py-24">
+    <div class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+            <p class="text-xs font-semibold uppercase tracking-widest text-teal-700">{{ __('landing.pricing_eyebrow') }}</p>
+            <h2 class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+                {{ __('landing.pricing_title') }}
+            </h2>
+            <p class="mt-4 text-lg text-slate-600">{{ __('landing.pricing_subtitle') }}</p>
+        </div>
+
+        <div class="mx-auto mt-14 grid max-w-2xl grid-cols-1 gap-6 md:max-w-none md:grid-cols-2 xl:grid-cols-4">
+            @foreach ($plans as $plan)
+                @php
+                    $onRequest = $plan->price_tzs === 0;
+                    $monthly = intdiv($plan->price_tzs, 100);
+                    $limits = [
+                        'pricing_properties' => $plan->max_properties,
+                        'pricing_units' => $plan->max_units,
+                        'pricing_staff' => $plan->max_operators,
+                    ];
+                @endphp
+                <div class="flex flex-col rounded-2xl p-7 ring-1 {{ $onRequest ? 'bg-slate-50 ring-slate-200' : 'bg-white shadow-sm ring-slate-200/70' }}">
+                    <h3 class="text-lg font-bold text-slate-900">{{ $plan->name }}</h3>
+
+                    <div class="mt-4 min-h-[4.5rem]">
+                        @if ($onRequest)
+                            <p class="text-3xl font-extrabold tracking-tight text-slate-900">{{ __('landing.pricing_on_request') }}</p>
+                        @else
+                            <p class="flex flex-wrap items-baseline gap-x-1.5">
+                                <span class="text-sm font-semibold text-slate-500">{{ __('landing.pricing_currency') }}</span>
+                                <span class="text-4xl font-extrabold tracking-tight text-slate-900 tabular-nums">{{ number_format($monthly) }}</span>
+                                <span class="text-sm font-medium text-slate-500">{{ __('landing.pricing_per_month') }}</span>
+                            </p>
+                            @if ($plan->billing_period === 'monthly')
+                                <p class="mt-1.5 text-sm font-medium text-teal-700">{{ __('landing.pricing_per_year', ['amount' => number_format($monthly * 10)]) }}</p>
+                            @endif
+                        @endif
+                    </div>
+
+                    <dl class="mt-5 space-y-2 border-y border-slate-200 py-4 text-sm">
+                        @foreach ($limits as $label => $value)
+                            <div class="flex items-center justify-between gap-3">
+                                <dt class="text-slate-500">{{ __('landing.'.$label) }}</dt>
+                                <dd class="font-semibold text-slate-900 tabular-nums">{{ $value === null ? __('landing.pricing_unlimited') : number_format($value) }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+
+                    <ul class="mt-5 flex-1 space-y-2.5 text-sm text-slate-700">
+                        @foreach ($plan->featureKeys() as $key)
+                            @php($soon = in_array($key, \App\Models\Plan::COMING_SOON, true))
+                            <li class="flex items-start gap-2.5 {{ $soon ? 'text-slate-500' : '' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="mt-0.5 h-4 w-4 flex-none {{ $soon ? 'text-amber-500' : 'text-teal-600' }}"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                                <span>
+                                    {{ __('landing.plan_feature_'.$key) }}
+                                    @if ($soon)
+                                        <span class="ml-1 inline-block rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">{{ __('landing.pricing_coming_soon') }}</span>
+                                    @endif
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    <a href="mailto:{{ __('landing.footer_email') }}?subject={{ rawurlencode('PMS '.$plan->name.' plan') }}" class="mt-7 inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-5 py-3 text-sm font-semibold transition-colors {{ $onRequest ? 'bg-white text-slate-900 ring-1 ring-slate-300 hover:ring-slate-400' : 'bg-slate-900 text-white hover:bg-slate-700' }}">
+                        {{ $onRequest ? __('landing.pricing_cta_contact') : __('landing.pricing_cta_trial') }}
+                    </a>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="mx-auto mt-10 max-w-3xl space-y-4 text-center">
+            <p class="text-sm leading-6 text-slate-600">{{ __('landing.pricing_core') }} {{ __('landing.pricing_limits_rule') }}</p>
+            <ul class="flex flex-wrap items-center justify-center gap-2 text-sm font-medium text-teal-800">
+                @foreach (['pricing_term_trial', 'pricing_term_setup', 'pricing_term_yearly'] as $term)
+                    <li class="rounded-full bg-teal-50 px-3.5 py-1.5 ring-1 ring-teal-200/70">{{ __('landing.'.$term) }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+</section>
+@endif
+
 {{-- ════════════════════════════════════════════════════════════════ FAQ ══ --}}
 <section id="faq" class="bg-slate-50 py-20 sm:py-24">
     <div class="mx-auto max-w-3xl px-5 sm:px-6 lg:px-8">
@@ -728,6 +815,9 @@
                 <ul class="mt-4 space-y-2.5 text-sm text-slate-600">
                     <li><a href="#features" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_features') }}</a></li>
                     <li><a href="#how" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_how') }}</a></li>
+                    @if (isset($plans) && $plans->isNotEmpty())
+                        <li><a href="#pricing" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_pricing') }}</a></li>
+                    @endif
                     <li><a href="#faq" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_faq') }}</a></li>
                     <li><a href="/admin/login" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_sign_in') }}</a></li>
                 </ul>
