@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PMS User Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+  @page { size: A4; margin: 17mm 16mm 18mm; }
+  @page cover { margin: 0; }
+  :root {
+    --ink: #0f1f1e; --muted: #56696a; --line: #d5e0de; --wash: #f1f6f5;
+    --teal: #0f766e; --teal-dark: #0b4f4a; --teal-soft: #dcf1ed; --amber: #8a5300; --amber-soft: #fbefd6;
+    --font: "Plus Jakarta Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: var(--font); color: var(--ink); font-size: 9.8pt; line-height: 1.55; }
+
+  /* cover */
+  .cover { page: cover; height: 297mm; width: 210mm; background: var(--teal-dark); color: #fff; padding: 26mm 22mm 20mm; display: flex; flex-direction: column; page-break-after: always; }
+  .cover .brand { display: flex; align-items: center; gap: 12px; }
+  .cover .mark { width: 46px; height: 46px; border-radius: 12px; background: #fff; color: var(--teal-dark); font-weight: 800; font-size: 23px; display: grid; place-items: center; }
+  .cover .brand b { font-size: 17pt; display: block; letter-spacing: -0.02em; }
+  .cover .brand small { opacity: 0.8; font-size: 9pt; }
+  .cover h1 { margin-top: 52mm; font-size: 40pt; line-height: 1.02; letter-spacing: -0.04em; font-weight: 800; }
+  .cover .sub { margin-top: 7mm; font-size: 13pt; opacity: 0.9; max-width: 140mm; }
+  .cover .parts { margin-top: 16mm; display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; max-width: 150mm; }
+  .cover .parts div { border: 1px solid rgba(255,255,255,0.35); border-radius: 10px; padding: 5mm; }
+  .cover .parts b { display: block; font-size: 11pt; }
+  .cover .parts span { font-size: 9pt; opacity: 0.85; }
+  .cover .foot { margin-top: auto; display: flex; justify-content: space-between; font-size: 9pt; opacity: 0.85; }
+
+  /* headings */
+  .part { page-break-before: always; }
+  .part-head { border-bottom: 2px solid var(--ink); padding-bottom: 4mm; margin-bottom: 7mm; }
+  .part-head .eyebrow { font-size: 8pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--teal); font-weight: 700; }
+  .part-head h1 { font-size: 24pt; letter-spacing: -0.03em; font-weight: 800; line-height: 1.15; }
+  .part-head p { color: var(--muted); margin-top: 2mm; max-width: 150mm; }
+  h2 { font-size: 15pt; letter-spacing: -0.02em; font-weight: 800; margin: 9mm 0 3mm; break-after: avoid; display: flex; gap: 9px; align-items: baseline; }
+  h2 .n { color: var(--teal); font-variant-numeric: tabular-nums; }
+  h3 { font-size: 11pt; font-weight: 700; margin: 5mm 0 2mm; break-after: avoid; }
+  p + p { margin-top: 2mm; }
+  .lead { color: var(--muted); max-width: 165mm; }
+  section.topic { break-before: auto; }
+  section.topic.new-page { page-break-before: always; }
+  section.topic.new-page > h2:first-child { margin-top: 0; }
+
+  ol.steps { list-style: none; counter-reset: s; margin: 3mm 0; display: grid; gap: 2.2mm; }
+  ol.steps > li { counter-increment: s; display: grid; grid-template-columns: 7.5mm 1fr; gap: 2mm; break-inside: avoid; }
+  ol.steps > li::before { content: counter(s); width: 6mm; height: 6mm; border-radius: 50%; background: var(--teal-soft); color: var(--teal-dark); font-weight: 800; font-size: 8.2pt; display: grid; place-items: center; margin-top: 0.4mm; }
+  ul.dots { list-style: none; margin: 2mm 0; display: grid; gap: 1.4mm; }
+  ul.dots li { padding-left: 13px; position: relative; }
+  ul.dots li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 5px; height: 5px; border-radius: 2px; background: var(--teal); }
+  b, strong { font-weight: 700; }
+  .ui { font-weight: 700; color: var(--teal-dark); }
+
+  figure { margin: 4mm 0 2mm; break-inside: avoid; }
+  figure img { display: block; width: auto; max-width: 100%; max-height: 92mm; margin: 0 auto; border: 1px solid var(--line); border-radius: 8px; }
+  figure.half img { max-height: 62mm; }
+  figcaption { font-size: 8.2pt; color: var(--muted); margin-top: 1.6mm; text-align: center; }
+  .phones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; margin: 4mm 0; break-inside: avoid; }
+  .phones figure { margin: 0; }
+  .phones img { border-radius: 14px; max-height: 118mm; }
+
+  .note, .tip { border-radius: 9px; padding: 3.5mm 4.5mm; margin: 3.5mm 0; break-inside: avoid; font-size: 9.3pt; }
+  .note { background: var(--amber-soft); color: #4d3400; }
+  .note b:first-child, .tip b:first-child { display: block; margin-bottom: 0.6mm; }
+  .tip { background: var(--wash); }
+
+  h3 + table, h3 + ul, h3 + p { break-before: avoid; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 3mm 0; break-inside: avoid; }
+  th, td { text-align: left; padding: 2mm 3mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-size: 7.6pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1.5px solid var(--ink); }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+
+  .toc { margin-top: 2mm; display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; }
+  .toc h3 { margin-top: 0; color: var(--teal); font-size: 8.5pt; letter-spacing: 0.1em; text-transform: uppercase; }
+  .toc ol { list-style: none; display: grid; gap: 1.6mm; }
+  .toc li { display: flex; gap: 8px; }
+  .toc li span { color: var(--teal); font-weight: 700; width: 6mm; font-variant-numeric: tabular-nums; }
+  .contact { margin-top: 6mm; border: 1.5px solid var(--teal); border-radius: 12px; padding: 5mm 6mm; display: flex; justify-content: space-between; gap: 6mm; break-inside: avoid; }
+  .contact b { font-size: 11pt; }
+  .contact p { color: var(--muted); }
+  .contact .lines { text-align: right; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ═════════════ COVER ═════════════ -->
+<section class="cover">
+  <div class="brand"><span class="mark">P</span><div><b>PMS</b><small>Property Management System by BJP Technologies</small></div></div>
+  <h1>User Guide</h1>
+  <p class="sub">How to run your properties in PMS, from the first sign-in to rent, receipts and reports, plus a short guide for your renters.</p>
+  <div class="parts">
+    <div><b>Part 1 · Landlords and staff</b><span>Setting up, leases, invoices, payments, maintenance, your website, reports and your team.</span></div>
+    <div><b>Part 2 · Renters</b><span>Activating the account, viewing invoices, downloading receipts and reporting problems.</span></div>
+  </div>
+  <div class="foot"><span>pms.bjptechnologies.co.tz</span><span>Version 1 · October 2026</span></div>
+</section>
+
+<!-- ═════════════ CONTENTS ═════════════ -->
+<section>
+  <div class="part-head"><span class="eyebrow">Contents</span><h1>What's in this guide</h1>
+    <p>Part 1 follows the order you'll use PMS in: set up your buildings once, add renters and leases, then bill and collect every month. Part 2 is written for your renters; you can share those pages with them.</p></div>
+  <div class="toc">
+    <div><h3>Part 1 · Landlords and staff</h3>
+      <ol>
+        <li><span>1</span>Signing in and your dashboard</li>
+        <li><span>2</span>Finding your way around</li>
+        <li><span>3</span>Locations, properties and units</li>
+        <li><span>4</span>Adding renters</li>
+        <li><span>5</span>Leases</li>
+        <li><span>6</span>Invoices</li>
+        <li><span>7</span>Payments and receipts</li>
+        <li><span>8</span>Expenses</li>
+        <li><span>9</span>Maintenance requests</li>
+        <li><span>10</span>Your website</li>
+        <li><span>11</span>Reports</li>
+        <li><span>12</span>Your team and roles</li>
+        <li><span>13</span>Workspace settings and your plan</li>
+      </ol></div>
+    <div><h3>Part 2 · Renters</h3>
+      <ol>
+        <li><span>14</span>Activating your account</li>
+        <li><span>15</span>Signing in</li>
+        <li><span>16</span>Your dashboard and invoices</li>
+        <li><span>17</span>Reporting a problem</li>
+        <li><span>18</span>Your profile and password</li>
+      </ol>
+      <h3 style="margin-top:7mm">Your web addresses</h3>
+      <table>
+        <tr><td>Staff sign-in</td><td>pms.bjptechnologies.co.tz/manage</td></tr>
+        <tr><td>Your website</td><td>pms.bjptechnologies.co.tz/<i>your-workspace</i></td></tr>
+        <tr><td>Renter portal</td><td>pms.bjptechnologies.co.tz/<i>your-workspace</i>/portal</td></tr>
+      </table>
+      <p class="lead" style="font-size:8.8pt">Your workspace name is the short name in your invitation email, for example <i>mshale-plaza</i>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ PART 1 ═════════════ -->
+<section class="part">
+  <div class="part-head"><span class="eyebrow">Part 1</span><h1>Landlords and staff</h1>
+    <p>Everything here happens in the staff area at <b>pms.bjptechnologies.co.tz/manage</b>, on a computer or a phone.</p></div>
+
+  <section class="topic">
+    <h2><span class="n">1</span>Signing in and your dashboard</h2>
+    <h3>Your first sign-in</h3>
+    <ol class="steps">
+      <li><div>Open the email titled <b>"Activate your … staff account"</b> and press <span class="ui">Activate my account</span>. If a phone number was given, the same link also arrives by SMS.</div></li>
+      <li><div>Choose your password. The link works for <b>72 hours</b>. If it has expired, ask the workspace owner to resend it (section 12), or ask BJP if you are the owner.</div></li>
+      <li><div>From then on, sign in at <b>pms.bjptechnologies.co.tz/manage</b> with your email and password. Capital letters in the email don't matter.</div></li>
+    </ol>
+    <figure class="half"><img src="screenshots/01-operator-login.png" alt="Staff sign-in page"><figcaption>The staff sign-in page.</figcaption></figure>
+    <div class="tip"><b>Forgot your password?</b>There is no reset link on the sign-in page. Ask the workspace owner to press <span class="ui">Resend invite</span> next to your name under Team; you'll get a new activation link and choose a new password.</div>
+
+    <h3>The dashboard</h3>
+    <p>The dashboard is the first page after signing in. The four figures at the top tell you where you stand this month:</p>
+    <table>
+      <tr><td>Occupancy</td><td>The share of your units that have a renter.</td></tr>
+      <tr><td>Collected this month</td><td>Payments recorded this month, against what was billed.</td></tr>
+      <tr><td>Outstanding</td><td>Everything still owed on open invoices.</td></tr>
+      <tr><td>Overdue</td><td>The part of that which is past its due date.</td></tr>
+    </table>
+    <p>Below them are your collections over six months, units by status, the five largest unpaid invoices and the latest payments. A short tour runs the first time you sign in; you can skip it.</p>
+    <figure><img src="screenshots/02-dashboard.png" alt="Dashboard"><figcaption>The dashboard.</figcaption></figure>
+  </section>
+
+  <section class="topic">
+    <h2><span class="n">2</span>Finding your way around</h2>
+    <p class="lead">The menu on the left is grouped by job. On a phone, open it with the menu button at the top.</p>
+    <table>
+      <thead><tr><th>Menu group</th><th>What's in it</th></tr></thead>
+      <tr><td>Dashboard, Settings</td><td>Your overview, and your workspace details and plan (section 13).</td></tr>
+      <tr><td>Inventory</td><td>Locations, Properties and Units: your buildings, set up once.</td></tr>
+      <tr><td>Leasing</td><td>Renters and Leases.</td></tr>
+      <tr><td>Billing</td><td>Invoices, Payments and Receipts.</td></tr>
+      <tr><td>Operations</td><td>Expenses and expense Categories.</td></tr>
+      <tr><td>Maintenance</td><td>Repair requests from renters and staff.</td></tr>
+      <tr><td>Website</td><td>Your public website's Pages, Announcements and Contact inbox.</td></tr>
+      <tr><td>Reports</td><td>Seven reports, each downloadable as Excel or PDF.</td></tr>
+      <tr><td>Administration</td><td>Team (your staff) and Roles &amp; Permissions.</td></tr>
+    </table>
+    <p>Every list works the same way: search at the top right, filters behind the funnel icon, and the action buttons (<span class="ui">Edit</span>, <span class="ui">Issue</span>, <span class="ui">Download PDF</span> and so on) at the end of each row. The bell at the top shows notifications, such as a new maintenance request.</p>
+    <div class="tip"><b>What you see depends on your role.</b>An accountant, for example, doesn't see Team. If something in this guide is missing for you, your role or your plan doesn't include it.</div>
+
+    <h2><span class="n">3</span>Locations, properties and units</h2>
+    <p class="lead">Set this up once. A <b>location</b> is an area (region, district, ward), a <b>property</b> is a building or compound, and a <b>unit</b> is what you rent out: a room, apartment, business frame, office, shop or warehouse.</p>
+    <h3>Add a property</h3>
+    <ol class="steps">
+      <li><div>Go to <b>Inventory → Properties</b> and press <span class="ui">New Property</span>.</div></li>
+      <li><div>Enter the <b>Property name</b> and choose its <b>Location</b>. If the location doesn't exist yet, press <span class="ui">+</span> beside the field to add it there.</div></li>
+      <li><div>Choose the <b>Type</b> and <b>Status</b>, and add the street address and a description if you wish.</div></li>
+      <li><div>Add photos (up to 5 MB each); they appear on your website. Press <span class="ui">Create</span>.</div></li>
+    </ol>
+    <figure><img src="screenshots/04-property-create.png" alt="Create property form"><figcaption>Adding a property.</figcaption></figure>
+  </section>
+
+  <section class="topic">
+    <h3>Add units</h3>
+    <ol class="steps">
+      <li><div>Go to <b>Inventory → Units</b> and press <span class="ui">New Unit</span>.</div></li>
+      <li><div>Choose the <b>Property</b> and give the unit a short <b>Unit code</b>, such as "Room 5" or "Frame 2A".</div></li>
+      <li><div>Choose the <b>Type</b>. Leave <b>Status</b> as <i>Vacant</i> unless someone already lives there.</div></li>
+      <li><div>Under <b>Rent</b>, enter the amount in whole shillings (350000 for TZS 350,000), the currency and the billing cycle.</div></li>
+      <li><div>Optionally fill in <b>Specs</b> (bedrooms, bathrooms, size), tick <b>Amenities</b> and add photos. Press <span class="ui">Create</span>, or <span class="ui">Create &amp; create another</span> to add the next unit straight away.</div></li>
+    </ol>
+    <figure><img src="screenshots/05-unit-create.png" alt="Create unit form"><figcaption>Adding a unit. Vacant units appear on your website automatically.</figcaption></figure>
+    <div class="note"><b>Plan limits</b>Each plan allows a number of properties, units and staff, and the Properties, Units and Team pages show how many you've used, for example "45 of 60 units used on the Starter plan". When you reach the limit, the <span class="ui">New</span> button is replaced by <span class="ui">Request an upgrade</span>, which tells BJP you need a bigger plan. Everything you already have keeps working.</div>
+  </section>
+
+  <section class="topic">
+    <h2><span class="n">4</span>Adding renters</h2>
+    <ol class="steps">
+      <li><div>Go to <b>Leasing → Renters</b> and press <span class="ui">New Renter</span>.</div></li>
+      <li><div>Under <b>Who is renting?</b> choose an individual or a business and enter the <b>Full name</b>.</div></li>
+      <li><div>Enter the <b>Phone</b> number. You can type it as 0712 345 678; PMS stores it in the international format. Add an email address if they have one.</div></li>
+      <li><div>Add identification (NIDA or TIN number), an emergency contact and notes if you need them. Press <span class="ui">Create</span>.</div></li>
+    </ol>
+    <div class="tip"><b>Phone and email matter.</b>The phone number is how the renter signs in to the renter portal. The email address is where their invoices, receipts and reminders are sent. Without an email, the renter still sees everything in the portal.</div>
+    <figure><img src="screenshots/07-renter-create.png" alt="Create renter form"><figcaption>Adding a renter.</figcaption></figure>
+  </section>
+
+  <section class="topic">
+    <h2><span class="n">5</span>Leases</h2>
+    <p class="lead">A lease connects a renter to a unit, with the rent, dates and deposit. Creating one takes four steps.</p>
+    <ol class="steps">
+      <li><div>Go to <b>Leasing → Leases</b> and press <span class="ui">New Lease</span>.</div></li>
+      <li><div><b>Renter:</b> choose who is renting.</div></li>
+      <li><div><b>Unit:</b> choose which unit they're renting.</div></li>
+      <li><div><b>Terms:</b> enter the start and end dates, rent, deposit, billing cycle and the day of the month rent is due.</div></li>
+      <li><div><b>Confirm:</b> check the summary and create the lease. It starts as <i>Pending</i>.</div></li>
+    </ol>
+    <figure><img src="screenshots/08-lease-create.png" alt="Create lease wizard"><figcaption>The four steps of a new lease.</figcaption></figure>
+    <h3>Activating a lease</h3>
+    <p>When the renter moves in, press <span class="ui">Activate</span> on the lease. Three things happen:</p>
+    <ul class="dots">
+      <li>The lease becomes <b>Active</b> and the unit is marked <b>Occupied</b>.</li>
+      <li>If your plan includes the renter portal, the renter gets an account and an activation link by email (and SMS where set up).</li>
+      <li>The change is recorded in the lease's <span class="ui">History</span>.</li>
+    </ul>
+    <h3>Other lease actions</h3>
+    <table>
+      <tr><td>Download PDF</td><td>A printable lease contract to sign.</td></tr>
+      <tr><td>End (natural)</td><td>The lease ran its course. The unit becomes vacant again.</td></tr>
+      <tr><td>Terminate</td><td>Ending early. You're asked for a reason, which is kept in the history.</td></tr>
+      <tr><td>History</td><td>Every change to the lease, who made it and when.</td></tr>
+    </table>
+  </section>
+
+  <section class="topic">
+    <h2><span class="n">6</span>Invoices</h2>
+    <div class="note"><b>Create an invoice for each rent period.</b>PMS doesn't create rent invoices on its own yet. At the start of each period, create the invoice for each lease as described below. Overdue tracking is automatic.</div>
+    <ol class="steps">
+      <li><div>Go to <b>Billing → Invoices</b> and press <span class="ui">New Invoice</span>.</div></li>
+      <li><div>Under <b>Invoice header</b>, choose the lease, the <b>Period start</b> and <b>Period end</b>, and the <b>Due date</b>. Leave the invoice number empty; it's given when you issue.</div></li>
+      <li><div>Under <b>Line items</b>, press <span class="ui">Add line</span> for each charge. A line can be rent, a utility, a fee, a deposit or anything else.</div></li>
+      <li><div>Press <span class="ui">Create</span>. The invoice is saved as a <b>Draft</b>, which the renter can't see yet, so you can still correct it.</div></li>
+      <li><div>When it's right, press <span class="ui">Issue</span> on the invoice. It gets its number, and the renter is emailed and sees it in the portal.</div></li>
+    </ol>
+    <figure><img src="screenshots/11-invoice-create.png" alt="Create invoice form"><figcaption>A new invoice with its line items.</figcaption></figure>
+    <h3>What the statuses mean</h3>
+    <table>
+      <tr><td>Draft</td><td>Not sent yet; only you can see it.</td></tr>
+      <tr><td>Unpaid</td><td>Issued, nothing paid.</td></tr>
+      <tr><td>Partial</td><td>Part of it is paid.</td></tr>
+      <tr><td>Paid</td><td>Fully paid.</td></tr>
+      <tr><td>Overdue</td><td>Past its due date and not fully paid. PMS checks every morning at 06:00 and emails the renter a reminder.</td></tr>
+      <tr><td>Cancelled</td><td>Cancelled with <span class="ui">Cancel</span>; kept for your records.</td></tr>
+    </table>
+    <p>Every invoice can be downloaded with <span class="ui">Download PDF</span>.</p>
+  </section>
+
+  <section class="topic">
+    <h2><span class="n">7</span>Payments and receipts</h2>
+    <p class="lead">Renters pay you the way they always have: cash, bank, mobile money. You record the payment in PMS, and the receipt is produced for you.</p>
+    <ol class="steps">
+      <li><div>Go to <b>Billing → Payments</b> and press <span class="ui">New Payment</span>.</div></li>
+      <li><div>Under <b>Which invoice?</b> choose the invoice being paid.</div></li>
+      <li><div>Enter the <b>Amount</b> and <b>Payment date</b>. A part payment is fine; the invoice becomes <i>Partial</i>.</div></li>
+      <li><div>Choose the <b>Method</b>: cash, bank transfer, mobile money, cheque or card. Add the transaction or cheque number under <b>Reference</b>.</div></li>
+      <li><div>Leave the status as <b>Completed</b> and press <span class="ui">Create</span>.</div></li>
+    </ol>
+    <p>PMS then updates the invoice balance, creates a numbered <b>receipt</b>, and emails it to the renter as a PDF. You'll find every receipt under <b>Billing → Receipts</b>, where you can download or email it again.</p>
+    <figure><img src="screenshots/12-payment-create.png" alt="Record a payment"><figcaption>Recording a payment.</figcaption></figure>
+
+    <h2><span class="n">8</span>Expenses</h2>
+    <p>Record what your buildings cost, such as repairs, security, cleaning and utilities, so your reports show real profit. Go to <b>Operations → Expenses</b>, press <span class="ui">New Expense</span>, and choose a category, the property, the amount and the date. You can attach a photo of the paper receipt. Manage your list of categories under <b>Operations → Categories</b>.</p>
+  </section>
+
+  <section class="topic">
+    <h2><span class="n">9</span>Maintenance requests</h2>
+    <p class="lead">Renters report problems from the renter portal, with photos if they like. Staff can also log a request with <span class="ui">New Maintenance Request</span>.</p>
+    <ul class="dots">
+      <li>A new request notifies the owner, managers and maintenance staff by email and in the bell.</li>
+      <li>Press <span class="ui">Start</span> when work begins and <span class="ui">Complete</span> when it's done, or <span class="ui">Cancel</span> it. The renter sees each change in the portal.</li>
+      <li>Open a request to add progress notes, which keep a running record of what was done.</li>
+    </ul>
+    <figure><img src="screenshots/15-maintenance.png" alt="Maintenance requests"><figcaption>Maintenance requests, with Start, Complete and Cancel on each row.</figcaption></figure>
+
+    <h2><span class="n">10</span>Your website</h2>
+    <p>Your workspace comes with a public website at <b>pms.bjptechnologies.co.tz/<i>your-workspace</i></b>, with Home, About, Units, News and Contact pages.</p>
+    <ul class="dots">
+      <li><b>Website → Pages:</b> edit the text of each page.</li>
+      <li><b>Website → Announcements:</b> post news, such as a water cut or new units.</li>
+      <li><b>Website → Contact inbox:</b> messages visitors send through the contact form. You're also notified by email.</li>
+      <li>The <b>Units</b> page lists your vacant units with their photos, rent and amenities automatically. Once a unit is occupied it drops off.</li>
+    </ul>
+  </section>
+
+  <section class="topic">
+    <h2><span class="n">11</span>Reports</h2>
+    <p class="lead">Seven reports under <b>Reports</b> in the menu. Choose the filters, such as the property or the dates, then press <span class="ui">Download Excel</span> or <span class="ui">Download PDF</span>. Reports are included from the Starter plan up.</p>
+    <table>
+      <tr><td>Monthly Rent Collection</td><td>What was billed and collected each month.</td></tr>
+      <tr><td>Outstanding Rent</td><td>Who owes what, and how late it is.</td></tr>
+      <tr><td>Occupancy</td><td>Occupied and vacant units per property.</td></tr>
+      <tr><td>Property Income</td><td>Income per property.</td></tr>
+      <tr><td>Expenses</td><td>Spending by category.</td></tr>
+      <tr><td>Profit Summary</td><td>Income minus expenses.</td></tr>
+      <tr><td>Renter Payment History</td><td>Every payment one renter has made.</td></tr>
+    </table>
+    <figure><img src="screenshots/17-report.png" alt="Outstanding rent report"><figcaption>The Outstanding Rent report.</figcaption></figure>
+  </section>
+
+  <section class="topic">
+    <h2><span class="n">12</span>Your team and roles</h2>
+    <ol class="steps">
+      <li><div>Go to <b>Administration → Team</b> and press <span class="ui">Invite member</span>.</div></li>
+      <li><div>Enter their name and email and choose a role. They receive an activation email, as you did.</div></li>
+      <li><div>If the email doesn't arrive or the link expires, press <span class="ui">Resend invite</span> next to their name. The new link is also shown to you, so you can send it by WhatsApp.</div></li>
+    </ol>
+    <table>
+      <thead><tr><th>Role</th><th>Typical use</th></tr></thead>
+      <tr><td>Owner</td><td>Everything, including the team and settings.</td></tr>
+      <tr><td>Manager</td><td>Day-to-day running: renters, leases, billing, maintenance.</td></tr>
+      <tr><td>Accountant</td><td>Invoices, payments, expenses and reports.</td></tr>
+      <tr><td>Maintenance staff</td><td>Maintenance requests.</td></tr>
+    </table>
+    <p>On the Pro plan and above, the owner can change exactly what each role may do under <b>Administration → Roles &amp; Permissions</b>.</p>
+
+    <h2><span class="n">13</span>Workspace settings and your plan</h2>
+    <p><b>Settings</b> (owners only) has five tabs: <b>Business</b> (name, email, phone), <b>Branding</b> (logo and colour, used on your website and renter portal), <b>Preferences</b>, <b>Security</b> (change your password) and <b>Subscription</b> (your plan and when it renews).</p>
+  </section>
+
+  <!-- ═════════════ PART 2 ═════════════ -->
+  <section class="part">
+    <div class="part-head"><span class="eyebrow">Part 2 · For renters</span><h1>Your renter portal</h1>
+      <p>Your landlord uses PMS to manage your tenancy. The renter portal lets you see your rent, download receipts and report problems from your phone. Nothing to install: it opens in your browser.</p></div>
+
+    <h2><span class="n">14</span>Activating your account</h2>
+    <ol class="steps">
+      <li><div>When your lease starts, you receive an email (and an SMS where available) with an activation link.</div></li>
+      <li><div>Open it and choose your password. The link works for 72 hours. If it has expired, ask your landlord to send a new one.</div></li>
+    </ol>
+
+    <h2><span class="n">15</span>Signing in</h2>
+    <p>Go to the portal address your landlord gives you, for example <b>pms.bjptechnologies.co.tz/<i>mshale-plaza</i>/portal</b>. Sign in with your <b>phone number</b> (such as 0712345678) and your password.</p>
+    <div class="tip"><b>Forgot your password?</b>Contact your landlord. They'll send you a new activation link so you can choose a new one.</div>
+
+    <h2><span class="n">16</span>Your dashboard and invoices</h2>
+    <p>The <b>Dashboard</b> shows your unit, your next due date, what you owe in total, and your lease details. Under <b>Invoices</b> you'll see every invoice; filter by <i>Open</i> or <i>Paid</i>, and download the receipt for any payment.</p>
+    <div class="phones">
+      <figure><img src="screenshots/20-portal-login.png" alt="Portal sign-in"><figcaption>Signing in</figcaption></figure>
+      <figure><img src="screenshots/21-portal-dashboard.png" alt="Portal dashboard"><figcaption>Your dashboard</figcaption></figure>
+      <figure><img src="screenshots/22-portal-invoices.png" alt="Portal invoices"><figcaption>Invoices and receipts</figcaption></figure>
+    </div>
+    <p>Pay your rent the way your landlord asks: cash, bank or mobile money. Once they record it, your receipt arrives by email and appears here.</p>
+
+    <h2><span class="n">17</span>Reporting a problem</h2>
+    <ol class="steps">
+      <li><div>Open <b>Maintenance</b> and start a new request.</div></li>
+      <li><div>Give it a short title, choose your unit and how urgent it is, and describe the problem. Add photos if they help.</div></li>
+      <li><div>Press <span class="ui">Submit request</span>. Your landlord is notified straight away, and you can follow progress under <b>Maintenance</b>.</div></li>
+    </ol>
+
+    <h2><span class="n">18</span>Your profile and password</h2>
+    <p>Under <b>Profile</b> you can update your details and change your password.</p>
+    <div class="phones">
+      <figure><img src="screenshots/23-portal-maintenance.png" alt="New maintenance request"><figcaption>Reporting a problem</figcaption></figure>
+      <figure><img src="screenshots/24-portal-profile.png" alt="Profile"><figcaption>Your profile</figcaption></figure>
+      <figure></figure>
+    </div>
+
+    <div class="contact">
+      <div><b>Need help with PMS?</b><p>Landlords and staff can contact BJP Technologies. Renters, please contact your landlord first.</p></div>
+      <div class="lines">+255 764 764 011<br>info@bjptechnologies.co.tz</div>
+    </div>
+  </section>
+</section>
+
+</body>
+</html>
