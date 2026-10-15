@@ -205,13 +205,13 @@ return [
     'faq_subtitle' => 'If you do not see your question here, just reach out.',
 
     'faq_1_q' => 'Do my renters need to install anything?',
-    'faq_1_a' => 'No. The renter portal runs in any browser — including modest phones over slow connections. They sign in with a phone number and a one-time password.',
+    'faq_1_a' => 'No. The renter portal runs in any browser, including basic phones on slow connections. Renters sign in with their phone number and a password they choose themselves from the activation link we send them.',
 
     'faq_2_q' => 'Can I import my existing renters and units?',
-    'faq_2_a' => 'Yes. We can import from a spreadsheet during onboarding so you do not have to type everything in by hand.',
+    'faq_2_a' => 'Yes. During setup our team enters your properties, units and renters for you, so you do not have to type everything in yourself.',
 
     'faq_3_q' => 'Is PMS available in Kiswahili?',
-    'faq_3_a' => 'Fully. Both you and your renters can switch between English and Kiswahili at any time, and we keep both translations in sync as features ship.',
+    'faq_3_a' => 'Partly. The public website and the sign-in pages are in Kiswahili and English. The landlord and renter screens are in English for now. Tell us if your team needs them in Kiswahili.',
 
     'faq_4_q' => 'Where is my data stored?',
     'faq_4_a' => 'Your data lives on secure cloud infrastructure with daily backups. Each property management company has its own isolated workspace — never visible to other clients.',
