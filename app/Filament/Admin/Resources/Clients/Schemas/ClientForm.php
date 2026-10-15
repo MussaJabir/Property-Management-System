@@ -160,7 +160,7 @@ class ClientForm
                     ->collapsed()
                     ->components([
                         Textarea::make('settings.internal_notes')
-                            ->label(false)
+                            ->hiddenLabel()
                             ->placeholder('Billing quirks, key contacts, sales-cycle stage, anything worth remembering.')
                             ->rows(4),
                     ]),

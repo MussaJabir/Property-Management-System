@@ -47,7 +47,7 @@ class LocationForm
                     ->collapsed()
                     ->components([
                         Textarea::make('notes')
-                            ->label(false)
+                            ->hiddenLabel()
                             ->placeholder('Landmarks, access notes, anything else.')
                             ->rows(3),
                     ]),

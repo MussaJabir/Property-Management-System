@@ -30,6 +30,15 @@ parameters:
             message: '#Method App\\Exports\\ReportExcelExport::collection\(\) should return#'
             path: app/Exports/ReportExcelExport.php
 
+        # Widget::$columnSpan is documented as array<string, int|null>, but
+        # Filament's grid also accepts 'full' per breakpoint (rendered as
+        # "1 / -1"). Our dashboards use ['default' => 'full', 'md' => 1].
+        -
+            message: '#::\$columnSpan \(array<string, int\|null>\|int\|string\) does not accept default value#'
+            paths:
+                - app/Filament/Admin/Widgets/*.php
+                - app/Filament/Operator/Widgets/*.php
+
         # Filament v4 Page has dynamic $form property via InteractsWithForms.
         -
             message: '#Access to an undefined property App\\Filament\\.+::\$form#'

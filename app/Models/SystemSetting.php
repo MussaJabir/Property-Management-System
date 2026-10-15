@@ -37,7 +37,7 @@ class SystemSetting extends Model
     {
         $setting = static::find($key);
 
-        return $setting?->value ?? $default;
+        return $setting->value ?? $default;
     }
 
     /**
