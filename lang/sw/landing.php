@@ -204,13 +204,13 @@ return [
     'faq_subtitle' => 'Kama huoni swali lako hapa, wasiliana nasi.',
 
     'faq_1_q' => 'Je, wapangaji wangu wanahitaji kuweka chochote?',
-    'faq_1_a' => 'Hapana. Lango la mpangaji linafanya kazi kwenye kivinjari chochote — pamoja na simu rahisi za miunganisho ya polepole. Wanaingia kwa namba ya simu na nenosiri la mara moja.',
+    'faq_1_a' => 'Hapana. Lango la mpangaji linafanya kazi kwenye kivinjari chochote, pamoja na simu za kawaida zenye mtandao wa polepole. Wapangaji wanaingia kwa namba yao ya simu na nenosiri wanalojichagulia wenyewe kupitia kiungo cha kuwezesha akaunti tunachowatumia.',
 
     'faq_2_q' => 'Je, ninaweza kuingiza wapangaji na vyumba vyangu vilivyopo?',
-    'faq_2_a' => 'Ndio. Tunaweza kuingiza kutoka kwenye lahajedwali wakati wa kuanza ili usilazimike kuandika kila kitu kwa mkono.',
+    'faq_2_a' => 'Ndio. Wakati wa kuanza, timu yetu inaingiza nyumba, vyumba na wapangaji wako kwa ajili yako, ili usilazimike kuandika kila kitu mwenyewe.',
 
     'faq_3_q' => 'Je, PMS inapatikana kwa Kiswahili?',
-    'faq_3_a' => 'Kabisa. Wewe na wapangaji wako mnaweza kubadilisha kati ya Kiingereza na Kiswahili wakati wowote, na tunaweka tafsiri zote mbili sawa kadri vipengele vinapotokea.',
+    'faq_3_a' => 'Kwa sehemu. Tovuti ya umma na kurasa za kuingia zinapatikana kwa Kiswahili na Kiingereza. Skrini za mwenye nyumba na za mpangaji kwa sasa ni za Kiingereza. Tuambie kama timu yako inazihitaji kwa Kiswahili.',
 
     'faq_4_q' => 'Data yangu inahifadhiwa wapi?',
     'faq_4_a' => 'Data yako iko kwenye miundombinu salama ya wingu yenye nakala rudufu za kila siku. Kila kampuni ya usimamizi wa nyumba ina eneo lake binafsi — halionekani kamwe kwa wateja wengine.',
