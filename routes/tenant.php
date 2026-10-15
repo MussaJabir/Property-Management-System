@@ -6,6 +6,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\Portal\LogoutController;
 use App\Http\Controllers\Portal\ReceiptDownloadController;
+use App\Http\Middleware\EnsurePlanFeature;
 use App\Http\Middleware\EnsureRenterAuthenticated;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Livewire\Portal\Auth\Activate;
@@ -49,7 +50,7 @@ Route::middleware([
     Route::get('/contact', PublicPage::class)->defaults('slug', 'contact')->name('public.contact');
 
     /* ----- Renter portal (Phase 8) ----- */
-    Route::prefix('portal')->name('portal.')->group(function () {
+    Route::prefix('portal')->name('portal.')->middleware(EnsurePlanFeature::class.':renter_portal')->group(function () {
         // Guests
         Route::get('login', Login::class)->name('login');
         Route::get('activate/{user}/{token}', Activate::class)->name('activate');

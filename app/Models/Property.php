@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantScopedModel;
+use App\Services\Plans\PlanUsage;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,14 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class Property extends Model implements HasMedia
 {
     use HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
+
+    protected static function booted(): void
+    {
+        // Plan limit safety net for every create path (panel, imports, API).
+        static::creating(function (self $model): void {
+            PlanUsage::forClientId($model->tenant_id)?->ensureCanAdd(PlanUsage::PROPERTIES);
+        });
+    }
 
     public const TYPE_RESIDENTIAL = 'residential';
 

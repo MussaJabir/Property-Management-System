@@ -5,6 +5,7 @@ namespace App\Filament\Operator\Pages\Reports;
 use App\Exports\ReportExcelExport;
 use App\Models\User;
 use App\Reports\Contracts\ReportBuilder;
+use App\Services\Plans\PlanUsage;
 use App\Services\Reports\ReportPdfGenerator;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -46,7 +47,8 @@ abstract class BaseReportPage extends Page
 
         app(PermissionRegistrar::class)->setPermissionsTeamId($user->tenant_id);
 
-        return $user->can('reports.view');
+        return $user->can('reports.view')
+            && (PlanUsage::forCurrentUser()?->hasFeature('reports') ?? true);
     }
 
     public function mount(): void

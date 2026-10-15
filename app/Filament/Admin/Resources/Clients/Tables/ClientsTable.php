@@ -2,17 +2,23 @@
 
 namespace App\Filament\Admin\Resources\Clients\Tables;
 
+use App\Filament\Admin\Resources\Clients\Actions\PlanLimitAllowanceActions;
 use App\Filament\Admin\Resources\Clients\Actions\PurgeClientAction;
 use App\Filament\Admin\Resources\Clients\Actions\ResendOwnerInviteAction;
+use App\Models\Client;
+use App\Services\Plans\PlanUsage;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ClientsTable
 {
@@ -48,6 +54,30 @@ class ClientsTable
                     ->sortable()
                     ->placeholder('—'),
 
+                TextColumn::make('unit_usage')
+                    ->label('Units')
+                    ->state(function (Client $record): string {
+                        $usage = PlanUsage::for($record);
+                        $limit = $usage->limit(PlanUsage::UNITS);
+                        $used = $usage->used(PlanUsage::UNITS);
+
+                        return $limit === null ? (string) $used : $used.' / '.$limit;
+                    })
+                    ->badge()
+                    ->color(function (Client $record): string {
+                        $usage = PlanUsage::for($record);
+
+                        return match (true) {
+                            $usage->isAtLimit(PlanUsage::UNITS) => 'danger',
+                            $usage->isNearLimit(PlanUsage::UNITS) => 'warning',
+                            default => 'gray',
+                        };
+                    })
+                    ->description(fn (Client $record): ?string => PlanUsage::for($record)->isWaived()
+                        ? __('Limits paused until :date', ['date' => $record->limits_waived_until?->format('d/m/Y')])
+                        : null)
+                    ->toggleable(),
+
                 TextColumn::make('contact_email')
                     ->searchable()
                     ->toggleable(),
@@ -67,6 +97,16 @@ class ClientsTable
                         'cancelled' => 'Cancelled',
                     ]),
 
+                Filter::make('near_unit_limit')
+                    ->label('Near or at unit limit')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->whereNotNull('plan_id')
+                        ->whereRaw(
+                            '(select count(*) from units where units.tenant_id = tenants.id and units.deleted_at is null)'
+                            .' >= cast(? as decimal(4, 2)) * (select max_units from plans where plans.id = tenants.plan_id)',
+                            [PlanUsage::WARN_AT],
+                        )),
+
                 // Archived clients are reached via the Active/Archived/All tabs
                 // on the list page, not a trashed filter.
             ])
@@ -74,6 +114,11 @@ class ClientsTable
                 EditAction::make(),
 
                 ResendOwnerInviteAction::make(),
+
+                ActionGroup::make([
+                    PlanLimitAllowanceActions::allow(),
+                    PlanLimitAllowanceActions::end(),
+                ])->label('Plan limits')->icon('heroicon-o-adjustments-horizontal')->color('gray'),
 
                 Action::make('suspend')
                     ->icon('heroicon-o-no-symbol')

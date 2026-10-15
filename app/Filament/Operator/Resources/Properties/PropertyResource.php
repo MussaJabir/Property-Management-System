@@ -8,6 +8,7 @@ use App\Filament\Operator\Resources\Properties\Pages\ListProperties;
 use App\Filament\Operator\Resources\Properties\Schemas\PropertyForm;
 use App\Filament\Operator\Resources\Properties\Tables\PropertiesTable;
 use App\Models\Property;
+use App\Services\Plans\PlanUsage;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -31,6 +32,12 @@ class PropertyResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 20;
+
+    public static function canCreate(): bool
+    {
+        return parent::canCreate()
+            && (PlanUsage::forCurrentUser()?->canAdd(PlanUsage::PROPERTIES) ?? true);
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -23,6 +23,7 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  *
  * @property array<string, mixed>|null $settings
  * @property Carbon|null $trial_ends_at
+ * @property Carbon|null $limits_waived_until
  */
 class Client extends BaseTenant implements TenantWithDatabase
 {
@@ -66,6 +67,7 @@ class Client extends BaseTenant implements TenantWithDatabase
             'status',
             'plan_id',
             'trial_ends_at',
+            'limits_waived_until',
             'settings',
         ];
     }
@@ -75,6 +77,7 @@ class Client extends BaseTenant implements TenantWithDatabase
         return [
             'settings' => 'array',
             'trial_ends_at' => 'datetime',
+            'limits_waived_until' => 'datetime',
         ];
     }
 

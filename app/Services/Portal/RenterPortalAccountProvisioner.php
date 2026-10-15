@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Renter;
 use App\Models\User;
 use App\Notifications\PortalActivationNotification;
+use App\Services\Plans\PlanUsage;
 use App\Services\Sms\BeemSmsSender;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -39,6 +40,10 @@ class RenterPortalAccountProvisioner
      */
     public function provisionFor(Renter $renter): ?User
     {
+        if (! $this->planIncludesPortal($renter)) {
+            return null;
+        }
+
         if ($renter->user_id) {
             return $renter->user;
         }
@@ -64,6 +69,10 @@ class RenterPortalAccountProvisioner
      */
     public function resendActivation(Renter $renter): ?string
     {
+        if (! $this->planIncludesPortal($renter)) {
+            return null;
+        }
+
         $user = $renter->user;
 
         if (! $user instanceof User) {
@@ -191,5 +200,10 @@ class RenterPortalAccountProvisioner
         ])->save();
 
         return $rawToken;
+    }
+
+    protected function planIncludesPortal(Renter $renter): bool
+    {
+        return PlanUsage::forClientId($renter->tenant_id)?->hasFeature('renter_portal') ?? true;
     }
 }
