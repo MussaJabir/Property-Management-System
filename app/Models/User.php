@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Plans\PlanUsage;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
@@ -42,6 +43,13 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     protected static function booted(): void
     {
+        // Plan limit safety net: staff accounts count against the plan.
+        static::creating(function (self $user): void {
+            if ($user->type === self::TYPE_OPERATOR && $user->status !== self::STATUS_DISABLED) {
+                PlanUsage::forClientId($user->tenant_id)?->ensureCanAdd(PlanUsage::STAFF);
+            }
+        });
+
         // Once the user actually picks a new password on an existing account,
         // drop the "must change on next sign-in" gate. Only fires on updates
         // ($user->exists) so we don't clobber the flag at initial provisioning
@@ -137,7 +145,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function getTenants(Panel $panel): array|Collection
     {
-        return $this->client ? collect([$this->client]) : collect();
+        return new Collection($this->client ? [$this->client] : []);
     }
 
     public function canAccessTenant(Model $tenant): bool

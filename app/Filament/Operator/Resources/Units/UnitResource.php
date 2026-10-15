@@ -8,6 +8,7 @@ use App\Filament\Operator\Resources\Units\Pages\ListUnits;
 use App\Filament\Operator\Resources\Units\Schemas\UnitForm;
 use App\Filament\Operator\Resources\Units\Tables\UnitsTable;
 use App\Models\Unit;
+use App\Services\Plans\PlanUsage;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -31,6 +32,12 @@ class UnitResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 30;
+
+    public static function canCreate(): bool
+    {
+        return parent::canCreate()
+            && (PlanUsage::forCurrentUser()?->canAdd(PlanUsage::UNITS) ?? true);
+    }
 
     public static function form(Schema $schema): Schema
     {

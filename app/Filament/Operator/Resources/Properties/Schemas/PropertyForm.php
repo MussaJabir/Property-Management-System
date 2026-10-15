@@ -73,7 +73,7 @@ class PropertyForm
                     ->description('Square or landscape photos work best. Max 5 MB each.')
                     ->components([
                         SpatieMediaLibraryFileUpload::make('photos')
-                            ->label(false)
+                            ->hiddenLabel()
                             ->collection('photos')
                             ->multiple()
                             ->reorderable()

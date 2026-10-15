@@ -175,11 +175,11 @@ class WorkspaceSettings extends Page implements HasForms
                             ->schema([
                                 Placeholder::make('plan')
                                     ->label('Current plan')
-                                    ->content(fn (): string => $this->subscription?->plan?->name ?? '—'),
+                                    ->content(fn (): string => $this->subscription->plan->name ?? '—'),
 
                                 Placeholder::make('sub_status')
                                     ->label('Status')
-                                    ->content(fn (): string => ucfirst($this->subscription?->status ?? 'none')),
+                                    ->content(fn (): string => ucfirst($this->subscription->status ?? 'none')),
 
                                 Placeholder::make('renews')
                                     ->label('Renews / expires')

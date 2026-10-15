@@ -83,7 +83,7 @@ class SubscriptionsTable
                             ->numeric()
                             ->required()
                             ->minValue(0)
-                            ->default(fn (Subscription $record): float => round(($record->plan?->price_tzs ?? 0) / 100))
+                            ->default(fn (Subscription $record): float => round(($record->plan->price_tzs ?? 0) / 100))
                             ->helperText('Whole shillings.'),
 
                         DatePicker::make('paid_at')

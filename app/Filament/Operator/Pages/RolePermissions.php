@@ -6,6 +6,7 @@ namespace App\Filament\Operator\Pages;
 
 use App\Authorization\OperatorPermissions;
 use App\Models\User;
+use App\Services\Plans\PlanUsage;
 use BackedEnum;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -53,7 +54,8 @@ class RolePermissions extends Page implements HasForms
 
         app(PermissionRegistrar::class)->setPermissionsTeamId($user->tenant_id);
 
-        return $user->hasRole('owner');
+        return $user->hasRole('owner')
+            && (PlanUsage::forCurrentUser()?->hasFeature('custom_roles') ?? true);
     }
 
     public function mount(): void

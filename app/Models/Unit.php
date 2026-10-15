@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantScopedModel;
+use App\Services\Plans\PlanUsage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,6 +31,14 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class Unit extends Model implements HasMedia
 {
     use HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
+
+    protected static function booted(): void
+    {
+        // Plan limit safety net for every create path (panel, imports, API).
+        static::creating(function (self $model): void {
+            PlanUsage::forClientId($model->tenant_id)?->ensureCanAdd(PlanUsage::UNITS);
+        });
+    }
 
     public const TYPE_ROOM = 'room';
 
@@ -168,16 +177,16 @@ class Unit extends Model implements HasMedia
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
-            ->width(400)
-            ->height(300)
             ->keepOriginalImageFormat()
-            ->nonQueued();
+            ->nonQueued()
+            ->width(400)
+            ->height(300);
 
         $this->addMediaConversion('card')
-            ->width(800)
-            ->height(600)
             ->keepOriginalImageFormat()
-            ->nonQueued();
+            ->nonQueued()
+            ->width(800)
+            ->height(600);
     }
 
     /**
