@@ -117,7 +117,7 @@ jobs:
         run: vendor/bin/pint --test
 
       - name: Larastan (static analysis)
-        run: vendor/bin/phpstan analyse --memory-limit=2G || echo "::warning::Larastan failures — will be tightened in subsequent PRs"
+        run: vendor/bin/phpstan analyse --memory-limit=2G
 
       - name: Pest (tests)
         run: vendor/bin/pest

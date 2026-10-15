@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
@@ -19,6 +20,9 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  * `tenant_id` because stancl's scoping logic depends on those names.
  *
  * See CLAUDE.md > Naming glossary.
+ *
+ * @property array<string, mixed>|null $settings
+ * @property Carbon|null $trial_ends_at
  */
 class Client extends BaseTenant implements TenantWithDatabase
 {
@@ -74,11 +78,13 @@ class Client extends BaseTenant implements TenantWithDatabase
         ];
     }
 
+    /** @return BelongsTo<Plan, $this> */
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
     }
 
+    /** @return HasMany<Subscription, $this> */
     public function subscriptions(): HasMany
     {
         // FK column on subscriptions is tenant_id (not the default client_id).

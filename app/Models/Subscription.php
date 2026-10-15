@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|null $started_at
+ * @property Carbon|null $ends_at
+ */
 class Subscription extends Model
 {
     use HasFactory;
@@ -29,12 +34,14 @@ class Subscription extends Model
         ];
     }
 
+    /** @return BelongsTo<Client, $this> */
     public function client(): BelongsTo
     {
         // FK column is tenant_id (not the default client_id).
         return $this->belongsTo(Client::class, 'tenant_id');
     }
 
+    /** @return BelongsTo<Plan, $this> */
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
