@@ -3,10 +3,11 @@
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Operator\OperatorActivationController;
 use App\Http\Controllers\Portal\LocaleController;
+use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('welcome', ['plans' => Plan::publicCatalogue()]);
 })->name('home');
 
 Route::post('locale', LocaleController::class)->name('locale.switch');

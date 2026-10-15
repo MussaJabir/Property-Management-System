@@ -14,9 +14,9 @@ it('formats price as TZS with thousands separator', function () {
     expect($plan->formatted_price)->toBe('TZS 149,000');
 });
 
-it('seeded three public plans from PlanSeeder', function () {
+it('seeded four public plans from PlanSeeder', function () {
     $this->seed(PlanSeeder::class);
 
-    expect(Plan::where('is_public', true)->count())->toBe(3);
-    expect(Plan::pluck('slug')->all())->toContain('starter', 'pro', 'enterprise');
+    expect(Plan::where('is_public', true)->count())->toBe(4);
+    expect(Plan::pluck('slug')->all())->toContain('basic', 'starter', 'pro', 'enterprise');
 });
