@@ -7,7 +7,7 @@
 return [
     // ──────────────── Meta ────────────────
     'meta_title' => 'PMS — Property Management built for Tanzania',
-    'meta_description' => 'A bilingual property management platform for Tanzanian landlords. Track properties, units, leases, invoices, and renters from one workspace.',
+    'meta_description' => 'A property management platform for Tanzanian landlords. Track properties, units, leases, invoices, and renters from one workspace.',
 
     // ──────────────── Brand & nav ────────────────
     'brand_name' => 'PMS',
@@ -30,7 +30,7 @@ return [
     'hero_eyebrow' => 'Built for the Tanzanian rental market',
     'hero_title_line_1' => 'Property management,',
     'hero_title_line_2' => 'finally simple.',
-    'hero_subtitle' => 'Run your entire rental portfolio from a single bilingual workspace. Issue invoices, track payments, manage maintenance, and give renters a self-service portal — in English or Kiswahili.',
+    'hero_subtitle' => 'Run your entire rental portfolio from one workspace. Issue invoices, track payments, manage maintenance, and give renters a self-service portal.',
     'hero_cta_primary' => 'Request a demo',
     'hero_cta_secondary' => 'Take the tour',
 
@@ -48,7 +48,7 @@ return [
     // ──────────────── Trust bar ────────────────
     'trust_eyebrow' => 'Trusted infrastructure',
     'trust_stat_1_value' => 'EN + SW',
-    'trust_stat_1_label' => 'Bilingual throughout',
+    'trust_stat_1_label' => 'Website in English and Kiswahili',
     'trust_stat_2_value' => '100%',
     'trust_stat_2_label' => 'Hosted in the cloud',
     'trust_stat_3_value' => '24/7',
@@ -81,10 +81,10 @@ return [
     'feature_1_desc' => 'Track every building, unit, and lease in one place. Each property management company gets its own private workspace.',
 
     'feature_2_title' => 'Renter self-service portal',
-    'feature_2_desc' => 'Your tenants log in to view invoices, pay rent, and submit maintenance requests — in English or Kiswahili.',
+    'feature_2_desc' => 'Your renters sign in to view their invoices, download receipts, and submit maintenance requests.',
 
-    'feature_3_title' => 'Automated invoicing',
-    'feature_3_desc' => 'Monthly rent invoices generate automatically. Branded PDFs, sequential numbering, and overdue tracking built in.',
+    'feature_3_title' => 'Invoices and receipts',
+    'feature_3_desc' => 'Branded PDF invoices with sequential numbers, created in a few clicks. Overdue invoices are flagged every morning, and a receipt is issued the moment you record a payment.',
 
     'feature_4_title' => 'Maintenance tracking',
     'feature_4_desc' => 'Renters submit issues with photos. Assign technicians, update status, and close requests with a full audit trail.',
@@ -92,15 +92,15 @@ return [
     'feature_5_title' => 'Financial reports',
     'feature_5_desc' => 'Rent roll, payment history, arrears, expenses — exportable to PDF or Excel for your accountant.',
 
-    'feature_6_title' => 'Bilingual: English + Kiswahili',
-    'feature_6_desc' => 'Every screen — yours and your renters\' — switches between English and Kiswahili in one click.',
+    'feature_6_title' => 'English and Kiswahili website',
+    'feature_6_desc' => 'Your public website and the sign-in pages switch between English and Kiswahili in one click.',
 
     // ──────────────── Product showcase ────────────────
     'showcase_eyebrow' => 'See PMS in action',
     'showcase_title' => 'Designed for the way you actually work',
     'showcase_subtitle' => 'A real workspace, not a static demo. Here is what your control center looks like.',
-    'showcase_pill_1' => 'Automatic invoice generation',
-    'showcase_pill_2' => 'Bilingual EN + SW interface',
+    'showcase_pill_1' => 'Automatic overdue reminders',
+    'showcase_pill_2' => 'Renter self-service portal',
     'showcase_pill_3' => 'Branded PDFs and receipts',
     'showcase_pill_4' => 'Live arrears dashboard',
 
@@ -119,7 +119,7 @@ return [
     'phone_invoice_period_may' => 'May 2026',
     'phone_invoice_status_due' => 'Due in 3 days',
     'phone_invoice_status_paid' => 'Paid',
-    'phone_cta_pay' => 'Pay now',
+    'phone_cta_pay' => 'View invoice',
     'phone_nav_home' => 'Home',
     'phone_nav_invoices' => 'Invoices',
     'phone_nav_maintenance' => 'Maintenance',
@@ -146,10 +146,10 @@ return [
     'how_subtitle' => 'Three steps from sign-up to running your portfolio online.',
 
     'how_step_1_title' => 'Onboard your portfolio',
-    'how_step_1_desc' => 'Add your properties, units, and current renters in minutes. We can import from a spreadsheet too.',
+    'how_step_1_desc' => 'Add your properties, units, and current renters. During setup, our team enters them for you.',
 
     'how_step_2_title' => 'Issue leases and invoices',
-    'how_step_2_desc' => 'Set rent terms once. PMS generates the lease document and recurring monthly invoices automatically.',
+    'how_step_2_desc' => 'Set rent terms once. PMS produces the lease document, and you issue each period\'s invoice in a few clicks.',
 
     'how_step_3_title' => 'Track payments and grow',
     'how_step_3_desc' => 'Renters pay, you reconcile, the system records receipts. Spend your time on what actually matters.',
@@ -162,8 +162,8 @@ return [
     'principle_1_title' => 'Built locally',
     'principle_1_desc' => 'Designed by a Tanzanian team that understands monthly cash rent, mixed-use compounds, and how landlords actually operate here.',
 
-    'principle_2_title' => 'Truly bilingual',
-    'principle_2_desc' => 'English and Kiswahili are first-class. Every screen, every notification, every PDF — switch in one tap.',
+    'principle_2_title' => 'Built for Tanzania',
+    'principle_2_desc' => 'Prices in shillings, phone numbers in the local format, and a public website in English and Kiswahili.',
 
     'principle_3_title' => 'Backed by BJP Technologies',
     'principle_3_desc' => 'A track record of building systems that ship and stay running for clients across multiple sectors in Tanzania.',

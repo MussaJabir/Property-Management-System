@@ -6,7 +6,7 @@
 return [
     // ──────────────── Meta ────────────────
     'meta_title' => 'PMS — Mfumo wa Usimamizi wa Nyumba uliotengenezwa kwa ajili ya Tanzania',
-    'meta_description' => 'Mfumo wa usimamizi wa nyumba wa lugha mbili kwa wamiliki wa nyumba Tanzania. Fuatilia nyumba, vyumba, mikataba, ankara, na wapangaji kutoka eneo moja la kazi.',
+    'meta_description' => 'Mfumo wa usimamizi wa nyumba kwa wamiliki wa nyumba Tanzania. Fuatilia nyumba, vyumba, mikataba, ankara, na wapangaji kutoka eneo moja la kazi.',
 
     // ──────────────── Brand & nav ────────────────
     'brand_name' => 'PMS',
@@ -29,7 +29,7 @@ return [
     'hero_eyebrow' => 'Imetengenezwa kwa soko la kupangisha la Tanzania',
     'hero_title_line_1' => 'Usimamizi wa nyumba,',
     'hero_title_line_2' => 'umerahisishwa.',
-    'hero_subtitle' => 'Endesha portfolio yako yote ya kupangisha kutoka eneo moja la kazi lenye lugha mbili. Toa ankara, fuatilia malipo, simamia matengenezo, na wape wapangaji lango la huduma binafsi — kwa Kiingereza au Kiswahili.',
+    'hero_subtitle' => 'Endesha portfolio yako yote ya kupangisha kutoka eneo moja la kazi. Toa ankara, fuatilia malipo, simamia matengenezo, na wape wapangaji lango la huduma binafsi.',
     'hero_cta_primary' => 'Omba onyesho',
     'hero_cta_secondary' => 'Pitia mfumo',
 
@@ -47,7 +47,7 @@ return [
     // ──────────────── Trust bar ────────────────
     'trust_eyebrow' => 'Miundombinu ya kuaminika',
     'trust_stat_1_value' => 'EN + SW',
-    'trust_stat_1_label' => 'Lugha mbili kabisa',
+    'trust_stat_1_label' => 'Tovuti kwa Kiingereza na Kiswahili',
     'trust_stat_2_value' => '100%',
     'trust_stat_2_label' => 'Inahifadhiwa katika wingu',
     'trust_stat_3_value' => '24/7',
@@ -80,10 +80,10 @@ return [
     'feature_1_desc' => 'Fuatilia kila jengo, chumba, na mkataba kwenye eneo moja. Kila kampuni ya usimamizi wa nyumba inapata eneo lake la kazi la siri.',
 
     'feature_2_title' => 'Lango la mpangaji',
-    'feature_2_desc' => 'Wapangaji wako wanaingia kuona ankara, kulipa kodi, na kuwasilisha maombi ya matengenezo — kwa Kiingereza au Kiswahili.',
+    'feature_2_desc' => 'Wapangaji wako wanaingia kuona ankara zao, kupakua risiti, na kuwasilisha maombi ya matengenezo.',
 
-    'feature_3_title' => 'Ankara za kiotomatiki',
-    'feature_3_desc' => 'Ankara za kodi ya mwezi zinatengenezwa kiotomatiki. PDF zenye chapa, namba mfululizo, na ufuatiliaji wa zilizopitwa na wakati.',
+    'feature_3_title' => 'Ankara na risiti',
+    'feature_3_desc' => 'Ankara za PDF zenye chapa na namba mfululizo, zinazotengenezwa kwa mibofyo michache. Ankara zilizochelewa hutambuliwa kila asubuhi, na risiti hutolewa mara tu unaporekodi malipo.',
 
     'feature_4_title' => 'Ufuatiliaji wa matengenezo',
     'feature_4_desc' => 'Wapangaji wanawasilisha matatizo na picha. Mpe fundi, sasisha hali, na funga ombi ukiwa na rekodi kamili.',
@@ -91,15 +91,15 @@ return [
     'feature_5_title' => 'Ripoti za kifedha',
     'feature_5_desc' => 'Orodha ya kodi, historia ya malipo, madeni, matumizi — zinaweza kutolewa katika PDF au Excel kwa mhasibu wako.',
 
-    'feature_6_title' => 'Lugha mbili: Kiingereza + Kiswahili',
-    'feature_6_desc' => 'Kila skrini — yako na ya wapangaji wako — inabadilika kati ya Kiingereza na Kiswahili kwa mguso mmoja.',
+    'feature_6_title' => 'Tovuti kwa Kiingereza na Kiswahili',
+    'feature_6_desc' => 'Tovuti yako ya umma na kurasa za kuingia zinabadilika kati ya Kiingereza na Kiswahili kwa mbofyo mmoja.',
 
     // ──────────────── Product showcase ────────────────
     'showcase_eyebrow' => 'Ona PMS ikifanya kazi',
     'showcase_title' => 'Imetengenezwa kwa jinsi unavyofanya kazi',
     'showcase_subtitle' => 'Eneo halisi la kazi, si onyesho la kudumu. Hivi ndivyo kituo chako cha udhibiti kinavyoonekana.',
-    'showcase_pill_1' => 'Utengenezaji wa ankara kiotomatiki',
-    'showcase_pill_2' => 'Kiolesura cha lugha mbili EN + SW',
+    'showcase_pill_1' => 'Vikumbusho vya madeni kiotomatiki',
+    'showcase_pill_2' => 'Lango la wapangaji la huduma binafsi',
     'showcase_pill_3' => 'PDF na risiti zenye chapa',
     'showcase_pill_4' => 'Dashibodi ya madeni ya moja kwa moja',
 
@@ -118,7 +118,7 @@ return [
     'phone_invoice_period_may' => 'Mei 2026',
     'phone_invoice_status_due' => 'Inastahili siku 3',
     'phone_invoice_status_paid' => 'Imelipwa',
-    'phone_cta_pay' => 'Lipa sasa',
+    'phone_cta_pay' => 'Ona ankara',
     'phone_nav_home' => 'Nyumbani',
     'phone_nav_invoices' => 'Ankara',
     'phone_nav_maintenance' => 'Matengenezo',
@@ -145,10 +145,10 @@ return [
     'how_subtitle' => 'Hatua tatu kutoka kujisajili hadi kuendesha portfolio yako mtandaoni.',
 
     'how_step_1_title' => 'Ingiza portfolio yako',
-    'how_step_1_desc' => 'Ongeza nyumba, vyumba, na wapangaji wako wa sasa kwa dakika chache. Tunaweza pia kuingiza kutoka kwenye lahajedwali.',
+    'how_step_1_desc' => 'Ongeza nyumba, vyumba, na wapangaji wako wa sasa. Wakati wa kuanza, timu yetu inakuingizia.',
 
     'how_step_2_title' => 'Toa mikataba na ankara',
-    'how_step_2_desc' => 'Weka masharti ya kodi mara moja. PMS hutoa hati ya mkataba na ankara za mwezi kiotomatiki.',
+    'how_step_2_desc' => 'Weka masharti ya kodi mara moja. PMS hutoa hati ya mkataba, nawe unatoa ankara ya kila kipindi kwa mibofyo michache.',
 
     'how_step_3_title' => 'Fuatilia malipo na kua',
     'how_step_3_desc' => 'Wapangaji wanalipa, wewe unakagua, mfumo unarekodi risiti. Tumia muda wako kwenye mambo muhimu.',
@@ -161,8 +161,8 @@ return [
     'principle_1_title' => 'Imejengwa hapa nchini',
     'principle_1_desc' => 'Imebuniwa na timu ya Kitanzania inayoelewa kodi ya mwezi ya pesa taslimu, makazi yenye matumizi mchanganyiko, na jinsi wamiliki wanavyofanya kazi hapa.',
 
-    'principle_2_title' => 'Lugha mbili kweli',
-    'principle_2_desc' => 'Kiingereza na Kiswahili ni za hadhi sawa. Kila skrini, kila taarifa, kila PDF — badilisha kwa mguso mmoja.',
+    'principle_2_title' => 'Imetengenezwa kwa Tanzania',
+    'principle_2_desc' => 'Bei kwa shilingi, namba za simu kwa muundo wa nyumbani, na tovuti ya umma kwa Kiingereza na Kiswahili.',
 
     'principle_3_title' => 'Imeungwa mkono na BJP Technologies',
     'principle_3_desc' => 'Rekodi ya kujenga mifumo inayofanikiwa na kuendelea kufanya kazi kwa wateja katika sekta mbalimbali Tanzania.',
