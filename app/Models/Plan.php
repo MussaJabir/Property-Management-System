@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Plan extends Model
 {
@@ -23,11 +24,21 @@ class Plan extends Model
         'cms_website' => 'Website / CMS pages',
         'maintenance' => 'Maintenance tracking',
         'reports' => 'Reports & Excel export',
+        'custom_roles' => 'Custom staff roles & permissions',
         'email_notifications' => 'Email notifications',
-        'sms_notifications' => 'SMS notifications',
-        'whatsapp_notifications' => 'WhatsApp notifications',
+        'sms_notifications' => 'SMS rent reminders',
+        'whatsapp_notifications' => 'WhatsApp rent reminders',
         'priority_support' => 'Priority support',
         'sla' => 'Uptime SLA',
+    ];
+
+    /**
+     * Catalogue features that are sold on a plan but not built yet. The public
+     * pricing page marks them "coming soon" instead of presenting them as live.
+     */
+    public const COMING_SOON = [
+        'sms_notifications',
+        'whatsapp_notifications',
     ];
 
     protected $fillable = [
@@ -90,5 +101,34 @@ class Plan extends Model
             self::FEATURES,
             array_flip($selected),
         ));
+    }
+
+    /**
+     * The plan's selected feature keys, in catalogue order, unknown keys dropped.
+     *
+     * @return list<string>
+     */
+    public function featureKeys(): array
+    {
+        return array_keys(array_intersect_key(
+            self::FEATURES,
+            array_flip((array) ($this->features ?? [])),
+        ));
+    }
+
+    /**
+     * Plans shown on the public pricing section: public only, sized plans by
+     * price, then unlimited (enterprise-style) plans last.
+     *
+     * @return Collection<int, Plan>
+     */
+    public static function publicCatalogue(): Collection
+    {
+        return self::query()
+            ->where('is_public', true)
+            ->get()
+            ->sortBy(fn (Plan $plan): array => [$plan->max_units === null ? 1 : 0, $plan->price_tzs])
+            ->values()
+            ->toBase();
     }
 }
