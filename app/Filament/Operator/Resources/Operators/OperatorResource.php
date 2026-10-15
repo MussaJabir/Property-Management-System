@@ -10,6 +10,7 @@ use App\Filament\Operator\Resources\Operators\Pages\ListOperators;
 use App\Filament\Operator\Resources\Operators\Schemas\OperatorForm;
 use App\Filament\Operator\Resources\Operators\Tables\OperatorsTable;
 use App\Models\User;
+use App\Services\Plans\PlanUsage;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -76,7 +77,8 @@ class OperatorResource extends Resource
 
     public static function canCreate(): bool
     {
-        return static::canManageTeam();
+        return static::canManageTeam()
+            && (PlanUsage::forCurrentUser()?->canAdd(PlanUsage::STAFF) ?? true);
     }
 
     public static function canEdit(Model $record): bool

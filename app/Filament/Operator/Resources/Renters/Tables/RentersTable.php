@@ -4,6 +4,7 @@ namespace App\Filament\Operator\Resources\Renters\Tables;
 
 use App\Models\Lease;
 use App\Models\Renter;
+use App\Services\Plans\PlanUsage;
 use App\Services\Portal\RenterPortalAccountProvisioner;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -80,6 +81,7 @@ class RentersTable
                 EditAction::make(),
                 Action::make('resendActivation')
                     ->label('Portal activation')
+                    ->visible(fn (): bool => PlanUsage::forCurrentUser()?->hasFeature('renter_portal') ?? true)
                     ->icon('heroicon-o-key')
                     ->color('gray')
                     ->requiresConfirmation()
