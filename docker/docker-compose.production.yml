@@ -25,6 +25,60 @@
 
 name: pms
 
+# One environment for every container that runs the app, so the scheduler
+# (overdue-invoice emails, reminders) can never drift from the web app again.
+x-app-env: &app-env
+  APP_NAME: ${APP_NAME:-PMS}
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_URL: https://pms.bjptechnologies.co.tz
+  APP_KEY: ${APP_KEY}
+  LOG_CHANNEL: stack
+  LOG_LEVEL: warning
+
+  DB_CONNECTION: pgsql
+  DB_HOST: pgsql
+  DB_PORT: 5432
+  DB_DATABASE: ${DB_DATABASE:-pms}
+  DB_USERNAME: ${DB_USERNAME:-pms}
+  DB_PASSWORD: ${DB_PASSWORD}
+
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+
+  CACHE_STORE: redis
+  QUEUE_CONNECTION: sync
+  SESSION_DRIVER: redis
+  SESSION_LIFETIME: 240
+
+  FILESYSTEM_DISK: ${FILESYSTEM_DISK:-b2}
+  AWS_ACCESS_KEY_ID: ${B2_ACCESS_KEY_ID}
+  AWS_SECRET_ACCESS_KEY: ${B2_SECRET_ACCESS_KEY}
+  AWS_DEFAULT_REGION: ${B2_REGION:-us-west-002}
+  AWS_BUCKET: ${B2_BUCKET}
+  AWS_ENDPOINT: ${B2_ENDPOINT}
+  AWS_USE_PATH_STYLE_ENDPOINT: "true"
+
+  MAIL_MAILER: ${MAIL_MAILER:-smtp}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME:-PMS}
+  # SMTP (e.g. cPanel mailbox). Only used when MAIL_MAILER=smtp.
+  MAIL_SCHEME: ${MAIL_SCHEME:-smtps}
+  MAIL_HOST: ${MAIL_HOST}
+  MAIL_PORT: ${MAIL_PORT:-465}
+  MAIL_USERNAME: ${MAIL_USERNAME}
+  MAIL_PASSWORD: ${MAIL_PASSWORD}
+  # Resend (only used when MAIL_MAILER=resend).
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+
+  SCOUT_DRIVER: collection
+
+  # SMS (Beem Africa). Blank keys switch SMS off; email still goes out.
+  BEEM_API_KEY: ${BEEM_API_KEY:-}
+  BEEM_SECRET: ${BEEM_SECRET:-}
+  BEEM_SOURCE_ADDR: ${BEEM_SOURCE_ADDR:-PMS}
+
 services:
   app:
     image: ghcr.io/mussajabir/pms:${PMS_TAG:-latest}
@@ -36,53 +90,7 @@ services:
     # listens on 8080. NOT exposed publicly; loopback only.
     ports:
       - "127.0.0.1:9080:8080"
-    environment:
-      APP_NAME: ${APP_NAME:-PMS}
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_URL: https://pms.bjptechnologies.co.tz
-      APP_KEY: ${APP_KEY}
-      LOG_CHANNEL: stack
-      LOG_LEVEL: warning
-
-      DB_CONNECTION: pgsql
-      DB_HOST: pgsql
-      DB_PORT: 5432
-      DB_DATABASE: ${DB_DATABASE:-pms}
-      DB_USERNAME: ${DB_USERNAME:-pms}
-      DB_PASSWORD: ${DB_PASSWORD}
-
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
-
-      CACHE_STORE: redis
-      QUEUE_CONNECTION: sync
-      SESSION_DRIVER: redis
-      SESSION_LIFETIME: 240
-
-      FILESYSTEM_DISK: ${FILESYSTEM_DISK:-b2}
-      AWS_ACCESS_KEY_ID: ${B2_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${B2_SECRET_ACCESS_KEY}
-      AWS_DEFAULT_REGION: ${B2_REGION:-us-west-002}
-      AWS_BUCKET: ${B2_BUCKET}
-      AWS_ENDPOINT: ${B2_ENDPOINT}
-      AWS_USE_PATH_STYLE_ENDPOINT: "true"
-
-      MAIL_MAILER: ${MAIL_MAILER:-smtp}
-      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
-      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-PMS}
-      # SMTP (e.g. cPanel mailbox). Only used when MAIL_MAILER=smtp.
-      MAIL_SCHEME: ${MAIL_SCHEME:-smtps}
-      MAIL_HOST: ${MAIL_HOST}
-      MAIL_PORT: ${MAIL_PORT:-465}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      # Resend (only used when MAIL_MAILER=resend).
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
-
-      SCOUT_DRIVER: collection
-
+    environment: *app-env
     depends_on:
       pgsql:
         condition: service_healthy
@@ -112,19 +120,7 @@ services:
         php artisan schedule:run --no-interaction >> /proc/1/fd/1 2>&1 || true;
         sleep 60;
       done"
-    environment:
-      APP_NAME: ${APP_NAME:-PMS}
-      APP_ENV: production
-      APP_KEY: ${APP_KEY}
-      DB_CONNECTION: pgsql
-      DB_HOST: pgsql
-      DB_PORT: 5432
-      DB_DATABASE: ${DB_DATABASE:-pms}
-      DB_USERNAME: ${DB_USERNAME:-pms}
-      DB_PASSWORD: ${DB_PASSWORD}
-      REDIS_HOST: redis
-      CACHE_STORE: redis
-      QUEUE_CONNECTION: sync
+    environment: *app-env
     depends_on:
       pgsql:
         condition: service_healthy
