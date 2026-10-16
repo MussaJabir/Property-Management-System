@@ -28,6 +28,7 @@ use Throwable;
  * (2) update the linked unit's status,
  * (3) write a LeaseHistory row.
  *
+ * @property Carbon|null $end_date
  * @property-read Renter|null $renter
  * @property-read Unit|null $unit
  */

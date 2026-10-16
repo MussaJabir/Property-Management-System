@@ -7,10 +7,10 @@ use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Pages\Auth\EditOperatorProfile;
 use App\Filament\Operator\Pages\Dashboard;
 use App\Filament\Operator\Widgets\CollectionsChartWidget;
+use App\Filament\Operator\Widgets\ComingUpWidget;
 use App\Filament\Operator\Widgets\GettingStartedWidget;
-use App\Filament\Operator\Widgets\OccupancyChartWidget;
+use App\Filament\Operator\Widgets\NeedsAttentionWidget;
 use App\Filament\Operator\Widgets\RecentPaymentsWidget;
-use App\Filament\Operator\Widgets\TopUnpaidInvoicesWidget;
 use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Http\Middleware\ForceOperatorPasswordChange;
@@ -69,10 +69,12 @@ class OperatorPanelProvider extends PanelProvider
             ->brandLogo(fn (): Htmlable => view('filament.operator.brand'))
             ->brandLogoHeight('2.25rem')
             ->colors([
-                // PMS teal (#0f766e) as the 600 shade, so buttons get white
-                // text: Tailwind's teal shifted one step darker.
+                // PMS teal (#0f766e) as the 600 shade: Tailwind's teal shifted
+                // one step darker. Filament only gives buttons white text when
+                // both 600 (button) and 500 (hover) pass WCAG AA against white,
+                // so 500 sits between teal-600 and teal-700 (contrast 4.7).
                 'primary' => array_replace(Color::Teal, [
-                    500 => Color::Teal[600],
+                    500 => 'oklch(0.54 0.103 185.8)',
                     600 => Color::Teal[700],
                     700 => Color::Teal[800],
                     800 => Color::Teal[900],
@@ -119,13 +121,13 @@ class OperatorPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Operator/Widgets'), for: 'App\\Filament\\Operator\\Widgets')
             ->widgets([
-                // Row 1: compact KPI cards. Row 2: collections + occupancy
-                // charts side by side. Row 3: the two tables side by side.
+                // Today: key figures, then the work lists (needs attention +
+                // coming up), then billed vs collected + latest payments.
                 // Getting-started only renders until the workspace is set up.
                 WorkspaceOverviewWidget::class,
+                NeedsAttentionWidget::class,
+                ComingUpWidget::class,
                 CollectionsChartWidget::class,
-                OccupancyChartWidget::class,
-                TopUnpaidInvoicesWidget::class,
                 RecentPaymentsWidget::class,
                 GettingStartedWidget::class,
             ])
