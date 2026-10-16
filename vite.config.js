@@ -12,6 +12,7 @@ export default defineConfig({
                 // both the operator panel (Filament render hook) and the
                 // renter portal layout.
                 'resources/js/onboarding.js',
+                'resources/css/filament/operator/theme.css',
             ],
             refresh: true,
         }),

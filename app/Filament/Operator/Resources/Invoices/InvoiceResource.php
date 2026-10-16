@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Invoices;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Operator\Resources\Invoices\Pages\EditInvoice;
 use App\Filament\Operator\Resources\Invoices\Pages\ListInvoices;
@@ -15,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class InvoiceResource extends Resource
@@ -29,9 +31,43 @@ class InvoiceResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Invoices';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Billing';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Billing;
 
     protected static ?int $navigationSort = 10;
+
+    protected static ?string $recordTitleAttribute = 'invoice_number';
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var Invoice $record */
+        return array_filter([
+            __('Renter') => (string) $record->lease?->renter?->full_name,
+            __('Status') => ucfirst((string) $record->status),
+        ]);
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('lease.renter');
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $overdue = Invoice::query()->where('status', Invoice::STATUS_OVERDUE)->count();
+
+        return $overdue > 0 ? (string) $overdue : null;
+    }
+
+    public static function getNavigationBadgeColor(): string
+    {
+        return 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): string
+    {
+        return __('Overdue invoices');
+    }
 
     public static function form(Schema $schema): Schema
     {

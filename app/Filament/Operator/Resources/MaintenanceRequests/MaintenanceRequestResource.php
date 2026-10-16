@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\MaintenanceRequests;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\MaintenanceRequests\Pages\CreateMaintenanceRequest;
 use App\Filament\Operator\Resources\MaintenanceRequests\Pages\EditMaintenanceRequest;
 use App\Filament\Operator\Resources\MaintenanceRequests\Pages\ListMaintenanceRequests;
@@ -29,9 +30,9 @@ class MaintenanceRequestResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Maintenance requests';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Maintenance';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Properties;
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 40;
 
     public static function form(Schema $schema): Schema
     {

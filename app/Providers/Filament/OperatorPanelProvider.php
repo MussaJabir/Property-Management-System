@@ -3,7 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\Login;
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Pages\Auth\EditOperatorProfile;
+use App\Filament\Operator\Pages\Dashboard;
 use App\Filament\Operator\Widgets\CollectionsChartWidget;
 use App\Filament\Operator\Widgets\GettingStartedWidget;
 use App\Filament\Operator\Widgets\OccupancyChartWidget;
@@ -13,15 +15,16 @@ use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Http\Middleware\ForceOperatorPasswordChange;
 use App\Http\Middleware\InitializeTenancyByUser;
+use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\Support\Htmlable;
@@ -30,6 +33,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /**
@@ -61,10 +65,41 @@ class OperatorPanelProvider extends PanelProvider
             ->profile(EditOperatorProfile::class)
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
-            ->brandName('PMS Operator')
+            ->brandName(fn (): string => auth()->user()?->client?->name ?? 'PMS')
+            ->brandLogo(fn (): Htmlable => view('filament.operator.brand'))
+            ->brandLogoHeight('2.25rem')
             ->colors([
-                'primary' => Color::Teal,
+                // PMS teal (#0f766e) as the 600 shade, so buttons get white
+                // text: Tailwind's teal shifted one step darker.
+                'primary' => array_replace(Color::Teal, [
+                    500 => Color::Teal[600],
+                    600 => Color::Teal[700],
+                    700 => Color::Teal[800],
+                    800 => Color::Teal[900],
+                    900 => Color::Teal[950],
+                    950 => 'oklch(0.22 0.04 193)',
+                ]),
+                // Neutral greys with a faint teal cast, so surfaces read clean.
+                'gray' => Color::generatePalette('#6b7575'),
             ])
+            ->font('Geist', provider: GoogleFontProvider::class)
+            ->viteTheme('resources/css/filament/operator/theme.css')
+            ->maxContentWidth(Width::Full)
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarWidth('15rem')
+            ->navigationGroups(NavGroup::class)
+            ->globalSearchKeyBindings(['/', 'mod+k'])
+            // The menu was regrouped (Oct 2026). Browsers remember folded
+            // groups by label, so clear that memory once to show the new
+            // defaults. Runs before Alpine reads it.
+            ->renderHook(
+                PanelsRenderHook::HEAD_START,
+                fn (): Htmlable => new HtmlString("<script>try{if(localStorage.getItem('pms-nav-layout')!=='2026-10'){localStorage.removeItem('collapsedGroups');localStorage.setItem('pms-nav-layout','2026-10');}}catch(e){}</script>"),
+            )
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_FOOTER,
+                fn (): Htmlable => view('filament.operator.plan-usage'),
+            )
             ->discoverResources(in: app_path('Filament/Operator/Resources'), for: 'App\\Filament\\Operator\\Resources')
             ->discoverPages(in: app_path('Filament/Operator/Pages'), for: 'App\\Filament\\Operator\\Pages')
             ->pages([

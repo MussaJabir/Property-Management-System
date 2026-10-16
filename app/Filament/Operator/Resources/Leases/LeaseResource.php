@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Leases;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Leases\Pages\CreateLease;
 use App\Filament\Operator\Resources\Leases\Pages\EditLease;
 use App\Filament\Operator\Resources\Leases\Pages\ListLeases;
@@ -29,7 +30,7 @@ class LeaseResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Leases';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Leasing';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::RentersLeases;
 
     protected static ?int $navigationSort = 20;
 

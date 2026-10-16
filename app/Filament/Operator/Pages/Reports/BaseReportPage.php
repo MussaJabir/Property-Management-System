@@ -3,6 +3,7 @@
 namespace App\Filament\Operator\Pages\Reports;
 
 use App\Exports\ReportExcelExport;
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Models\User;
 use App\Reports\Contracts\ReportBuilder;
 use App\Services\Plans\PlanUsage;
@@ -28,7 +29,7 @@ abstract class BaseReportPage extends Page
 {
     protected string $view = 'filament.operator.pages.report';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Reports';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Reports;
 
     /**
      * Filter form state. Each concrete page chooses which keys to use.

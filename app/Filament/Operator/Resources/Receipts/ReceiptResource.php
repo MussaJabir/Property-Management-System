@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Receipts;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Receipts\Pages\ListReceipts;
 use App\Filament\Operator\Resources\Receipts\Tables\ReceiptsTable;
 use App\Models\Receipt;
@@ -24,7 +25,7 @@ class ReceiptResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Receipts';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Billing';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Billing;
 
     protected static ?int $navigationSort = 30;
 

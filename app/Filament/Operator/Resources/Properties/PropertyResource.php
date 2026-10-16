@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Properties;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Properties\Pages\CreateProperty;
 use App\Filament\Operator\Resources\Properties\Pages\EditProperty;
 use App\Filament\Operator\Resources\Properties\Pages\ListProperties;
@@ -29,9 +30,9 @@ class PropertyResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Properties';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Properties;
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 10;
 
     public static function canCreate(): bool
     {

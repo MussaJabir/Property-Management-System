@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Locations;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Locations\Pages\CreateLocation;
 use App\Filament\Operator\Resources\Locations\Pages\EditLocation;
 use App\Filament\Operator\Resources\Locations\Pages\ListLocations;
@@ -28,9 +29,9 @@ class LocationResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Locations';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Properties;
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 30;
 
     public static function form(Schema $schema): Schema
     {
