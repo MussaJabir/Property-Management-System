@@ -30,6 +30,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY resources/ resources/
+# The operator panel theme (resources/css/filament/operator/theme.css)
+# imports Filament's CSS from vendor/ and scans app/Filament for classes.
+COPY --from=composer /app/vendor/filament vendor/filament
+COPY app/Filament/ app/Filament/
 COPY vite.config.js postcss.config.js* tailwind.config.js* ./
 COPY public/ public/
 RUN npm run build
