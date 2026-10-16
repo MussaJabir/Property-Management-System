@@ -18,6 +18,7 @@ use App\Models\Property;
 use App\Models\Renter;
 use App\Models\Unit;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
 use Spatie\Permission\PermissionRegistrar;
@@ -98,7 +99,7 @@ it('greets the operator and puts the everyday actions in the header', function (
         ->assertSee('Record payment')
         ->assertSee('Add renter')
         ->assertSee('New invoice')
-        ->assertSee('/manage/payments/create', false)
+        ->assertSee('/manage/invoices/create', false)
         // Primary buttons are deep teal with white text (shade 600, hover
         // 500), not the light fallback Filament uses when contrast fails.
         ->assertSee('fi-bg-color-600 hover:fi-bg-color-500', false);
@@ -113,7 +114,7 @@ it('lists only this workspace\'s overdue rent and repairs, with the next action'
     Livewire::test(NeedsAttentionWidget::class)
         ->assertSee('Mine Renter')
         ->assertSee('10 days late')
-        ->assertSee('/manage/payments/create?invoice='.$invoice->id, false)
+        ->assertActionVisible(TestAction::make('recordPayment')->arguments(['invoice' => $invoice->id]))
         ->assertSee('Mine leaking tap')
         ->assertSee('Urgent')
         ->assertDontSee('Theirs Renter')

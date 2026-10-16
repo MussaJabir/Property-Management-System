@@ -12,6 +12,7 @@ use App\Filament\Operator\Widgets\GettingStartedWidget;
 use App\Filament\Operator\Widgets\NeedsAttentionWidget;
 use App\Filament\Operator\Widgets\RecentPaymentsWidget;
 use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
+use App\Http\Controllers\Operator\ReceiptPdfController;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Http\Middleware\ForceOperatorPasswordChange;
 use App\Http\Middleware\InitializeTenancyByUser;
@@ -33,6 +34,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
@@ -131,6 +133,9 @@ class OperatorPanelProvider extends PanelProvider
                 RecentPaymentsWidget::class,
                 GettingStartedWidget::class,
             ])
+            ->authenticatedRoutes(function (): void {
+                Route::get('receipts/{receipt}/pdf', ReceiptPdfController::class)->name('receipts.pdf');
+            })
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

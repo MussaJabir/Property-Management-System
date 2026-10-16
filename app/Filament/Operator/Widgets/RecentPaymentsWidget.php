@@ -3,6 +3,7 @@
 namespace App\Filament\Operator\Widgets;
 
 use App\Filament\Operator\Resources\Payments\PaymentResource;
+use App\Filament\Operator\Widgets\Concerns\RefreshesAfterPayment;
 use App\Models\Payment;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
  */
 class RecentPaymentsWidget extends TableWidget
 {
+    use RefreshesAfterPayment;
+
     protected static ?int $sort = 4;
 
     protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 2];
@@ -48,7 +51,7 @@ class RecentPaymentsWidget extends TableWidget
                     ->wrap()
                     ->description(fn (Payment $p): string => collect([
                         $p->payment_date?->format('d/m/Y'),
-                        self::methodLabel($p),
+                        $p->method_label,
                         $p->status === Payment::STATUS_COMPLETED ? null : __(ucfirst($p->status)),
                     ])->filter()->implode(' · ')),
 
@@ -60,20 +63,5 @@ class RecentPaymentsWidget extends TableWidget
             ])
             ->emptyStateHeading(__('No payments yet'))
             ->emptyStateIcon('heroicon-o-banknotes');
-    }
-
-    private static function methodLabel(Payment $payment): string
-    {
-        if ($payment->method === Payment::METHOD_MOBILE_MONEY) {
-            return match ($payment->mobile_money_provider) {
-                Payment::PROVIDER_MPESA => 'M-Pesa',
-                Payment::PROVIDER_TIGOPESA => 'Tigo Pesa',
-                Payment::PROVIDER_AIRTELMONEY => 'Airtel Money',
-                Payment::PROVIDER_HALOPESA => 'Halo Pesa',
-                default => __('Mobile money'),
-            };
-        }
-
-        return __(str_replace('_', ' ', ucfirst($payment->method ?? 'unknown')));
     }
 }

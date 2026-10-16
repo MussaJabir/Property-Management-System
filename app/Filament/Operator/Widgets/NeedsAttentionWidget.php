@@ -4,19 +4,30 @@ declare(strict_types=1);
 
 namespace App\Filament\Operator\Widgets;
 
+use App\Filament\Operator\Actions\RecordPaymentAction;
 use App\Filament\Operator\Resources\Invoices\InvoiceResource;
 use App\Filament\Operator\Resources\MaintenanceRequests\MaintenanceRequestResource;
 use App\Filament\Operator\Resources\Payments\PaymentResource;
+use App\Filament\Operator\Widgets\Concerns\RefreshesAfterPayment;
 use App\Models\Invoice;
 use App\Models\MaintenanceRequest;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Widgets\Widget;
 
 /**
  * "Needs your attention": the lists the operator works through each day,
  * as tabs, each row with its next action. Tenant-scoped via the models.
  */
-class NeedsAttentionWidget extends Widget
+class NeedsAttentionWidget extends Widget implements HasActions, HasSchemas
 {
+    use InteractsWithActions;
+    use InteractsWithSchemas;
+    use RefreshesAfterPayment;
+
     protected string $view = 'filament.operator.widgets.needs-attention';
 
     protected static ?int $sort = 1;
@@ -24,6 +35,12 @@ class NeedsAttentionWidget extends Widget
     protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 3];
 
     private const LIMIT = 6;
+
+    /** Opened from an overdue row with that row's invoice as argument. */
+    public function recordPaymentAction(): Action
+    {
+        return RecordPaymentAction::make()->size('sm');
+    }
 
     public static function canView(): bool
     {
@@ -51,13 +68,12 @@ class NeedsAttentionWidget extends Widget
                     'sub' => collect([$unit?->code, $unit?->property?->name, $invoice->formatted_balance])->filter()->implode(' · '),
                     'pill' => trans_choice(':count day late|:count days late', $daysLate),
                     'tone' => $daysLate > 7 ? 'danger' : 'warning',
-                    'action' => $canPay ? __('Record payment') : __('Open'),
-                    'url' => match (true) {
-                        $canPay => PaymentResource::getUrl('create', ['invoice' => $invoice->id]),
-                        InvoiceResource::canEdit($invoice) => InvoiceResource::getUrl('edit', ['record' => $invoice]),
-                        default => null,
-                    },
-                    'primary' => $canPay,
+                    // With billing rights: the Record payment modal for this
+                    // invoice. Otherwise a link to the invoice, if allowed.
+                    'pay' => $canPay ? $invoice->id : null,
+                    'action' => __('Open'),
+                    'url' => ! $canPay && InvoiceResource::canEdit($invoice) ? InvoiceResource::getUrl('edit', ['record' => $invoice]) : null,
+                    'primary' => false,
                 ];
             });
 
@@ -78,6 +94,7 @@ class NeedsAttentionWidget extends Widget
                     default => 'gray',
                 },
                 'action' => __('Open'),
+                'pay' => null,
                 'url' => MaintenanceRequestResource::canEdit($request) ? MaintenanceRequestResource::getUrl('edit', ['record' => $request]) : null,
                 'primary' => false,
             ]);
