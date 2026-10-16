@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Operator\Resources\CmsPages;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\CmsPages\Pages\EditCmsPage;
 use App\Filament\Operator\Resources\CmsPages\Pages\ListCmsPages;
 use App\Filament\Operator\Resources\CmsPages\Schemas\CmsPageForm;
@@ -32,7 +33,7 @@ class CmsPageResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Pages';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Website';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Website;
 
     protected static ?int $navigationSort = 10;
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Operator\Pages;
 
 use App\Authorization\OperatorPermissions;
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Models\User;
 use App\Services\Plans\PlanUsage;
 use BackedEnum;
@@ -35,9 +36,9 @@ class RolePermissions extends Page implements HasForms
 
     protected static ?string $navigationLabel = 'Roles & Permissions';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::SettingsTeam;
 
-    protected static ?int $navigationSort = 95;
+    protected static ?int $navigationSort = 30;
 
     protected string $view = 'filament.operator.pages.role-permissions';
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Payments;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Payments\Pages\CreatePayment;
 use App\Filament\Operator\Resources\Payments\Pages\EditPayment;
 use App\Filament\Operator\Resources\Payments\Pages\ListPayments;
@@ -28,7 +29,7 @@ class PaymentResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Payments';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Billing';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Billing;
 
     protected static ?int $navigationSort = 20;
 

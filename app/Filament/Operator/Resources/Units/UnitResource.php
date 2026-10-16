@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Units;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Units\Pages\CreateUnit;
 use App\Filament\Operator\Resources\Units\Pages\EditUnit;
 use App\Filament\Operator\Resources\Units\Pages\ListUnits;
@@ -15,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UnitResource extends Resource
@@ -29,9 +31,23 @@ class UnitResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Units';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Properties;
 
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 20;
+
+    protected static ?string $recordTitleAttribute = 'code';
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var Unit $record */
+        return [__('Property') => (string) $record->property?->name, __('Status') => ucfirst((string) $record->status)];
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('property');
+    }
 
     public static function canCreate(): bool
     {
