@@ -5,6 +5,7 @@ use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Contracts\TenantCouldNotBeIdentifiedException;
 
@@ -23,6 +24,15 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Production: visitor -> host nginx (sets X-Forwarded-For) -> Docker
+        // network -> app, so every request arrives from the Docker gateway.
+        // Trust only the loopback and Docker ranges, which nothing outside
+        // the host can reach, so the visitor's real IP is read from the header.
+        $middleware->trustProxies(
+            at: ['127.0.0.1', '172.16.0.0/12'],
+            headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO,
+        );
+
         $middleware->web(append: [
             SetLocale::class,
             // Global so Livewire AJAX POSTs (form submits) also get the
