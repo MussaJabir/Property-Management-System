@@ -24,7 +24,9 @@
                             <b>{{ $row['who'] }} <span class="pms-pill is-{{ $row['tone'] }}">{{ $row['pill'] }}</span></b>
                             <small>{{ $row['sub'] }}</small>
                         </div>
-                        @if ($row['url'])
+                        @if ($row['pay'])
+                            {{ ($this->recordPaymentAction)(['invoice' => $row['pay']]) }}
+                        @elseif ($row['url'])
                             <x-filament::button tag="a" :href="$row['url']" size="sm" :color="$row['primary'] ? 'primary' : 'gray'">
                                 {{ $row['action'] }}
                             </x-filament::button>
@@ -40,4 +42,6 @@
             </div>
         @endforeach
     </div>
+
+    <x-filament-actions::modals />
 </x-filament-widgets::widget>

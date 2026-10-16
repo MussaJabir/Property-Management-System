@@ -3,6 +3,7 @@
 namespace App\Filament\Operator\Widgets;
 
 use App\Filament\Operator\Resources\Invoices\InvoiceResource;
+use App\Filament\Operator\Widgets\Concerns\RefreshesAfterPayment;
 use App\Models\Invoice;
 use App\Models\Payment;
 use Filament\Support\RawJs;
@@ -15,6 +16,8 @@ use Filament\Widgets\ChartWidget;
  */
 class CollectionsChartWidget extends ChartWidget
 {
+    use RefreshesAfterPayment;
+
     protected static ?int $sort = 3;
 
     protected ?string $pollingInterval = null;

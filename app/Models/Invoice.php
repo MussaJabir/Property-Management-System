@@ -116,6 +116,12 @@ class Invoice extends Model
         return $this->status === self::STATUS_DRAFT;
     }
 
+    /** Issued and not yet fully paid: unpaid, partial or overdue. */
+    public function isOutstanding(): bool
+    {
+        return in_array($this->status, [self::STATUS_UNPAID, self::STATUS_PARTIAL, self::STATUS_OVERDUE], true);
+    }
+
     public function isCancelled(): bool
     {
         return $this->status === self::STATUS_CANCELLED;

@@ -102,12 +102,7 @@ class PaymentForm
 
                         Select::make('mobile_money_provider')
                             ->label('Mobile money provider')
-                            ->options([
-                                Payment::PROVIDER_MPESA => 'M-Pesa',
-                                Payment::PROVIDER_TIGOPESA => 'Tigo Pesa',
-                                Payment::PROVIDER_AIRTELMONEY => 'Airtel Money',
-                                Payment::PROVIDER_HALOPESA => 'Halo Pesa',
-                            ])
+                            ->options(Payment::providerLabels())
                             ->visible(fn (Get $get) => $get('method') === Payment::METHOD_MOBILE_MONEY)
                             ->required(fn (Get $get) => $get('method') === Payment::METHOD_MOBILE_MONEY)
                             ->native(false),

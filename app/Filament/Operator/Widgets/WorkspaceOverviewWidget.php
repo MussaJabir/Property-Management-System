@@ -3,6 +3,7 @@
 namespace App\Filament\Operator\Widgets;
 
 use App\Filament\Operator\Resources\Invoices\InvoiceResource;
+use App\Filament\Operator\Widgets\Concerns\RefreshesAfterPayment;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Unit;
@@ -19,6 +20,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
  */
 class WorkspaceOverviewWidget extends BaseWidget
 {
+    use RefreshesAfterPayment;
+
     // Dashboard order: key figures first. (Widget discovery would otherwise
     // sort alphabetically and push this — "W…" — to the bottom.)
     protected static ?int $sort = 0;

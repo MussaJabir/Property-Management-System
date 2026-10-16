@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Throwable;
 
+use function Illuminate\Support\defer;
+
 /**
  * Keeps the invoice's amount_paid / status in sync with the live payments
  * table, and issues a Receipt the first time a payment reaches `completed`.
@@ -97,23 +99,29 @@ class PaymentObserver
      * Best-effort send to the renter's email. Failure is logged but never
      * blocks payment recording — operators record cash payments offline and
      * we don't want a flaky SMTP server to break that flow.
+     *
+     * Deferred until after the response: the email renders the receipt PDF
+     * (headless Chrome, 15s+ on a small server), and the operator should see
+     * "Payment recorded" straight away rather than wait for it.
      */
     protected function maybeEmail(Payment $payment, Receipt $receipt): void
     {
-        $renter = $payment->invoice?->lease?->renter;
-        if (! $renter?->email) {
+        $email = $payment->invoice?->lease?->renter?->email;
+        if (! $email) {
             return;
         }
 
-        try {
-            Notification::route('mail', $renter->email)
-                ->notify(new ReceiptIssuedNotification($receipt));
-        } catch (Throwable $e) {
-            Log::warning('Failed to send receipt email', [
-                'receipt_id' => $receipt->id,
-                'renter_email' => $renter->email,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        defer(function () use ($email, $receipt): void {
+            try {
+                Notification::route('mail', $email)
+                    ->notify(new ReceiptIssuedNotification($receipt));
+            } catch (Throwable $e) {
+                Log::warning('Failed to send receipt email', [
+                    'receipt_id' => $receipt->id,
+                    'renter_email' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        });
     }
 }

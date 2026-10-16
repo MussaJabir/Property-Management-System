@@ -6,6 +6,7 @@ namespace App\Filament\Operator\Widgets;
 
 use App\Filament\Operator\Resources\Leases\LeaseResource;
 use App\Filament\Operator\Resources\Units\UnitResource;
+use App\Filament\Operator\Widgets\Concerns\RefreshesAfterPayment;
 use App\Models\Lease;
 use App\Models\Unit;
 use Filament\Widgets\Widget;
@@ -16,6 +17,8 @@ use Filament\Widgets\Widget;
  */
 class ComingUpWidget extends Widget
 {
+    use RefreshesAfterPayment;
+
     protected string $view = 'filament.operator.widgets.coming-up';
 
     protected static ?int $sort = 2;

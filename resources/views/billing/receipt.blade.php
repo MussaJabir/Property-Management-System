@@ -84,10 +84,7 @@
         <tr>
             <td class="label">{{ __('Method') }}</td>
             <td class="value">
-                {{ str_replace('_', ' ', ucfirst((string) $payment?->method)) }}
-                @if ($payment?->mobile_money_provider)
-                    — {{ strtoupper($payment->mobile_money_provider) }}
-                @endif
+                {{ $payment?->method_label }}
             </td>
         </tr>
         @if ($payment?->reference_number)

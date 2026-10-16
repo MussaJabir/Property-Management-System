@@ -12,6 +12,7 @@ use App\Models\Renter;
 use App\Models\Unit;
 use App\Notifications\ReceiptIssuedNotification;
 use App\Services\InvoiceNumberGenerator;
+use Illuminate\Support\Defer\DeferredCallbackCollection;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\PermissionRegistrar;
 use Stancl\Tenancy\Facades\Tenancy;
@@ -191,6 +192,8 @@ it('promotes invoice from unpaid → partial → paid as payments accumulate', f
 it('issues a receipt and sends the email when a completed payment lands', function () {
     Tenancy::initialize($this->clientA);
     Notification::fake();
+    // The email is deferred until after the response; run it right away here.
+    $this->withoutDefer();
 
     $lease = makeLease();
     $invoice = makeInvoice($lease);
@@ -209,6 +212,31 @@ it('issues a receipt and sends the email when a completed payment lands', functi
 
     $receipt = Receipt::first();
     expect($receipt->receipt_number)->toMatch('/^RCP-A-\d{4}-\d{6}$/');
+
+    Notification::assertSentOnDemand(ReceiptIssuedNotification::class);
+});
+
+it('sends the receipt email only after the response, so recording stays fast', function () {
+    Tenancy::initialize($this->clientA);
+    Notification::fake();
+
+    $lease = makeLease();
+    $invoice = makeInvoice($lease);
+    $invoice->issue();
+
+    Payment::create([
+        'invoice_id' => $invoice->id,
+        'amount' => 350_000_00,
+        'currency' => 'TZS',
+        'payment_date' => now()->toDateString(),
+        'method' => 'cash',
+        'status' => 'completed',
+    ]);
+
+    expect(Receipt::count())->toBe(1);
+    Notification::assertSentOnDemandTimes(ReceiptIssuedNotification::class, 0);
+
+    app(DeferredCallbackCollection::class)->invoke();
 
     Notification::assertSentOnDemand(ReceiptIssuedNotification::class);
 });

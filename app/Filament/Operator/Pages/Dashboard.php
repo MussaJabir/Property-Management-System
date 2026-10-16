@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Operator\Pages;
 
+use App\Filament\Operator\Actions\RecordPaymentAction;
 use App\Filament\Operator\Resources\Invoices\InvoiceResource;
-use App\Filament\Operator\Resources\Payments\PaymentResource;
 use App\Filament\Operator\Resources\Renters\RenterResource;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -60,11 +60,7 @@ class Dashboard extends BaseDashboard
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('recordPayment')
-                ->label(__('Record payment'))
-                ->icon(Heroicon::OutlinedBanknotes)
-                ->url(fn (): string => PaymentResource::getUrl('create'))
-                ->visible(fn (): bool => PaymentResource::canCreate()),
+            RecordPaymentAction::make(),
 
             Action::make('addRenter')
                 ->label(__('Add renter'))
