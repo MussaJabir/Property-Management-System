@@ -30,7 +30,7 @@ class NeedsAttentionWidget extends Widget implements HasActions, HasSchemas
 
     protected string $view = 'filament.operator.widgets.needs-attention';
 
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 2;
 
     protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 3];
 

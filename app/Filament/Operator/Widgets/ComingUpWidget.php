@@ -21,7 +21,7 @@ class ComingUpWidget extends Widget
 
     protected string $view = 'filament.operator.widgets.coming-up';
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
     protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 2];
 
@@ -48,7 +48,8 @@ class ComingUpWidget extends Widget
                 'url' => LeaseResource::canEdit($lease) ? LeaseResource::getUrl('edit', ['record' => $lease]) : null,
             ]);
 
-        $vacantQuery = Unit::query()->vacant();
+        // Units to let on a lease; short-stay rooms live on the front desk.
+        $vacantQuery = Unit::query()->vacant()->longTerm();
         $vacant = (clone $vacantQuery)
             ->with('property')
             ->orderBy('code')

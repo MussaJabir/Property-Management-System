@@ -54,6 +54,8 @@
                             {{ $booking->guest?->full_name }}
                             @if ($booking->check_out_date->lt(today()))
                                 <span class="pms-pill is-danger">{{ __('was due :date', ['date' => $booking->check_out_date->format('d/m')]) }}</span>
+                            @elseif ($pastCheckOut)
+                                <span class="pms-pill is-danger">{{ __('past :time', ['time' => $checkOutTime]) }}</span>
                             @endif
                             @if (($booking->invoice?->balanceDue() ?? 0) > 0)
                                 <span class="pms-pill is-warning">{{ __('owes :amount', ['amount' => $booking->invoice?->formatted_balance]) }}</span>
