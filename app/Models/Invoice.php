@@ -29,7 +29,7 @@ use RuntimeException;
  *   draft   → issue()   → unpaid          (locks the invoice_number)
  *   draft   → cancel()  → cancelled
  *   any-non-final → cancel() refused if any completed payment exists
- *   unpaid|partial → recomputeStatus()    → partial / paid
+ *   unpaid|partial → recomputeStatus()    → partial / paid (overdue if past due)
  *   unpaid|partial → markOverdueIfDue()   → overdue (daily scheduler)
  *
  * @property string $invoice_number
@@ -210,7 +210,9 @@ class Invoice extends Model
             $this->status = $this->isPastDue() ? self::STATUS_OVERDUE : self::STATUS_UNPAID;
             $this->paid_at = null;
         } elseif ($paid < $this->total_amount) {
-            $this->status = self::STATUS_PARTIAL;
+            // Part-paid but past due still counts as overdue, so it stays on
+            // the overdue lists until the balance is cleared.
+            $this->status = $this->isPastDue() ? self::STATUS_OVERDUE : self::STATUS_PARTIAL;
             $this->paid_at = null;
         } else {
             $this->status = self::STATUS_PAID;

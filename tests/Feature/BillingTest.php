@@ -333,3 +333,22 @@ it('refuses to cancel an invoice with completed payments', function () {
 
     expect(fn () => $invoice->cancel())->toThrow(RuntimeException::class);
 });
+
+it('keeps a part-paid invoice overdue once its due date has passed', function () {
+    Tenancy::initialize($this->clientA);
+    Notification::fake();
+
+    $invoice = makeInvoice(makeLease());
+    $invoice->issue();
+    $invoice->forceFill(['due_date' => now()->subDays(3)->toDateString()])->save();
+
+    Payment::create([
+        'invoice_id' => $invoice->id, 'amount' => 100_000_00, 'currency' => 'TZS',
+        'payment_date' => now()->toDateString(), 'method' => 'cash', 'status' => 'completed',
+    ]);
+
+    $invoice->refresh();
+    expect($invoice->status)->toBe(Invoice::STATUS_OVERDUE)
+        ->and($invoice->amount_paid)->toBe(100_000_00)
+        ->and(Invoice::query()->overdue()->whereKey($invoice->id)->exists())->toBeTrue();
+});
