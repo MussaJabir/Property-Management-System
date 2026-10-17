@@ -5,12 +5,14 @@ namespace App\Filament\Operator\Pages;
 use App\Filament\Operator\Navigation\NavGroup;
 use App\Models\Client;
 use App\Models\Subscription;
+use App\Services\RentInvoiceGenerator;
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -89,6 +91,7 @@ class WorkspaceSettings extends Page implements HasForms
             'logo_path' => $this->client->logo_path,
             'brand_primary_color' => $this->client->brand_primary_color,
             'default_locale' => $this->client->settings['default_locale'] ?? 'en',
+            'auto_invoices' => RentInvoiceGenerator::enabledFor($this->client),
         ]);
     }
 
@@ -147,6 +150,10 @@ class WorkspaceSettings extends Page implements HasForms
                                     ])
                                     ->default('en')
                                     ->native(false),
+
+                                Toggle::make('auto_invoices')
+                                    ->label(__('Create rent invoices automatically'))
+                                    ->helperText(__('Each active lease gets its rent invoice when a new period starts, and its first invoice (with the deposit) when it is activated.')),
                             ]),
 
                         Tab::make('Security')
@@ -206,6 +213,7 @@ class WorkspaceSettings extends Page implements HasForms
 
         $settings = $this->client->settings ?? [];
         $settings['default_locale'] = $data['default_locale'] ?? 'en';
+        $settings['auto_invoices'] = (bool) ($data['auto_invoices'] ?? true);
 
         $this->client->update([
             'name' => $data['name'],

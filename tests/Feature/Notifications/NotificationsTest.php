@@ -78,6 +78,8 @@ function setupBilling(): array
         'billing_cycle' => 'monthly',
         'payment_due_day' => 1,
     ]);
+    // These tests build their own invoices; skip the automatic first one.
+    Client::find(tenant('id'))?->update(['settings' => ['auto_invoices' => false]]);
     $lease->activate(); // provisions portal user via Phase 8 hook
 
     return [$renter->fresh(), $lease->fresh(), $renter->fresh()->user];
