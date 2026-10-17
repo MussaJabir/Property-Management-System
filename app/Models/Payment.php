@@ -32,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $received_by_user_id
  * @property-read Invoice|null $invoice
  * @property-read Receipt|null $receipt
+ * @property-read string $method_label
  * @property-read User|null $receivedBy
  */
 class Payment extends Model
@@ -104,6 +105,44 @@ class Payment extends Model
     public function isCompleted(): bool
     {
         return $this->status === self::STATUS_COMPLETED;
+    }
+
+    /**
+     * Mobile money networks as shown to people. Tigo Pesa was rebranded
+     * "Mixx by Yas"; the stored value stays `tigopesa`.
+     *
+     * @return array<string, string>
+     */
+    public static function providerLabels(): array
+    {
+        return [
+            self::PROVIDER_MPESA => 'M-Pesa',
+            self::PROVIDER_TIGOPESA => 'Mixx by Yas',
+            self::PROVIDER_AIRTELMONEY => 'Airtel Money',
+            self::PROVIDER_HALOPESA => 'Halo Pesa',
+        ];
+    }
+
+    /** @return array<string, string> */
+    public static function methodLabels(): array
+    {
+        return [
+            self::METHOD_CASH => __('Cash'),
+            self::METHOD_BANK_TRANSFER => __('Bank transfer'),
+            self::METHOD_MOBILE_MONEY => __('Mobile money'),
+            self::METHOD_CHEQUE => __('Cheque'),
+            self::METHOD_CARD => __('Card'),
+        ];
+    }
+
+    /** "M-Pesa", "Cash", "Bank transfer"… — the network when it is mobile money. */
+    public function getMethodLabelAttribute(): string
+    {
+        if ($this->method === self::METHOD_MOBILE_MONEY && isset(self::providerLabels()[(string) $this->mobile_money_provider])) {
+            return self::providerLabels()[(string) $this->mobile_money_provider];
+        }
+
+        return self::methodLabels()[$this->method] ?? __(str_replace('_', ' ', ucfirst((string) $this->method)));
     }
 
     public function getFormattedAmountAttribute(): string

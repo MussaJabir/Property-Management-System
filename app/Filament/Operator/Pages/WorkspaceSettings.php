@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Pages;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Models\Client;
 use App\Models\Subscription;
 use BackedEnum;
@@ -35,7 +36,9 @@ class WorkspaceSettings extends Page implements HasForms
 
     protected static ?string $navigationLabel = 'Settings';
 
-    protected static ?int $navigationSort = 100;
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::SettingsTeam;
+
+    protected static ?int $navigationSort = 10;
 
     protected string $view = 'filament.operator.pages.workspace-settings';
 

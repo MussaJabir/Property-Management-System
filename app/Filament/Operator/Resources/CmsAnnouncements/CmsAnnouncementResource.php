@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Operator\Resources\CmsAnnouncements;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\CmsAnnouncements\Pages\CreateCmsAnnouncement;
 use App\Filament\Operator\Resources\CmsAnnouncements\Pages\EditCmsAnnouncement;
 use App\Filament\Operator\Resources\CmsAnnouncements\Pages\ListCmsAnnouncements;
@@ -31,7 +32,7 @@ class CmsAnnouncementResource extends Resource
 
     protected static ?string $modelLabel = 'Announcement';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Website';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Website;
 
     protected static ?int $navigationSort = 20;
 

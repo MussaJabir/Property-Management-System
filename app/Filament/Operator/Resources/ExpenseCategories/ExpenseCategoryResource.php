@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\ExpenseCategories;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\ExpenseCategories\Pages\CreateExpenseCategory;
 use App\Filament\Operator\Resources\ExpenseCategories\Pages\EditExpenseCategory;
 use App\Filament\Operator\Resources\ExpenseCategories\Pages\ListExpenseCategories;
@@ -20,15 +21,15 @@ class ExpenseCategoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
-    protected static ?string $navigationLabel = 'Categories';
+    protected static ?string $navigationLabel = 'Expense categories';
 
     protected static ?string $modelLabel = 'Expense category';
 
     protected static ?string $pluralModelLabel = 'Expense categories';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Operations';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::Properties;
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 60;
 
     public static function form(Schema $schema): Schema
     {

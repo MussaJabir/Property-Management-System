@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Operator\Resources\Operators;
 
+use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Operators\Pages\CreateOperator;
 use App\Filament\Operator\Resources\Operators\Pages\EditOperator;
 use App\Filament\Operator\Resources\Operators\Pages\ListOperators;
@@ -38,9 +39,9 @@ class OperatorResource extends Resource
 
     protected static ?string $pluralModelLabel = 'team';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
+    protected static string|\UnitEnum|null $navigationGroup = NavGroup::SettingsTeam;
 
-    protected static ?int $navigationSort = 90;
+    protected static ?int $navigationSort = 20;
 
     public static function form(Schema $schema): Schema
     {
