@@ -410,3 +410,191 @@
         display: none;
     }
 }
+
+/* ---------- Front desk ---------- */
+.pms-desk-figures {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.pms-desk-figures > div {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background-color: white;
+    box-shadow:
+        0 0 0 1px rgb(16 24 24 / 6%),
+        0 1px 2px rgb(16 24 24 / 6%);
+}
+
+.dark .pms-desk-figures > div {
+    background-color: var(--gray-900);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 10%);
+}
+
+.pms-desk-figures b {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    color: var(--gray-950);
+}
+
+.dark .pms-desk-figures b {
+    color: white;
+}
+
+.pms-desk-figures span {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.pms-desk-lists {
+    display: grid;
+    gap: 1rem;
+}
+
+@media (min-width: 64rem) {
+    .pms-desk-lists {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.pms-desk-lists .pms-item {
+    flex-wrap: wrap;
+}
+
+.pms-desk-property .pms-subhead {
+    padding-inline: 0;
+}
+
+.pms-rooms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+    gap: 0.75rem;
+}
+
+.pms-room {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 8.5rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background-color: white;
+    border-top: 4px solid var(--room-accent, var(--gray-300));
+    box-shadow:
+        0 0 0 1px rgb(16 24 24 / 6%),
+        0 1px 2px rgb(16 24 24 / 6%);
+}
+
+.dark .pms-room {
+    background-color: var(--gray-900);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 10%);
+}
+
+.pms-room.is-free {
+    --room-accent: var(--success-500);
+    --room-text: var(--success-700);
+}
+
+.pms-room.is-occupied {
+    --room-accent: var(--primary-600);
+    --room-text: var(--primary-700);
+}
+
+.pms-room.is-leaving {
+    --room-accent: var(--warning-500);
+    --room-text: var(--warning-700);
+}
+
+.pms-room.is-arriving {
+    --room-accent: var(--info-500);
+    --room-text: var(--info-700);
+}
+
+.pms-room.is-blocked {
+    --room-accent: var(--gray-300);
+    opacity: 0.75;
+}
+
+.pms-room-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.pms-room-top b {
+    font-size: 1rem;
+    font-weight: 650;
+    color: var(--gray-950);
+}
+
+.dark .pms-room-top b {
+    color: white;
+}
+
+.pms-room-state {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--room-text, var(--gray-600));
+}
+
+.dark .pms-room-state {
+    color: var(--room-accent);
+}
+
+.pms-room.is-blocked .pms-room-state {
+    color: var(--gray-500);
+}
+
+.pms-room-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.pms-room-guest {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--gray-950);
+    overflow-wrap: anywhere;
+}
+
+.dark .pms-room-guest {
+    color: white;
+}
+
+.pms-room-body small {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.pms-room-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pms-link {
+    font-weight: 600;
+    color: var(--primary-700);
+}
+
+.dark .pms-link {
+    color: var(--primary-400);
+}
+
+@media (max-width: 39.99rem) {
+    .pms-desk-figures {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pms-rooms {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Units\Schemas;
 
+use App\Filament\Operator\Support\ShortStays;
 use App\Models\Property;
 use App\Models\Unit;
 use Filament\Forms\Components\CheckboxList;
@@ -67,8 +68,36 @@ class UnitForm
                 Section::make('Rent')
                     ->columns(3)
                     ->components([
+                        // Short stays (Pro / Enterprise): let by the night, by
+                        // lease, or both. Without the feature every unit is long-term.
+                        Select::make('rental_mode')
+                            ->label(__('How is it let?'))
+                            ->options(Unit::rentalModeOptions())
+                            ->default(Unit::RENTAL_LONG_TERM)
+                            ->required()
+                            ->live()
+                            ->native(false)
+                            ->visible(fn (): bool => ShortStays::enabled()),
+
+                        TextInput::make('nightly_rate')
+                            ->label(__('Rate a night'))
+                            ->prefix(fn (callable $get) => $get('rent_currency') ?? 'TZS')
+                            ->numeric()
+                            ->minValue(0)
+                            ->step(1)
+                            ->placeholder('80000')
+                            ->required(fn (callable $get): bool => self::takesShortStays($get))
+                            ->visible(fn (callable $get): bool => ShortStays::enabled() && self::takesShortStays($get))
+                            ->dehydrateStateUsing(fn ($state) => $state === null || $state === '' ? null : (int) round(((float) $state) * 100))
+                            ->afterStateHydrated(function (TextInput $component, $state): void {
+                                if ($state !== null) {
+                                    $component->state(((int) $state) / 100);
+                                }
+                            }),
+
                         TextInput::make('rent_amount')
                             ->label('Rent')
+                            ->hidden(fn (callable $get): bool => $get('rental_mode') === Unit::RENTAL_SHORT_STAY)
                             ->prefix(fn (callable $get) => $get('rent_currency') ?? 'TZS')
                             ->numeric()
                             ->required()
@@ -98,6 +127,7 @@ class UnitForm
                         Select::make('billing_cycle')
                             ->label('Billing cycle')
                             ->required()
+                            ->hidden(fn (callable $get): bool => $get('rental_mode') === Unit::RENTAL_SHORT_STAY)
                             ->options([
                                 'monthly' => 'Monthly',
                                 'quarterly' => 'Every 3 months (Quarterly)',
@@ -165,5 +195,10 @@ class UnitForm
                             ->columnSpanFull(),
                     ]),
             ]);
+    }
+
+    private static function takesShortStays(callable $get): bool
+    {
+        return in_array($get('rental_mode'), [Unit::RENTAL_SHORT_STAY, Unit::RENTAL_BOTH], true);
     }
 }

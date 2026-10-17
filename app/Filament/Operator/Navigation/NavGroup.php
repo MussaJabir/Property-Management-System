@@ -13,6 +13,7 @@ use Filament\Support\Contracts\HasLabel;
  */
 enum NavGroup implements Collapsible, HasLabel
 {
+    case FrontDesk;
     case Billing;
     case RentersLeases;
     case Properties;
@@ -23,6 +24,7 @@ enum NavGroup implements Collapsible, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
+            self::FrontDesk => __('Front desk'),
             self::Billing => __('Billing'),
             self::RentersLeases => __('Renters & leases'),
             self::Properties => __('Properties'),
