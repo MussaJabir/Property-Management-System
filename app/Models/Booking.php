@@ -233,12 +233,17 @@ class Booking extends Model
         return $query->whereIn('status', self::LIVE_STATUSES);
     }
 
+    /** Live bookings that share at least one night with [in, out). */
+    public function scopeDuring(Builder $query, Carbon $in, Carbon $out): Builder
+    {
+        return $query->whereIn('status', self::LIVE_STATUSES)
+            ->whereDate('check_in_date', '<', $out->toDateString())
+            ->whereDate('check_out_date', '>', $in->toDateString());
+    }
+
     /** Live bookings on $unitId that share at least one night with [in, out). */
     public function scopeOverlapping(Builder $query, string $unitId, Carbon $in, Carbon $out): Builder
     {
-        return $query->whereIn('status', self::LIVE_STATUSES)
-            ->where('unit_id', $unitId)
-            ->whereDate('check_in_date', '<', $out->toDateString())
-            ->whereDate('check_out_date', '>', $in->toDateString());
+        return $this->scopeDuring($query->where('unit_id', $unitId), $in, $out);
     }
 }

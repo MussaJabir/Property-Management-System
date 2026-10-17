@@ -132,21 +132,13 @@ class RecordPaymentAction
                     return;
                 }
 
-                $channel = (string) $data['channel'];
-                $isMobile = isset(Payment::providerLabels()[$channel]);
-
-                $payment = Payment::create([
-                    'invoice_id' => $invoice->id,
-                    'amount' => (int) round(((float) $data['amount']) * 100),
-                    'currency' => $invoice->currency,
-                    'payment_date' => $data['payment_date'],
-                    'method' => $isMobile ? Payment::METHOD_MOBILE_MONEY : $channel,
-                    'mobile_money_provider' => $isMobile ? $channel : null,
-                    'transaction_id' => $isMobile ? ($data['reference'] ?? null) : null,
-                    'reference_number' => $isMobile ? null : ($data['reference'] ?? null),
-                    'received_by_user_id' => auth()->id(),
-                    'status' => Payment::STATUS_COMPLETED,
-                ]);
+                $payment = self::record(
+                    $invoice,
+                    (int) round(((float) $data['amount']) * 100),
+                    (string) $data['channel'],
+                    $data['reference'] ?? null,
+                    (string) $data['payment_date'],
+                );
 
                 self::notify($payment, $invoice);
                 // Let the dashboard cards and lists refresh (RefreshesAfterPayment).
@@ -159,6 +151,29 @@ class RecordPaymentAction
                     $action->halt();
                 }
             });
+    }
+
+    /**
+     * Save a completed payment against $invoice (which issues the receipt).
+     * $channel is a key of channels(): mobile networks are stored as
+     * method mobile_money + provider. Also used by the front desk.
+     */
+    public static function record(Invoice $invoice, int $amount, string $channel, ?string $reference = null, ?string $date = null): Payment
+    {
+        $isMobile = isset(Payment::providerLabels()[$channel]);
+
+        return Payment::create([
+            'invoice_id' => $invoice->id,
+            'amount' => $amount,
+            'currency' => $invoice->currency,
+            'payment_date' => $date ?? today()->toDateString(),
+            'method' => $isMobile ? Payment::METHOD_MOBILE_MONEY : $channel,
+            'mobile_money_provider' => $isMobile ? $channel : null,
+            'transaction_id' => $isMobile ? $reference : null,
+            'reference_number' => $isMobile ? null : $reference,
+            'received_by_user_id' => auth()->id(),
+            'status' => Payment::STATUS_COMPLETED,
+        ]);
     }
 
     /** The invoice this action is tied to, if any (and still open). */

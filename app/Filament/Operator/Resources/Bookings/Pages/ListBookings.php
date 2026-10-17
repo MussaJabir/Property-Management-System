@@ -1,0 +1,22 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Filament\Operator\Resources\Bookings\Pages;
+
+use App\Filament\Operator\Actions\FrontDeskActions;
+use App\Filament\Operator\Resources\Bookings\BookingResource;
+use Filament\Resources\Pages\ListRecords;
+
+class ListBookings extends ListRecords
+{
+    protected static string $resource = BookingResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            FrontDeskActions::book(),
+            FrontDeskActions::walkIn(),
+        ];
+    }
+}

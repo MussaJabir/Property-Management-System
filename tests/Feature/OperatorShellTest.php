@@ -64,14 +64,16 @@ function shellRenter(Client $client, string $name, bool $overdue = false): Rente
 
 it('orders the menu with daily work first and folds reports and website away', function () {
     expect(array_map(fn (NavGroup $g): string => $g->name, NavGroup::cases()))
-        ->toBe(['Billing', 'RentersLeases', 'Properties', 'Reports', 'Website', 'SettingsTeam'])
+        ->toBe(['FrontDesk', 'Billing', 'RentersLeases', 'Properties', 'Reports', 'Website', 'SettingsTeam'])
         ->and(NavGroup::Reports->isCollapsed())->toBeTrue()
         ->and(NavGroup::Website->isCollapsed())->toBeTrue()
         ->and(NavGroup::Billing->isCollapsed())->toBeFalse();
 
     $this->actingAs($this->owner, 'web')->get('/manage')
         ->assertOk()
-        ->assertSeeInOrder(['Today', 'Billing', 'Renters &amp; leases', 'Properties', 'Reports', 'Website', 'Settings &amp; team'], false);
+        ->assertSeeInOrder(['Today', 'Billing', 'Renters &amp; leases', 'Properties', 'Reports', 'Website', 'Settings &amp; team'], false)
+        // Starter plan: no short stays, so no Front desk group.
+        ->assertDontSee('Front desk');
 });
 
 it('shows the workspace name and plan usage instead of a generic brand', function () {
