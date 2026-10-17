@@ -130,8 +130,9 @@ final class FrontDeskActions
             ->modalSubmitActionLabel(__('Save booking'))
             ->fillForm(fn (array $arguments): array => [
                 'unit_id' => self::unit($arguments)?->id,
-                'check_in_date' => today()->toDateString(),
-                'check_out_date' => today()->addDay()->toDateString(),
+                // From the calendar: the clicked room and night.
+                'check_in_date' => self::date($arguments)->toDateString(),
+                'check_out_date' => self::date($arguments)->addDay()->toDateString(),
                 'nightly_rate' => self::rateOf(self::unit($arguments)),
                 'guests_count' => 1,
             ])
@@ -537,6 +538,19 @@ final class FrontDeskActions
         $id = $arguments['unit'] ?? null;
 
         return is_string($id) ? Unit::query()->shortStay()->find($id) : null;
+    }
+
+    private static function date(array $arguments): Carbon
+    {
+        $date = $arguments['date'] ?? null;
+
+        try {
+            $date = is_string($date) ? Carbon::parse($date)->startOfDay() : today();
+        } catch (\Throwable) {
+            $date = today();
+        }
+
+        return $date->lt(today()) ? today() : $date;
     }
 
     private static function rateOf(?Unit $unit): ?int

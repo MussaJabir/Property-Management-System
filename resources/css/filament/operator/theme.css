@@ -598,3 +598,200 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+/* ---------- Booking calendar ---------- */
+.pms-cal-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pms-cal-range {
+    margin-inline-start: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.dark .pms-cal-range {
+    color: var(--gray-200);
+}
+
+.pms-cal-wrap {
+    overflow-x: auto;
+}
+
+.pms-cal {
+    width: 100%;
+    min-width: 56rem;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.75rem;
+}
+
+.pms-cal th,
+.pms-cal td {
+    height: 2.75rem;
+    padding: 0.25rem;
+    border-bottom: 1px solid var(--gray-100);
+    border-inline-start: 1px solid var(--gray-100);
+    text-align: center;
+}
+
+.dark .pms-cal th,
+.dark .pms-cal td {
+    border-color: rgb(255 255 255 / 8%);
+}
+
+.pms-cal thead th {
+    font-weight: 500;
+    color: var(--gray-500);
+}
+
+.pms-cal thead th span {
+    display: block;
+}
+
+.pms-cal thead th b {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--gray-900);
+}
+
+.dark .pms-cal thead th b {
+    color: white;
+}
+
+.pms-cal thead th.is-weekend {
+    background-color: var(--gray-50);
+}
+
+.dark .pms-cal thead th.is-weekend {
+    background-color: rgb(255 255 255 / 3%);
+}
+
+.pms-cal thead th.is-today b {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    background-color: var(--primary-600);
+    color: white;
+}
+
+.pms-cal .pms-cal-room {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    width: 8rem;
+    padding-inline: 0.75rem;
+    text-align: start;
+    background-color: white;
+    border-inline-start: 0;
+}
+
+.dark .pms-cal .pms-cal-room {
+    background-color: var(--gray-900);
+}
+
+.pms-cal-room b {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--gray-950);
+}
+
+.dark .pms-cal-room b {
+    color: white;
+}
+
+.pms-cal-room small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--gray-500);
+}
+
+.pms-cal-stay {
+    display: inline-block;
+    width: 100%;
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    text-align: start;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.pms-cal-stay.is-checked_in {
+    background-color: var(--primary-600);
+    color: white;
+}
+
+.pms-cal-stay.is-reserved {
+    background-color: var(--info-50);
+    color: var(--info-700);
+    box-shadow: inset 0 0 0 1px var(--info-200);
+}
+
+.dark .pms-cal-stay.is-reserved {
+    background-color: color-mix(in oklab, var(--info-500) 18%, transparent);
+    color: var(--info-300);
+    box-shadow: none;
+}
+
+.pms-cal-free {
+    width: 100%;
+    height: 100%;
+    border-radius: 0.375rem;
+    /* Faint so touch screens (no hover) still see where to tap. */
+    color: var(--gray-300);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.pms-cal-free:hover,
+.pms-cal-free:focus-visible {
+    background-color: var(--primary-50);
+    color: var(--primary-700);
+}
+
+.dark .pms-cal-free:hover,
+.dark .pms-cal-free:focus-visible {
+    background-color: rgb(255 255 255 / 6%);
+    color: var(--primary-300);
+}
+
+.pms-cal-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.pms-cal-legend .pms-cal-stay {
+    width: auto;
+}
+
+.pms-desk-today {
+    display: grid;
+}
+
+@media (min-width: 48rem) {
+    .pms-desk-today {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pms-desk-today > div + div {
+        border-inline-start: 1px solid var(--gray-100);
+    }
+
+    .dark .pms-desk-today > div + div {
+        border-color: rgb(255 255 255 / 8%);
+    }
+}

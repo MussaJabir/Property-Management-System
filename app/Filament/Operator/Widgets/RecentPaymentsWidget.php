@@ -18,7 +18,7 @@ class RecentPaymentsWidget extends TableWidget
 {
     use RefreshesAfterPayment;
 
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 2];
 
