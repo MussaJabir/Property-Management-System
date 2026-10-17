@@ -72,6 +72,8 @@ function makePropertyGraph(string $unitCode = 'U1', int $rentCents = 500_000_00)
         'payment_due_day' => 1,
         'status' => 'pending',
     ]);
+    // These tests build their own invoices; skip the automatic first one.
+    Client::find(tenant('id'))?->update(['settings' => ['auto_invoices' => false]]);
     $lease->activate();
 
     return [$property, $unit, $renter, $lease];
