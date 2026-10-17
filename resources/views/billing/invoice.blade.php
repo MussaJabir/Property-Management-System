@@ -63,14 +63,19 @@
     <h1>{{ __('INVOICE') }} {{ $invoice->invoice_number ?? '(DRAFT)' }}</h1>
     <h1 class="sub">{{ __('Ankara ya Malipo') }}</h1>
 
+    @php
+        // Renter on a lease, or guest on a short stay.
+        $party = $invoice->lease?->renter ?? $invoice->booking?->guest;
+        $unit = $invoice->lease?->unit ?? $invoice->booking?->unit;
+    @endphp
     <div class="grid">
         <div class="col">
             <div class="box">
                 <div class="label">{{ __('Billed to') }}</div>
-                <div class="value">{{ $invoice->lease?->renter?->display_name ?? '—' }}</div>
+                <div class="value">{{ $invoice->bill_to_name }}</div>
                 <div style="font-size:9pt;color:#6b7280;margin-top:4px;">
-                    {{ $invoice->lease?->renter?->phone ?? '' }}<br>
-                    {{ $invoice->lease?->renter?->email ?? '' }}
+                    {{ $party?->phone ?? '' }}<br>
+                    {{ $party?->email ?? '' }}
                 </div>
             </div>
         </div>
@@ -78,7 +83,7 @@
             <div class="box">
                 <div class="label">{{ __('Unit') }}</div>
                 <div class="value">
-                    {{ $invoice->lease?->unit?->property?->name ?? '—' }} / {{ $invoice->lease?->unit?->code ?? '—' }}
+                    {{ $unit?->property?->name ?? '—' }} / {{ $unit?->code ?? '—' }}
                 </div>
                 <div style="font-size:9pt;color:#6b7280;margin-top:4px;">
                     {{ __('Period') }}: {{ optional($invoice->billing_period_start)->format('d/m/Y') }} → {{ optional($invoice->billing_period_end)->format('d/m/Y') }}

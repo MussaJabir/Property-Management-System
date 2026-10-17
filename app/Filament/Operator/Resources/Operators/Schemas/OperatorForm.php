@@ -59,6 +59,7 @@ class OperatorForm
             'manager' => 'Manager',
             'accountant' => 'Accountant',
             'maintenance-staff' => 'Maintenance staff',
+            'receptionist' => 'Receptionist',
         ];
 
         $user = auth()->user();

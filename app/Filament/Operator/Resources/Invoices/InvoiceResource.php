@@ -42,14 +42,14 @@ class InvoiceResource extends Resource
     {
         /** @var Invoice $record */
         return array_filter([
-            __('Renter') => (string) $record->lease?->renter?->full_name,
+            __('Renter') => $record->bill_to_name,
             __('Status') => ucfirst((string) $record->status),
         ]);
     }
 
     public static function getGlobalSearchEloquentQuery(): Builder
     {
-        return parent::getGlobalSearchEloquentQuery()->with('lease.renter');
+        return parent::getGlobalSearchEloquentQuery()->with(['lease.renter', 'booking.guest']);
     }
 
     public static function getNavigationBadge(): ?string
@@ -105,6 +105,6 @@ class InvoiceResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['lease.renter', 'lease.unit.property']);
+        return parent::getEloquentQuery()->with(['lease.renter', 'lease.unit.property', 'booking.guest', 'booking.unit.property']);
     }
 }

@@ -62,6 +62,6 @@ class PaymentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['invoice.lease.renter', 'receipt']);
+        return parent::getEloquentQuery()->with(['invoice.lease.renter', 'invoice.booking.guest', 'receipt']);
     }
 }

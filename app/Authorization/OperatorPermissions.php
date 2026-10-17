@@ -18,11 +18,13 @@ namespace App\Authorization;
  *   accountant       billing + expenses + reports (manage); inventory,
  *                    tenancy, maintenance (view only)
  *   maintenance-staff maintenance (manage); inventory, tenancy, expenses (view)
+ *   receptionist     front desk + billing (manage); inventory, tenancy,
+ *                    maintenance (view)
  */
 final class OperatorPermissions
 {
     /** Domains that expose both a `.view` and a `.manage` permission. */
-    public const DOMAINS = ['inventory', 'tenancy', 'billing', 'expenses', 'maintenance', 'cms'];
+    public const DOMAINS = ['inventory', 'tenancy', 'billing', 'expenses', 'maintenance', 'cms', 'frontdesk'];
 
     /**
      * Every operator permission name (guard `web`).
@@ -62,12 +64,20 @@ final class OperatorPermissions
                 'expenses.view', 'expenses.manage',
                 'maintenance.view',
                 'reports.view',
+                'frontdesk.view',
             ],
             'maintenance-staff' => [
                 'inventory.view',
                 'tenancy.view',
                 'expenses.view',
                 'maintenance.view', 'maintenance.manage',
+            ],
+            'receptionist' => [
+                'frontdesk.view', 'frontdesk.manage',
+                'billing.view', 'billing.manage',
+                'inventory.view',
+                'tenancy.view',
+                'maintenance.view',
             ],
             default => [],
         };

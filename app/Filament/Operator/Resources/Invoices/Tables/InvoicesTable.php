@@ -34,18 +34,14 @@ class InvoicesTable
                     ->weight('semibold')
                     ->sortable(),
 
-                TextColumn::make('lease.renter.display_name')
+                // Renter on a lease, or guest on a short stay.
+                TextColumn::make('bill_to_name')
                     ->label('Renter')
-                    ->searchable(query: function ($query, string $search) {
-                        $query->whereHas('lease.renter', function ($q) use ($search) {
-                            $q->where('full_name', 'ilike', "%{$search}%")
-                                ->orWhere('business_name', 'ilike', "%{$search}%");
-                        });
-                    }),
+                    ->searchable(query: fn ($query, string $search) => $query->billToMatches($search)),
 
-                TextColumn::make('lease.unit.code')
+                TextColumn::make('unit_code')
                     ->label('Unit')
-                    ->description(fn (Invoice $record): ?string => $record->lease?->unit?->property?->name)
+                    ->description(fn (Invoice $record): ?string => ($record->lease->unit ?? $record->booking->unit ?? null)?->property?->name)
                     ->toggleable(),
 
                 TextColumn::make('due_date')

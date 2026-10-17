@@ -20,7 +20,8 @@ use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 /**
- * Invoice = a billable charge against a Lease for one billing period.
+ * Invoice = a billable charge against a Lease for one billing period, or
+ * against a Booking for a short stay (exactly one of lease_id / booking_id).
  *
  * Money is in TZS cents. amount_paid is denormalized — kept in sync via
  * Invoice::recomputeStatus(), called by the Payment observer.
@@ -43,6 +44,9 @@ use RuntimeException;
  * @property Carbon|null $paid_at
  * @property Carbon|null $due_date
  * @property-read Lease|null $lease
+ * @property-read Booking|null $booking
+ * @property-read string $bill_to_name
+ * @property-read string|null $unit_code
  * @property-read Collection<int, InvoiceItem> $items
  * @property-read Collection<int, Payment> $payments
  */
@@ -64,6 +68,7 @@ class Invoice extends Model
 
     protected $fillable = [
         'lease_id',
+        'booking_id',
         'invoice_number',
         'billing_period_start',
         'billing_period_end',
@@ -97,6 +102,12 @@ class Invoice extends Model
     public function lease(): BelongsTo
     {
         return $this->belongsTo(Lease::class);
+    }
+
+    /** Short-stay invoices belong to a booking instead of a lease. */
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class);
     }
 
     public function items(): HasMany
@@ -281,6 +292,19 @@ class Invoice extends Model
 
     /* ----- Display helpers ----- */
 
+    /** Who the invoice is for: the lease's renter or the booking's guest. */
+    public function getBillToNameAttribute(): string
+    {
+        return $this->lease->renter->display_name
+            ?? $this->booking->guest->full_name
+            ?? '—';
+    }
+
+    public function getUnitCodeAttribute(): ?string
+    {
+        return $this->lease->unit->code ?? $this->booking->unit->code ?? null;
+    }
+
     public function getFormattedTotalAttribute(): string
     {
         return $this->currency.' '.number_format($this->total_amount / 100, 0, '.', ',');
@@ -306,5 +330,15 @@ class Invoice extends Model
     public function scopeOverdue(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_OVERDUE);
+    }
+
+    /** Renter (lease) or guest (booking) name contains $search. */
+    public function scopeBillToMatches(Builder $query, string $search): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->whereHas('lease.renter', fn (Builder $r) => $r
+                ->where('full_name', 'ilike', "%{$search}%")
+                ->orWhere('business_name', 'ilike', "%{$search}%"))
+            ->orWhereHas('booking.guest', fn (Builder $g) => $g->where('full_name', 'ilike', "%{$search}%")));
     }
 }
