@@ -7,6 +7,7 @@ use App\Filament\Operator\Resources\Leases\LeaseResource;
 use App\Filament\Operator\Resources\Leases\Schemas\LeaseForm;
 use App\Models\Invoice;
 use App\Models\Lease;
+use App\Models\Renter;
 use App\Models\Unit;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -19,7 +20,8 @@ use Throwable;
  * "Start the lease now" on (the default) the lease is activated straight
  * away, which marks the unit occupied and issues the first invoice.
  *
- * `?unit=<id>` preselects a vacant unit (Today → Vacant units).
+ * `?unit=<id>` preselects a vacant unit (Today → Vacant units) and
+ * `?renter=<id>` the renter (after adding a renter).
  */
 class CreateLease extends CreateRecord
 {
@@ -51,6 +53,11 @@ class CreateLease extends CreateRecord
 
         if ($unit !== null) {
             $this->data = array_merge($this->data ?? [], ['unit_id' => $unit->id], LeaseForm::unitDefaults($unit));
+        }
+
+        $renterId = request()->query('renter');
+        if (is_string($renterId) && Renter::query()->whereKey($renterId)->exists()) {
+            $this->data = array_merge($this->data ?? [], ['renter_id' => $renterId]);
         }
     }
 

@@ -23,6 +23,8 @@ class UnitForm
                     ->components([
                         Select::make('property_id')
                             ->label('Property')
+                            // Coming from "Property saved → add its units".
+                            ->default(fn ($livewire) => $livewire->property ?? null)
                             ->options(fn () => Property::pluck('name', 'id'))
                             ->required()
                             ->searchable()
@@ -57,7 +59,9 @@ class UnitForm
                                 'reserved' => 'Reserved',
                             ])
                             ->default('vacant')
-                            ->native(false),
+                            ->native(false)
+                            // New units start vacant; leases change it after that.
+                            ->hiddenOn('create'),
                     ]),
 
                 Section::make('Rent')
@@ -146,6 +150,7 @@ class UnitForm
 
                 Section::make('Photos')
                     ->description('Show off this specific unit — living area, kitchen, bedroom, bathroom. The first photo is the cover. If you add none, the property\'s photos are used automatically.')
+                    ->collapsed(fn (string $operation): bool => $operation === 'create')
                     ->components([
                         SpatieMediaLibraryFileUpload::make('photos')
                             ->label('Unit photos')
