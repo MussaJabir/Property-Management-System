@@ -3,6 +3,7 @@
 use App\Filament\Operator\Pages\WorkspaceSettings;
 use App\Models\Client;
 use App\Models\User;
+use App\Services\RentInvoiceGenerator;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
@@ -77,4 +78,19 @@ it('saves workspace fields without touching the password when left blank', funct
     expect($this->client->name)->toBe('Set Co Renamed')
         ->and($this->client->brand_primary_color)->toBe('#123456')
         ->and($this->owner->password)->toBe($originalHash);
+});
+
+it('turns automatic rent invoices off and on from Preferences', function () {
+    $this->actingAs($this->owner, 'web');
+
+    Livewire::test(WorkspaceSettings::class)
+        ->assertSet('data.auto_invoices', true)
+        ->set('data.auto_invoices', false)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(RentInvoiceGenerator::enabledFor($this->client->refresh()))->toBeFalse()
+        ->and($this->client->settings['default_locale'])->toBe('en');
+
+    Livewire::test(WorkspaceSettings::class)->assertSet('data.auto_invoices', false);
 });

@@ -58,7 +58,12 @@ class ComingUpWidget extends Widget
                 'title' => $unit->code,
                 'sub' => (string) $unit->property?->name,
                 'when' => $unit->rent_amount > 0 ? $unit->formatted_rent : null,
-                'url' => UnitResource::canEdit($unit) ? UnitResource::getUrl('edit', ['record' => $unit]) : null,
+                // Straight into a new lease for that unit, the usual next step.
+                'url' => match (true) {
+                    LeaseResource::canCreate() => LeaseResource::getUrl('create', ['unit' => $unit->getKey()]),
+                    UnitResource::canEdit($unit) => UnitResource::getUrl('edit', ['record' => $unit]),
+                    default => null,
+                },
             ]);
 
         $sections = [

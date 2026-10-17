@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\TenantScopedModel;
 use App\Services\Portal\RenterPortalAccountProvisioner;
+use App\Services\RentInvoiceGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +28,9 @@ use Throwable;
  * (1) update the lease status,
  * (2) update the linked unit's status,
  * (3) write a LeaseHistory row.
+ * Activation also issues the first period's invoice (RentInvoiceGenerator).
  *
+ * @property Carbon|null $start_date
  * @property Carbon|null $end_date
  * @property-read Renter|null $renter
  * @property-read Unit|null $unit
@@ -171,6 +174,19 @@ class Lease extends Model implements HasMedia
                 }
             }
         });
+
+        // Bill the first period (rent + deposit) straight away instead of
+        // waiting for tomorrow's run. Never blocks the activation.
+        if (RentInvoiceGenerator::enabledFor(Client::find($this->tenant_id))) {
+            try {
+                app(RentInvoiceGenerator::class)->generateFor($this);
+            } catch (Throwable $e) {
+                Log::warning(
+                    'First rent invoice failed during lease activation',
+                    ['lease_id' => $this->id, 'error' => $e->getMessage()],
+                );
+            }
+        }
     }
 
     /**

@@ -97,7 +97,8 @@ it('records an M-Pesa payment from an invoice row in one step and issues a recei
         ->and($payment->status)->toBe(Payment::STATUS_COMPLETED)
         ->and($payment->received_by_user_id)->toBe($this->owner->id)
         ->and($payment->receipt)->not->toBeNull()
-        ->and($invoice->fresh()?->status)->toBe(Invoice::STATUS_PARTIAL);
+        // Part-paid and past due: still overdue until the balance is cleared.
+        ->and($invoice->fresh()?->status)->toBe(Invoice::STATUS_OVERDUE);
 });
 
 it('records a cash payment from the Today overdue list with the balance prefilled', function () {

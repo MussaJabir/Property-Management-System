@@ -6,16 +6,14 @@ use App\Models\Lease;
 use App\Models\Renter;
 use App\Models\Unit;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
-use Illuminate\Support\HtmlString;
 
 /**
  * Form schema for leases. Powers two surfaces:
@@ -24,8 +22,8 @@ use Illuminate\Support\HtmlString;
  *     are read-only after creation (changing them would silently invalidate
  *     invoices, payments, and lease history). Change those via terminating
  *     the lease and creating a new one.
- *   - Create page: wizardSteps() returns four Wizard steps — Renter → Unit
- *     → Terms → Confirm.
+ *   - Create page: createForm() is one screen — unit, renter (added inline
+ *     if new), rent, and "Start the lease now"; the rest under More details.
  *
  * Rent values are entered in WHOLE shillings (e.g. 350000) and dehydrated
  * to minor units (cents) for storage. Matches the convention from UnitForm.
@@ -73,126 +71,126 @@ class LeaseForm
     }
 
     /**
-     * Wizard steps for the create flow. Each step gates progression on its
-     * own validation; rent/currency/billing_cycle auto-fill from the chosen
-     * unit when entering step 2.
-     *
-     * @return array<int, Step>
+     * The create page: one screen. Pick a vacant unit (its rent fills in),
+     * pick or add the renter on the spot, and start the lease. Rarely
+     * changed terms sit under "More details".
      */
-    public static function wizardSteps(): array
+    public static function createForm(Schema $schema): Schema
+    {
+        $terms = collect(self::termsComponents())->keyBy(fn ($field) => $field->getName());
+
+        return $schema
+            ->columns(1)
+            ->components([
+                Section::make(__('Unit and renter'))
+                    ->columns(2)
+                    ->components([
+                        Select::make('unit_id')
+                            ->label(__('Vacant unit'))
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->live()
+                            ->options(fn (): array => Unit::query()
+                                ->vacant()
+                                ->with('property')
+                                ->get()
+                                ->mapWithKeys(fn (Unit $unit): array => [$unit->id => self::unitLabel($unit)])
+                                ->all())
+                            ->afterStateUpdated(function (?string $state, Set $set): void {
+                                $unit = $state !== null ? Unit::find($state) : null;
+
+                                foreach ($unit !== null ? self::unitDefaults($unit) : [] as $key => $value) {
+                                    $set($key, $value);
+                                }
+                            })
+                            ->helperText(__('Rent and billing fill in from the unit.')),
+
+                        Select::make('renter_id')
+                            ->label(__('Renter'))
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->options(fn (): array => Renter::query()
+                                ->orderBy('full_name')
+                                ->get()
+                                ->mapWithKeys(fn (Renter $renter): array => [$renter->id => $renter->display_name])
+                                ->all())
+                            ->createOptionForm([
+                                TextInput::make('full_name')
+                                    ->label(__('Full name'))
+                                    ->required()
+                                    ->maxLength(150),
+                                TextInput::make('phone')
+                                    ->label(__('Phone'))
+                                    ->tel()
+                                    ->required()
+                                    ->placeholder('0712345678')
+                                    ->maxLength(20),
+                                TextInput::make('email')
+                                    ->label(__('Email'))
+                                    ->email()
+                                    ->placeholder(__('Optional'))
+                                    ->maxLength(150),
+                            ])
+                            ->createOptionModalHeading(__('New renter'))
+                            ->createOptionUsing(fn (array $data): string => Renter::create([
+                                'type' => Renter::TYPE_INDIVIDUAL,
+                                'full_name' => $data['full_name'],
+                                'phone' => $data['phone'],
+                                'email' => $data['email'] ?? null,
+                            ])->getKey())
+                            ->helperText(__('New renter? Use + to add their name and phone. The rest can wait.')),
+                    ]),
+
+                Section::make(__('Rent'))
+                    ->columns(3)
+                    ->components([
+                        $terms['start_date'],
+                        $terms['rent_amount'],
+                        $terms['deposit_amount'],
+
+                        Toggle::make('activate_now')
+                            ->label(__('Start the lease now'))
+                            ->default(true)
+                            ->dehydrated(false)
+                            ->helperText(__('Marks the unit occupied and issues the first invoice. Turn off to keep it pending until it is signed.'))
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make(__('More details'))
+                    ->description(__('End date, billing cycle, due day, currency and notes.'))
+                    ->collapsed()
+                    ->columns(2)
+                    ->components([
+                        $terms['end_date'],
+                        $terms['payment_due_day'],
+                        $terms['billing_cycle'],
+                        $terms['currency'],
+                        $terms['billing_cycle_months'],
+                        $terms['terms_notes'],
+                    ]),
+            ]);
+    }
+
+    /**
+     * Form state taken from a unit: its rent (whole shillings) and billing.
+     *
+     * @return array<string, mixed>
+     */
+    public static function unitDefaults(Unit $unit): array
     {
         return [
-            Step::make('Renter')
-                ->description('Who is renting?')
-                ->schema([
-                    Select::make('renter_id')
-                        ->label('Renter')
-                        ->required()
-                        ->searchable()
-                        ->preload()
-                        ->options(fn () => Renter::query()
-                            ->orderBy('full_name')
-                            ->get()
-                            ->mapWithKeys(fn (Renter $r) => [$r->id => $r->display_name]))
-                        ->helperText('Pick an existing renter, or open the Renters page first to add one.'),
-                ]),
-
-            Step::make('Unit')
-                ->description('Which unit are they renting?')
-                ->schema([
-                    Select::make('unit_id')
-                        ->label('Vacant unit')
-                        ->required()
-                        ->searchable()
-                        ->preload()
-                        ->live()
-                        ->options(fn () => Unit::query()
-                            ->where('status', Unit::STATUS_VACANT)
-                            ->with('property')
-                            ->get()
-                            ->mapWithKeys(function (Unit $unit): array {
-                                $propertyName = $unit->property ? $unit->property->name : 'Unknown property';
-
-                                return [$unit->id => $propertyName.' — '.$unit->code];
-                            }))
-                        ->afterStateUpdated(function ($state, Set $set) {
-                            if (! $state) {
-                                return;
-                            }
-
-                            $unit = Unit::find($state);
-                            if (! $unit) {
-                                return;
-                            }
-
-                            // Snapshot the unit's current rent into the form (in
-                            // whole shillings — the TextInput's
-                            // dehydrateStateUsing will convert back to cents
-                            // when the form submits).
-                            $set('rent_amount', (int) ($unit->rent_amount / 100));
-                            $set('currency', $unit->rent_currency);
-                            $set('billing_cycle', $unit->billing_cycle);
-                            $set('billing_cycle_months', $unit->billing_cycle_months);
-                        })
-                        ->helperText('Only vacant units are shown. Mark a unit vacant first if it isn\'t listed.'),
-                ]),
-
-            Step::make('Terms')
-                ->description('Dates, rent, deposit')
-                ->columns(2)
-                ->schema(self::termsComponents()),
-
-            Step::make('Confirm')
-                ->description('Review and create')
-                ->schema([
-                    Placeholder::make('summary')
-                        ->hiddenLabel()
-                        ->content(function (Get $get) {
-                            $renter = $get('renter_id') ? Renter::find($get('renter_id')) : null;
-                            $unit = $get('unit_id') ? Unit::with('property')->find($get('unit_id')) : null;
-
-                            $rent = $get('rent_amount');
-                            $currency = $get('currency') ?: 'TZS';
-                            $deposit = $get('deposit_amount');
-                            $start = $get('start_date');
-                            $end = $get('end_date');
-                            $cycle = $get('billing_cycle');
-                            $cycleMonths = $get('billing_cycle_months');
-
-                            $cycleLabel = match ($cycle) {
-                                'monthly' => 'Monthly',
-                                'quarterly' => 'Every 3 months',
-                                'semi_annual' => 'Every 6 months',
-                                'annual' => 'Yearly',
-                                'custom' => 'Every '.($cycleMonths ?? '?').' months',
-                                default => ucfirst((string) $cycle),
-                            };
-
-                            $renterLabel = $renter ? $renter->display_name : '—';
-                            $unitLabel = $unit
-                                ? (($unit->property->name ?? 'Unknown property').' — '.$unit->code)
-                                : '—';
-
-                            $lines = [
-                                'Renter: '.$renterLabel,
-                                'Unit: '.$unitLabel,
-                                'Period: '.($start ?? '—').' → '.($end ?: 'open-ended'),
-                                'Rent: '.$currency.' '.number_format((float) $rent, 0, '.', ',').' ('.$cycleLabel.')',
-                                'Deposit: '.$currency.' '.number_format((float) ($deposit ?? 0), 0, '.', ','),
-                                'Due day: '.($get('payment_due_day') ?? 1).' of each billing period',
-                            ];
-
-                            return new HtmlString(
-                                '<div class="space-y-1 text-sm">'.
-                                collect($lines)->map(fn ($l) => '<div>'.e($l).'</div>')->implode('').
-                                '</div>'.
-                                '<div class="mt-3 text-xs text-gray-500">'.
-                                e('The lease starts in "pending" status. Activate it from the lease page once signed.').
-                                '</div>'
-                            );
-                        }),
-                ]),
+            'rent_amount' => (int) ($unit->rent_amount / 100),
+            'currency' => $unit->rent_currency,
+            'billing_cycle' => $unit->billing_cycle,
+            'billing_cycle_months' => $unit->billing_cycle_months,
         ];
+    }
+
+    private static function unitLabel(Unit $unit): string
+    {
+        return ($unit->property !== null ? $unit->property->name : __('Unknown property')).' — '.$unit->code;
     }
 
     /**
