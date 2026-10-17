@@ -77,7 +77,7 @@ class RecordPaymentAction
                     ->native(false)
                     ->live()
                     ->options(fn (): array => self::openInvoices($record)
-                        ->with(['lease.renter', 'lease.unit'])
+                        ->with(['lease.renter', 'lease.unit', 'booking.guest', 'booking.unit'])
                         ->orderBy('due_date')
                         ->get()
                         ->mapWithKeys(fn (Invoice $invoice): array => [$invoice->id => self::describe($invoice)])
@@ -209,12 +209,10 @@ class RecordPaymentAction
     /** "INV-2026-000012 · Hassan Omar · A4 · balance TZS 750,000" */
     private static function describe(Invoice $invoice): string
     {
-        $renter = $invoice->lease?->renter;
-
         return collect([
             $invoice->invoice_number ?? __('Draft invoice'),
-            $renter !== null ? $renter->display_name : null,
-            $invoice->lease?->unit?->code,
+            $invoice->bill_to_name,
+            $invoice->unit_code,
             __('balance :amount', ['amount' => $invoice->formatted_balance]),
         ])->filter()->implode(' · ');
     }
@@ -223,7 +221,6 @@ class RecordPaymentAction
     {
         // Issued by PaymentObserver when the payment was created.
         $receipt = $payment->receipt;
-        $renter = $invoice->lease?->renter;
 
         Notification::make()
             ->success()
@@ -231,7 +228,7 @@ class RecordPaymentAction
             ->body(collect([
                 __(':amount from :renter', [
                     'amount' => $payment->formatted_amount,
-                    'renter' => $renter !== null ? $renter->display_name : __('the renter'),
+                    'renter' => $invoice->bill_to_name,
                 ]),
                 $receipt !== null ? __('Receipt :number', ['number' => $receipt->receipt_number]) : null,
             ])->filter()->implode(' · '))

@@ -43,20 +43,22 @@ class OutstandingRentReport implements ReportBuilder
     {
         $query = Invoice::query()
             ->outstanding()
-            ->with(['lease.renter', 'lease.unit.property'])
+            ->with(['lease.renter', 'lease.unit.property', 'booking.guest', 'booking.unit.property'])
             ->orderBy('due_date');
 
         if ($this->propertyId) {
-            $query->whereHas('lease.unit', fn ($q) => $q->where('property_id', $this->propertyId));
+            $query->where(fn ($q) => $q
+                ->whereHas('lease.unit', fn ($u) => $u->where('property_id', $this->propertyId))
+                ->orWhereHas('booking.unit', fn ($u) => $u->where('property_id', $this->propertyId)));
         }
 
         return $query->get()->map(function (Invoice $invoice): array {
-            $unit = $invoice->lease?->unit;
+            $unit = $invoice->lease?->unit ?? $invoice->booking?->unit;
             $unitLabel = $unit ? (($unit->property?->name ?? '—').' / '.$unit->code) : '—';
 
             return [
                 'invoice_number' => $invoice->invoice_number ?? '—',
-                'renter' => $invoice->lease?->renter?->display_name ?? '—',
+                'renter' => $invoice->bill_to_name,
                 'unit' => $unitLabel,
                 'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? '—',
                 'total' => number_format($invoice->total_amount / 100, 0, '.', ','),
@@ -72,7 +74,9 @@ class OutstandingRentReport implements ReportBuilder
         $query = Invoice::query()->outstanding();
 
         if ($this->propertyId) {
-            $query->whereHas('lease.unit', fn ($q) => $q->where('property_id', $this->propertyId));
+            $query->where(fn ($q) => $q
+                ->whereHas('lease.unit', fn ($u) => $u->where('property_id', $this->propertyId))
+                ->orWhereHas('booking.unit', fn ($u) => $u->where('property_id', $this->propertyId)));
         }
 
         $invoices = $query->get();

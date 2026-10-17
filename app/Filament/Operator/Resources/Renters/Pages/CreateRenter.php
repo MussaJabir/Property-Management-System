@@ -22,7 +22,7 @@ class CreateRenter extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return LeaseResource::canCreate() && Unit::query()->vacant()->exists()
+        return LeaseResource::canCreate() && Unit::query()->vacant()->longTerm()->exists()
             ? LeaseResource::getUrl('create', ['renter' => $this->getRecord()->getKey()])
             : $this->indexUrl();
     }

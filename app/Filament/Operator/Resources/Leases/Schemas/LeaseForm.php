@@ -93,6 +93,7 @@ class LeaseForm
                             ->live()
                             ->options(fn (): array => Unit::query()
                                 ->vacant()
+                                ->longTerm()
                                 ->with('property')
                                 ->get()
                                 ->mapWithKeys(fn (Unit $unit): array => [$unit->id => self::unitLabel($unit)])

@@ -14,7 +14,7 @@ class InvoicePdfGenerator
 {
     public function render(Invoice $invoice): string
     {
-        $invoice->loadMissing(['items', 'lease.renter', 'lease.unit.property']);
+        $invoice->loadMissing(['items', 'lease.renter', 'lease.unit.property', 'booking.guest', 'booking.unit.property']);
 
         $html = View::make('billing.invoice', [
             'invoice' => $invoice,

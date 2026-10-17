@@ -32,7 +32,7 @@ final class PlanUsage
     public const WARN_AT = 0.8;
 
     /** Features that differ between plans and are switched off when missing. */
-    public const GATED_FEATURES = ['renter_portal', 'reports', 'custom_roles'];
+    public const GATED_FEATURES = ['renter_portal', 'reports', 'custom_roles', 'short_stays'];
 
     /** @var array<string, int> */
     private array $counts = [];

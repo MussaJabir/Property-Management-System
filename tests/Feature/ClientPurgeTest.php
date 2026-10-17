@@ -76,7 +76,7 @@ it('archiving a client (soft delete) keeps all its data and roles intact', funct
         ->and(Property::withoutGlobalScopes()->where('tenant_id', $this->clientA->id)->count())->toBe(1)
         ->and(Unit::withoutGlobalScopes()->where('tenant_id', $this->clientA->id)->count())->toBe(1)
         ->and(Renter::withoutGlobalScopes()->where('tenant_id', $this->clientA->id)->count())->toBe(1)
-        ->and(Role::where('tenant_id', $this->clientA->id)->count())->toBe(4);
+        ->and(Role::where('tenant_id', $this->clientA->id)->count())->toBe(5);
 });
 
 it('purging a client permanently removes all of its tenant-scoped data', function () {
@@ -93,7 +93,7 @@ it('purging a client permanently removes all of its tenant-scoped data', functio
 });
 
 it('purging a client removes its Spatie roles (which the FK cascade cannot reach)', function () {
-    expect(Role::where('tenant_id', $this->clientA->id)->count())->toBe(4);
+    expect(Role::where('tenant_id', $this->clientA->id)->count())->toBe(5);
 
     $this->clientA->forceDelete();
 
@@ -139,7 +139,7 @@ it('purging one client leaves another client’s data and roles untouched', func
         ->and(Property::withoutGlobalScopes()->where('tenant_id', $this->clientB->id)->count())->toBe(1)
         ->and(Unit::withoutGlobalScopes()->where('tenant_id', $this->clientB->id)->count())->toBe(1)
         ->and(Renter::withoutGlobalScopes()->where('tenant_id', $this->clientB->id)->count())->toBe(1)
-        ->and(Role::where('tenant_id', $this->clientB->id)->count())->toBe(4);
+        ->and(Role::where('tenant_id', $this->clientB->id)->count())->toBe(5);
 });
 
 it('the purge action requires the exact client name, then permanently deletes', function () {

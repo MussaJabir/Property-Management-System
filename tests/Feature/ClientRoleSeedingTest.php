@@ -3,7 +3,7 @@
 use App\Models\Client;
 use Spatie\Permission\Models\Role;
 
-it('auto-seeds four default roles when a client is created', function () {
+it('auto-seeds five default roles when a client is created', function () {
     $client = Client::create([
         'slug' => 'rolecheck',
         'name' => 'Role Check Ltd',
@@ -16,8 +16,8 @@ it('auto-seeds four default roles when a client is created', function () {
         ->all();
 
     expect($roleNames)
-        ->toContain('owner', 'manager', 'accountant', 'maintenance-staff')
-        ->and(count($roleNames))->toBe(4);
+        ->toContain('owner', 'manager', 'accountant', 'maintenance-staff', 'receptionist')
+        ->and(count($roleNames))->toBe(5);
 });
 
 it('keeps roles scoped per client (no cross-client leakage)', function () {
@@ -33,6 +33,6 @@ it('keeps roles scoped per client (no cross-client leakage)', function () {
         'status' => 'active',
     ]);
 
-    expect(Role::where('tenant_id', $clientA->id)->count())->toBe(4);
-    expect(Role::where('tenant_id', $clientB->id)->count())->toBe(4);
+    expect(Role::where('tenant_id', $clientA->id)->count())->toBe(5);
+    expect(Role::where('tenant_id', $clientB->id)->count())->toBe(5);
 });

@@ -49,7 +49,7 @@ class CreateLease extends CreateRecord
     protected function afterFill(): void
     {
         $unitId = request()->query('unit');
-        $unit = is_string($unitId) ? Unit::query()->vacant()->find($unitId) : null;
+        $unit = is_string($unitId) ? Unit::query()->vacant()->longTerm()->find($unitId) : null;
 
         if ($unit !== null) {
             $this->data = array_merge($this->data ?? [], ['unit_id' => $unit->id], LeaseForm::unitDefaults($unit));

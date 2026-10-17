@@ -19,7 +19,7 @@ class ReceiptPdfGenerator
 {
     public function render(Receipt $receipt): string
     {
-        $receipt->loadMissing(['payment.invoice.lease.renter', 'payment.invoice.lease.unit.property', 'payment.receivedBy']);
+        $receipt->loadMissing(['payment.invoice.lease.renter', 'payment.invoice.lease.unit.property', 'payment.invoice.booking.guest', 'payment.invoice.booking.unit.property', 'payment.receivedBy']);
 
         $html = View::make('billing.receipt', [
             'receipt' => $receipt,

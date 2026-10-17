@@ -58,6 +58,7 @@ class ReceiptResource extends Resource
         return parent::getEloquentQuery()->with([
             'payment.invoice.lease.renter',
             'payment.invoice.lease.unit.property',
+            'payment.invoice.booking.guest',
         ]);
     }
 }

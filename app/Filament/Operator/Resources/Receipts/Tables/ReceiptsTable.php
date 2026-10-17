@@ -31,14 +31,9 @@ class ReceiptsTable
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
 
-                TextColumn::make('payment.invoice.lease.renter.display_name')
+                TextColumn::make('payment.invoice.bill_to_name')
                     ->label('Renter')
-                    ->searchable(query: function ($query, string $search) {
-                        $query->whereHas('payment.invoice.lease.renter', function ($q) use ($search) {
-                            $q->where('full_name', 'ilike', "%{$search}%")
-                                ->orWhere('business_name', 'ilike', "%{$search}%");
-                        });
-                    }),
+                    ->searchable(query: fn ($query, string $search) => $query->whereHas('payment.invoice', fn ($q) => $q->billToMatches($search))),
 
                 TextColumn::make('payment.formatted_amount')
                     ->label('Amount'),

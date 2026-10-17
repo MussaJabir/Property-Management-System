@@ -29,14 +29,9 @@ class PaymentsTable
                     ->searchable()
                     ->placeholder('—'),
 
-                TextColumn::make('invoice.lease.renter.display_name')
+                TextColumn::make('invoice.bill_to_name')
                     ->label('Renter')
-                    ->searchable(query: function ($query, string $search) {
-                        $query->whereHas('invoice.lease.renter', function ($q) use ($search) {
-                            $q->where('full_name', 'ilike', "%{$search}%")
-                                ->orWhere('business_name', 'ilike', "%{$search}%");
-                        });
-                    }),
+                    ->searchable(query: fn ($query, string $search) => $query->whereHas('invoice', fn ($q) => $q->billToMatches($search))),
 
                 TextColumn::make('formatted_amount')
                     ->label('Amount')
