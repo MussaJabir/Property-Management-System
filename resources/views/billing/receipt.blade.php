@@ -53,13 +53,17 @@
         <div class="value">{{ $fmt($payment?->amount ?? 0) }}</div>
     </div>
 
+    @php
+        $party = $invoice?->lease?->renter ?? $invoice?->booking?->guest;
+        $unit = $invoice?->lease?->unit ?? $invoice?->booking?->unit;
+    @endphp
     <div class="grid">
         <div class="col">
             <div class="box">
                 <div class="label">{{ __('Received from') }}</div>
-                <div class="value">{{ $invoice?->lease?->renter?->display_name ?? '—' }}</div>
+                <div class="value">{{ $invoice?->bill_to_name ?? '—' }}</div>
                 <div style="font-size:9pt;color:#6b7280;margin-top:4px;">
-                    {{ $invoice?->lease?->renter?->phone ?? '' }}
+                    {{ $party?->phone ?? '' }}
                 </div>
             </div>
         </div>
@@ -67,7 +71,7 @@
             <div class="box">
                 <div class="label">{{ __('For') }}</div>
                 <div class="value">
-                    {{ $invoice?->lease?->unit?->property?->name ?? '—' }} / {{ $invoice?->lease?->unit?->code ?? '—' }}
+                    {{ $unit?->property?->name ?? '—' }} / {{ $unit?->code ?? '—' }}
                 </div>
                 <div style="font-size:9pt;color:#6b7280;margin-top:4px;">
                     {{ __('Invoice') }} {{ $invoice?->invoice_number ?? '—' }}

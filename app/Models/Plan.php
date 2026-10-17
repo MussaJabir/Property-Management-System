@@ -23,6 +23,7 @@ class Plan extends Model
         'renter_portal' => 'Renter portal',
         'cms_website' => 'Website / CMS pages',
         'maintenance' => 'Maintenance tracking',
+        'short_stays' => 'Short stays & front desk',
         'reports' => 'Reports & Excel export',
         'custom_roles' => 'Custom staff roles & permissions',
         'email_notifications' => 'Email notifications',

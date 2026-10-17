@@ -30,7 +30,7 @@ class RolePermissions extends Page implements HasForms
     use InteractsWithForms;
 
     /** Roles the owner can customise (owner is always full access). */
-    public const EDITABLE_ROLES = ['manager', 'accountant', 'maintenance-staff'];
+    public const EDITABLE_ROLES = ['manager', 'accountant', 'maintenance-staff', 'receptionist'];
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
 
@@ -154,6 +154,7 @@ class RolePermissions extends Page implements HasForms
             'expenses' => 'Expenses',
             'maintenance' => 'Maintenance',
             'cms' => 'Website (CMS)',
+            'frontdesk' => 'Front desk',
             'reports' => 'Reports',
             'team' => 'Team',
             default => ucfirst($domain),
@@ -168,6 +169,7 @@ class RolePermissions extends Page implements HasForms
             'manager' => 'Manager',
             'accountant' => 'Accountant',
             'maintenance-staff' => 'Maintenance staff',
+            'receptionist' => 'Receptionist',
             default => ucfirst($role),
         };
     }

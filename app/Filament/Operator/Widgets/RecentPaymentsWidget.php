@@ -18,7 +18,7 @@ class RecentPaymentsWidget extends TableWidget
 {
     use RefreshesAfterPayment;
 
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 2];
 
@@ -31,7 +31,7 @@ class RecentPaymentsWidget extends TableWidget
     protected function getTableQuery(): Builder|Relation|null
     {
         return Payment::query()
-            ->with(['invoice.lease.renter'])
+            ->with(['invoice.lease.renter', 'invoice.booking.guest'])
             ->latest('payment_date')
             ->latest('id')
             ->limit(5);
@@ -44,7 +44,7 @@ class RecentPaymentsWidget extends TableWidget
             ->query($this->getTableQuery())
             ->paginated(false)
             ->columns([
-                TextColumn::make('invoice.lease.renter.display_name')
+                TextColumn::make('invoice.bill_to_name')
                     ->label(__('Renter'))
                     ->placeholder('—')
                     ->weight('semibold')

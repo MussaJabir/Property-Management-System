@@ -30,11 +30,10 @@ class PaymentForm
                             ->live()
                             ->options(fn () => Invoice::query()
                                 ->outstanding()
-                                ->with(['lease.renter'])
+                                ->with(['lease.renter', 'booking.guest'])
                                 ->get()
                                 ->mapWithKeys(function (Invoice $inv): array {
-                                    $renterModel = $inv->lease?->renter;
-                                    $renter = $renterModel ? $renterModel->display_name : '—';
+                                    $renter = $inv->bill_to_name;
                                     $number = $inv->invoice_number ?? 'draft';
                                     $balance = $inv->formatted_balance;
 

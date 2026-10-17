@@ -77,7 +77,7 @@ class RecordPaymentAction
                     ->native(false)
                     ->live()
                     ->options(fn (): array => self::openInvoices($record)
-                        ->with(['lease.renter', 'lease.unit'])
+                        ->with(['lease.renter', 'lease.unit', 'booking.guest', 'booking.unit'])
                         ->orderBy('due_date')
                         ->get()
                         ->mapWithKeys(fn (Invoice $invoice): array => [$invoice->id => self::describe($invoice)])
@@ -132,21 +132,13 @@ class RecordPaymentAction
                     return;
                 }
 
-                $channel = (string) $data['channel'];
-                $isMobile = isset(Payment::providerLabels()[$channel]);
-
-                $payment = Payment::create([
-                    'invoice_id' => $invoice->id,
-                    'amount' => (int) round(((float) $data['amount']) * 100),
-                    'currency' => $invoice->currency,
-                    'payment_date' => $data['payment_date'],
-                    'method' => $isMobile ? Payment::METHOD_MOBILE_MONEY : $channel,
-                    'mobile_money_provider' => $isMobile ? $channel : null,
-                    'transaction_id' => $isMobile ? ($data['reference'] ?? null) : null,
-                    'reference_number' => $isMobile ? null : ($data['reference'] ?? null),
-                    'received_by_user_id' => auth()->id(),
-                    'status' => Payment::STATUS_COMPLETED,
-                ]);
+                $payment = self::record(
+                    $invoice,
+                    (int) round(((float) $data['amount']) * 100),
+                    (string) $data['channel'],
+                    $data['reference'] ?? null,
+                    (string) $data['payment_date'],
+                );
 
                 self::notify($payment, $invoice);
                 // Let the dashboard cards and lists refresh (RefreshesAfterPayment).
@@ -159,6 +151,29 @@ class RecordPaymentAction
                     $action->halt();
                 }
             });
+    }
+
+    /**
+     * Save a completed payment against $invoice (which issues the receipt).
+     * $channel is a key of channels(): mobile networks are stored as
+     * method mobile_money + provider. Also used by the front desk.
+     */
+    public static function record(Invoice $invoice, int $amount, string $channel, ?string $reference = null, ?string $date = null): Payment
+    {
+        $isMobile = isset(Payment::providerLabels()[$channel]);
+
+        return Payment::create([
+            'invoice_id' => $invoice->id,
+            'amount' => $amount,
+            'currency' => $invoice->currency,
+            'payment_date' => $date ?? today()->toDateString(),
+            'method' => $isMobile ? Payment::METHOD_MOBILE_MONEY : $channel,
+            'mobile_money_provider' => $isMobile ? $channel : null,
+            'transaction_id' => $isMobile ? $reference : null,
+            'reference_number' => $isMobile ? null : $reference,
+            'received_by_user_id' => auth()->id(),
+            'status' => Payment::STATUS_COMPLETED,
+        ]);
     }
 
     /** The invoice this action is tied to, if any (and still open). */
@@ -209,12 +224,10 @@ class RecordPaymentAction
     /** "INV-2026-000012 · Hassan Omar · A4 · balance TZS 750,000" */
     private static function describe(Invoice $invoice): string
     {
-        $renter = $invoice->lease?->renter;
-
         return collect([
             $invoice->invoice_number ?? __('Draft invoice'),
-            $renter !== null ? $renter->display_name : null,
-            $invoice->lease?->unit?->code,
+            $invoice->bill_to_name,
+            $invoice->unit_code,
             __('balance :amount', ['amount' => $invoice->formatted_balance]),
         ])->filter()->implode(' · ');
     }
@@ -223,7 +236,6 @@ class RecordPaymentAction
     {
         // Issued by PaymentObserver when the payment was created.
         $receipt = $payment->receipt;
-        $renter = $invoice->lease?->renter;
 
         Notification::make()
             ->success()
@@ -231,7 +243,7 @@ class RecordPaymentAction
             ->body(collect([
                 __(':amount from :renter', [
                     'amount' => $payment->formatted_amount,
-                    'renter' => $renter !== null ? $renter->display_name : __('the renter'),
+                    'renter' => $invoice->bill_to_name,
                 ]),
                 $receipt !== null ? __('Receipt :number', ['number' => $receipt->receipt_number]) : null,
             ])->filter()->implode(' · '))

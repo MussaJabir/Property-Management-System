@@ -8,6 +8,7 @@ use App\Filament\Operator\Pages\Auth\EditOperatorProfile;
 use App\Filament\Operator\Pages\Dashboard;
 use App\Filament\Operator\Widgets\CollectionsChartWidget;
 use App\Filament\Operator\Widgets\ComingUpWidget;
+use App\Filament\Operator\Widgets\FrontDeskTodayWidget;
 use App\Filament\Operator\Widgets\GettingStartedWidget;
 use App\Filament\Operator\Widgets\NeedsAttentionWidget;
 use App\Filament\Operator\Widgets\RecentPaymentsWidget;
@@ -127,6 +128,8 @@ class OperatorPanelProvider extends PanelProvider
                 // coming up), then billed vs collected + latest payments.
                 // Getting-started only renders until the workspace is set up.
                 WorkspaceOverviewWidget::class,
+                // Only for workspaces with short-stay rooms.
+                FrontDeskTodayWidget::class,
                 NeedsAttentionWidget::class,
                 ComingUpWidget::class,
                 CollectionsChartWidget::class,
