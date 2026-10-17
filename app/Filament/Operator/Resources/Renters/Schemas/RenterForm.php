@@ -74,6 +74,7 @@ class RenterForm
 
                 Section::make('Identification')
                     ->description('Stored encrypted. Visible only to authorized operators.')
+                    ->collapsed(fn (string $operation): bool => $operation === 'create')
                     ->columns(2)
                     ->components([
                         TextInput::make('nida_number')

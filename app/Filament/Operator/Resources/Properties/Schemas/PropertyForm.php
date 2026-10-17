@@ -55,7 +55,9 @@ class PropertyForm
                                 'inactive' => 'Inactive — hidden from listings',
                             ])
                             ->default('active')
-                            ->native(false),
+                            ->native(false)
+                            // New properties start active; change it later.
+                            ->hiddenOn('create'),
 
                         Textarea::make('address')
                             ->label('Street address')
@@ -71,6 +73,7 @@ class PropertyForm
 
                 Section::make('Photos')
                     ->description('Square or landscape photos work best. Max 5 MB each.')
+                    ->collapsed(fn (string $operation): bool => $operation === 'create')
                     ->components([
                         SpatieMediaLibraryFileUpload::make('photos')
                             ->hiddenLabel()
