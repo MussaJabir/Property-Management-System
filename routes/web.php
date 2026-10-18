@@ -3,6 +3,7 @@
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Operator\OperatorActivationController;
 use App\Http\Controllers\Portal\LocaleController;
+use App\Http\Controllers\PwaController;
 use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,11 @@ Route::get('/', function () {
 })->name('home');
 
 Route::post('locale', LocaleController::class)->name('locale.switch');
+
+// Installable app (PWA). Registered before the /{tenant} routes so these
+// single-segment paths aren't taken for a client slug.
+Route::get('service-worker.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-worker');
+Route::get('manage/manifest.webmanifest', [PwaController::class, 'operatorManifest'])->name('pwa.operator-manifest');
 
 // Onboarding tour: mark finished/skipped for the signed-in operator (web guard).
 // No `auth` middleware needed — the controller stamps only the currently

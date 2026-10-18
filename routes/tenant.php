@@ -6,6 +6,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\Portal\LogoutController;
 use App\Http\Controllers\Portal\ReceiptDownloadController;
+use App\Http\Controllers\PwaController;
 use App\Http\Controllers\Rating\RenterRatingController;
 use App\Http\Controllers\Rating\StayRatingController;
 use App\Http\Middleware\EnsurePlanFeature;
@@ -62,6 +63,7 @@ Route::middleware([
     /* ----- Renter portal (Phase 8) ----- */
     Route::prefix('portal')->name('portal.')->middleware(EnsurePlanFeature::class.':renter_portal')->group(function () {
         // Guests
+        Route::get('manifest.webmanifest', [PwaController::class, 'portalManifest'])->name('manifest');
         Route::get('login', Login::class)->name('login');
         Route::get('activate/{user}/{token}', Activate::class)->name('activate');
 
