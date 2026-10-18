@@ -53,5 +53,26 @@
                 </div>
             </dl>
         </div>
+
+        {{-- Plain form post (not Livewire): tenancy is set by the URL. --}}
+        <div class="mt-6 rounded-xl bg-white p-5 shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">{{ __('How are we doing?') }}</h2>
+            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                @if ($rating)
+                    {{ __('You rated us :score out of 5. You can change it any time.', ['score' => $rating->score]) }}
+                @else
+                    {{ __('Rate living here from 1 to 5. Your landlord sees it with your name.') }}
+                @endif
+            </p>
+            <form method="POST" action="{{ route('portal.rating.store', ['tenant' => tenant('id')]) }}" class="mt-3 space-y-3">
+                @csrf
+                @include('rating._stars', ['score' => $rating?->score])
+                <textarea name="comment" rows="3" maxlength="2000" placeholder="{{ __('Anything to tell us? (optional)') }}"
+                    class="block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950">{{ old('comment', $rating?->comment) }}</textarea>
+                <button type="submit" class="rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90" style="background-color: var(--brand);">
+                    {{ $rating ? __('Update my rating') : __('Send my rating') }}
+                </button>
+            </form>
+        </div>
     @endif
 </div>
