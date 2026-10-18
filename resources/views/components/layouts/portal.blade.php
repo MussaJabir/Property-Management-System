@@ -80,6 +80,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
     <style>:root { --brand: {{ $brand }}; --pms-tour-accent: {{ $brand }}; --pms-tour-accent-hover: {{ $brand }}; }</style>
+    {{-- Installable renter app, on portal pages only (not the guest rating page). --}}
+    @if ($clientSlug && request()->is($clientSlug.'/portal*'))
+        @include('pwa.head', ['manifest' => url('/'.$clientSlug.'/portal/manifest.webmanifest'), 'theme' => $brand, 'title' => $client?->name])
+    @endif
 </head>
 <body class="min-h-screen bg-zinc-50 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
 
@@ -164,6 +168,10 @@
         window.pmsOnboarding = @json($portalTourConfig, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
     </script>
     @vite('resources/js/onboarding.js')
+@endif
+
+@if ($authenticated && $user)
+    @include('pwa.install', ['name' => $client?->name])
 @endif
 
 @fluxScripts
