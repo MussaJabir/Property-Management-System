@@ -6,6 +6,7 @@ use App\Filament\Auth\Login;
 use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Pages\Auth\EditOperatorProfile;
 use App\Filament\Operator\Pages\Dashboard;
+use App\Filament\Operator\Pages\SendFeedback;
 use App\Filament\Operator\Widgets\CollectionsChartWidget;
 use App\Filament\Operator\Widgets\ComingUpWidget;
 use App\Filament\Operator\Widgets\FrontDeskTodayWidget;
@@ -117,6 +118,10 @@ class OperatorPanelProvider extends PanelProvider
                 fn (): Htmlable => view('filament.operator.onboarding-tour'),
             )
             ->userMenuItems([
+                MenuItem::make()
+                    ->label(__('Send feedback to BJP'))
+                    ->icon(Heroicon::OutlinedChatBubbleLeftEllipsis)
+                    ->url(fn (): string => SendFeedback::getUrl()),
                 MenuItem::make()
                     ->label(__('common.onboarding.replay'))
                     ->icon(Heroicon::OutlinedMap)
