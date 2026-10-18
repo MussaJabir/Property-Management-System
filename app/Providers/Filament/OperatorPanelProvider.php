@@ -102,6 +102,16 @@ class OperatorPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_START,
                 fn (): Htmlable => new HtmlString("<script>try{if(localStorage.getItem('pms-nav-layout')!=='2026-10'){localStorage.removeItem('collapsedGroups');localStorage.setItem('pms-nav-layout','2026-10');}}catch(e){}</script>"),
             )
+            // Installable app (PWA): manifest, icons, service worker.
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): Htmlable => view('pwa.head', ['manifest' => '/manage/manifest.webmanifest']),
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                // Signed-in staff only, not on the login page.
+                fn (): Htmlable => auth()->check() ? view('pwa.install', ['name' => 'PMS']) : new HtmlString(''),
+            )
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,
                 fn (): Htmlable => view('filament.operator.plan-usage'),
