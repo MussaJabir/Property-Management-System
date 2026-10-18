@@ -3,6 +3,7 @@
 namespace App\Filament\Operator\Pages;
 
 use App\Filament\Operator\Navigation\NavGroup;
+use App\Filament\Operator\Support\ShortStays;
 use App\Models\Client;
 use App\Models\Subscription;
 use App\Services\RentInvoiceGenerator;
@@ -12,11 +13,13 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
@@ -92,6 +95,8 @@ class WorkspaceSettings extends Page implements HasForms
             'brand_primary_color' => $this->client->brand_primary_color,
             'default_locale' => $this->client->settings['default_locale'] ?? 'en',
             'auto_invoices' => RentInvoiceGenerator::enabledFor($this->client),
+            'check_in_time' => ShortStays::checkInTime($this->client),
+            'check_out_time' => ShortStays::checkOutTime($this->client),
         ]);
     }
 
@@ -150,6 +155,24 @@ class WorkspaceSettings extends Page implements HasForms
                                     ])
                                     ->default('en')
                                     ->native(false),
+
+                                Grid::make(2)
+                                    ->visible(fn (): bool => ShortStays::enabled())
+                                    ->schema([
+                                        TimePicker::make('check_in_time')
+                                            ->label(__('Guests check in from'))
+                                            ->seconds(false)
+                                            ->native(false)
+                                            ->format('H:i')
+                                            ->displayFormat('H:i'),
+                                        TimePicker::make('check_out_time')
+                                            ->label(__('Guests check out by'))
+                                            ->seconds(false)
+                                            ->native(false)
+                                            ->format('H:i')
+                                            ->displayFormat('H:i')
+                                            ->helperText(__('Guests still in after this on their last day show as late at the front desk.')),
+                                    ]),
 
                                 Toggle::make('auto_invoices')
                                     ->label(__('Create rent invoices automatically'))
@@ -214,6 +237,10 @@ class WorkspaceSettings extends Page implements HasForms
         $settings = $this->client->settings ?? [];
         $settings['default_locale'] = $data['default_locale'] ?? 'en';
         $settings['auto_invoices'] = (bool) ($data['auto_invoices'] ?? true);
+        if (ShortStays::enabled()) {
+            $settings['check_in_time'] = $data['check_in_time'] ?? ShortStays::DEFAULT_CHECK_IN;
+            $settings['check_out_time'] = $data['check_out_time'] ?? ShortStays::DEFAULT_CHECK_OUT;
+        }
 
         $this->client->update([
             'name' => $data['name'],

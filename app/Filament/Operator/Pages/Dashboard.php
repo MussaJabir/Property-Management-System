@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Operator\Pages;
 
+use App\Filament\Operator\Actions\FrontDeskActions;
 use App\Filament\Operator\Actions\RecordPaymentAction;
 use App\Filament\Operator\Resources\Invoices\InvoiceResource;
 use App\Filament\Operator\Resources\Renters\RenterResource;
+use App\Filament\Operator\Support\ShortStays;
+use App\Models\Unit;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -61,6 +64,11 @@ class Dashboard extends BaseDashboard
     {
         return [
             RecordPaymentAction::make(),
+
+            // Front desk workspaces: walk-in check-in from Today too.
+            FrontDeskActions::walkIn('checkInGuest')
+                ->color('gray')
+                ->visible(fn (): bool => ShortStays::enabled() && Unit::query()->shortStay()->exists()),
 
             Action::make('addRenter')
                 ->label(__('Add renter'))

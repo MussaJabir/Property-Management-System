@@ -26,6 +26,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * surfaces a unit with no photos falls back to its property's photos so a
  * listing is never imageless — see coverImageUrl().
  *
+ * rental_mode says how it is let: long_term (leases), short_stay (bookings
+ * by the night at nightly_rate) or both.
+ *
+ * @property string $rental_mode
+ * @property int|null $nightly_rate
  * @property-read Property|null $property
  */
 class Unit extends Model implements HasMedia
@@ -59,6 +64,12 @@ class Unit extends Model implements HasMedia
     public const STATUS_MAINTENANCE = 'maintenance';
 
     public const STATUS_RESERVED = 'reserved';
+
+    public const RENTAL_LONG_TERM = 'long_term';
+
+    public const RENTAL_SHORT_STAY = 'short_stay';
+
+    public const RENTAL_BOTH = 'both';
 
     public const BILLING_MONTHLY = 'monthly';
 
@@ -98,6 +109,8 @@ class Unit extends Model implements HasMedia
         'billing_cycle',
         'billing_cycle_months',
         'status',
+        'rental_mode',
+        'nightly_rate',
         'bedrooms',
         'bathrooms',
         'size_sqm',
@@ -109,6 +122,7 @@ class Unit extends Model implements HasMedia
     {
         return [
             'rent_amount' => 'integer',
+            'nightly_rate' => 'integer',
             'bedrooms' => 'integer',
             'bathrooms' => 'integer',
             'size_sqm' => 'decimal:2',
@@ -159,6 +173,27 @@ class Unit extends Model implements HasMedia
     public function leases(): HasMany
     {
         return $this->hasMany(Lease::class);
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /** Can be booked by the night (short stays). */
+    public function takesShortStays(): bool
+    {
+        return in_array($this->rental_mode, [self::RENTAL_SHORT_STAY, self::RENTAL_BOTH], true);
+    }
+
+    /** @return array<string, string> */
+    public static function rentalModeOptions(): array
+    {
+        return [
+            self::RENTAL_LONG_TERM => __('Long-term (leases)'),
+            self::RENTAL_SHORT_STAY => __('Short stays (by the night)'),
+            self::RENTAL_BOTH => __('Both'),
+        ];
     }
 
     /* ----- Media ----- */
@@ -231,6 +266,11 @@ class Unit extends Model implements HasMedia
 
     /* ----- Display helpers ----- */
 
+    public function getFormattedNightlyRateAttribute(): string
+    {
+        return $this->rent_currency.' '.number_format(((int) $this->nightly_rate) / 100, 0, '.', ',');
+    }
+
     public function getFormattedRentAttribute(): string
     {
         $major = $this->rent_amount / 100;
@@ -248,6 +288,18 @@ class Unit extends Model implements HasMedia
     public function scopeOccupied(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_OCCUPIED);
+    }
+
+    /** Units that can be let on a lease (long-term or both). */
+    public function scopeLongTerm(Builder $query): Builder
+    {
+        return $query->whereIn('rental_mode', [self::RENTAL_LONG_TERM, self::RENTAL_BOTH]);
+    }
+
+    /** Units that can be booked by the night (short stay or both). */
+    public function scopeShortStay(Builder $query): Builder
+    {
+        return $query->whereIn('rental_mode', [self::RENTAL_SHORT_STAY, self::RENTAL_BOTH]);
     }
 
     /**

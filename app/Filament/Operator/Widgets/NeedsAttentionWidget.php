@@ -30,7 +30,7 @@ class NeedsAttentionWidget extends Widget implements HasActions, HasSchemas
 
     protected string $view = 'filament.operator.widgets.needs-attention';
 
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 2;
 
     protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 3];
 
@@ -54,17 +54,16 @@ class NeedsAttentionWidget extends Widget implements HasActions, HasSchemas
 
         $overdueQuery = Invoice::query()->overdue();
         $overdue = (clone $overdueQuery)
-            ->with(['lease.renter', 'lease.unit.property'])
+            ->with(['lease.renter', 'lease.unit.property', 'booking.guest', 'booking.unit.property'])
             ->orderBy('due_date')
             ->limit(self::LIMIT)
             ->get()
             ->map(function (Invoice $invoice) use ($canPay): array {
-                $renter = $invoice->lease?->renter;
-                $unit = $invoice->lease?->unit;
+                $unit = $invoice->lease->unit ?? $invoice->booking->unit ?? null;
                 $daysLate = $invoice->due_date ? (int) $invoice->due_date->diffInDays(today()) : 0;
 
                 return [
-                    'who' => $renter !== null ? $renter->display_name : __('Unknown renter'),
+                    'who' => $invoice->bill_to_name,
                     'sub' => collect([$unit?->code, $unit?->property?->name, $invoice->formatted_balance])->filter()->implode(' · '),
                     'pill' => trans_choice(':count day late|:count days late', $daysLate),
                     'tone' => $daysLate > 7 ? 'danger' : 'warning',

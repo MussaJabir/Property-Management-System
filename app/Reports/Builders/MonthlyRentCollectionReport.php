@@ -47,7 +47,9 @@ class MonthlyRentCollectionReport implements ReportBuilder
             ->whereBetween('payment_date', [$this->from->toDateString(), $this->to->toDateString()]);
 
         if ($this->propertyId) {
-            $query->whereHas('invoice.lease.unit', fn ($q) => $q->where('property_id', $this->propertyId));
+            $query->whereHas('invoice', fn ($i) => $i
+                ->whereHas('lease.unit', fn ($u) => $u->where('property_id', $this->propertyId))
+                ->orWhereHas('booking.unit', fn ($u) => $u->where('property_id', $this->propertyId)));
         }
 
         $payments = $query->get(['payment_date', 'amount']);
@@ -74,7 +76,9 @@ class MonthlyRentCollectionReport implements ReportBuilder
             ->whereBetween('payment_date', [$this->from->toDateString(), $this->to->toDateString()]);
 
         if ($this->propertyId) {
-            $query->whereHas('invoice.lease.unit', fn ($q) => $q->where('property_id', $this->propertyId));
+            $query->whereHas('invoice', fn ($i) => $i
+                ->whereHas('lease.unit', fn ($u) => $u->where('property_id', $this->propertyId))
+                ->orWhereHas('booking.unit', fn ($u) => $u->where('property_id', $this->propertyId)));
         }
 
         $total = (int) $query->sum('amount');
