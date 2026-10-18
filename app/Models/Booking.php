@@ -96,6 +96,11 @@ class Booking extends Model
         return $this->belongsTo(Guest::class);
     }
 
+    public function rating(): HasOne
+    {
+        return $this->hasOne(Rating::class);
+    }
+
     public function invoice(): HasOne
     {
         // Not latestOfMany(): it aggregates MAX(id), which Postgres lacks for uuid.

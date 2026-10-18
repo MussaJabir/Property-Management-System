@@ -43,6 +43,7 @@ class Dashboard extends Component
             'lease' => $lease,
             'nextDue' => $nextDue,
             'outstanding' => 'TZS '.number_format($outstandingCents / 100, 0, '.', ','),
+            'rating' => $lease?->rating,
         ]);
     }
 }

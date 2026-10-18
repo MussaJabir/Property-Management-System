@@ -75,6 +75,7 @@ class BookingsTable
                 ActionGroup::make([
                     FrontDeskActions::extend(),
                     FrontDeskActions::noShow(),
+                    FrontDeskActions::askForRating(),
                     Action::make('openBill')
                         ->label(__('Open bill'))
                         ->icon(Heroicon::OutlinedDocumentText)

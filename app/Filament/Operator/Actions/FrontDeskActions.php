@@ -6,7 +6,9 @@ namespace App\Filament\Operator\Actions;
 
 use App\Exceptions\RoomNotAvailable;
 use App\Filament\Operator\Resources\Bookings\BookingResource;
+use App\Http\Controllers\Rating\StayRatingController;
 use App\Models\Booking;
+use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Lease;
 use App\Models\Payment;
@@ -268,7 +270,8 @@ final class FrontDeskActions
                     ->title(__(':guest checked out', ['guest' => $booking?->guest?->full_name]))
                     ->body($invoice !== null && $balance > 0 ? __('Still owed: :balance', ['balance' => $invoice->formatted_balance]) : null);
                 ($balance > 0 ? $notification->warning() : $notification->success())
-                    ->actions(self::receiptActions($payment))
+                    ->actions([...self::receiptActions($payment), ...($booking !== null ? [self::askForRatingLink($booking)] : [])])
+                    ->persistent()
                     ->send();
                 self::refresh($livewire);
             });
@@ -319,6 +322,42 @@ final class FrontDeskActions
                     ->send();
                 self::refresh($livewire);
             });
+    }
+
+    /** Table row: send a checked-out guest the rating link on WhatsApp. */
+    public static function askForRating(string $name = 'askForRating'): Action
+    {
+        return Action::make($name)
+            ->label(__('Ask for a rating'))
+            ->icon(Heroicon::OutlinedStar)
+            ->authorize(fn (): bool => BookingResource::canCreate())
+            ->visible(fn (?Model $record, array $arguments): bool => ($booking = self::booking($record, $arguments)) !== null
+                && $booking->status === Booking::STATUS_CHECKED_OUT && $booking->rating === null)
+            ->url(fn (?Model $record, array $arguments): ?string => ($booking = self::booking($record, $arguments)) !== null ? self::whatsAppRatingUrl($booking) : null, shouldOpenInNewTab: true);
+    }
+
+    /**
+     * WhatsApp chat with the guest, message prefilled with their signed
+     * rating link (StayRatingController).
+     */
+    public static function whatsAppRatingUrl(Booking $booking): string
+    {
+        $client = Client::find($booking->tenant_id);
+        $message = __('Asante for staying with :client! How was your stay? Please rate us here: :link', [
+            'client' => $client !== null ? $client->name : '',
+            'link' => StayRatingController::linkFor($booking),
+        ]);
+
+        return 'https://wa.me/'.preg_replace('/\D+/', '', (string) $booking->guest?->phone).'?text='.rawurlencode($message);
+    }
+
+    private static function askForRatingLink(Booking $booking): Action
+    {
+        return Action::make('askForRating')
+            ->label(__('Ask for a rating on WhatsApp'))
+            ->button()
+            ->color('gray')
+            ->url(self::whatsAppRatingUrl($booking), shouldOpenInNewTab: true);
     }
 
     public static function cancel(string $name = 'cancelBooking'): Action

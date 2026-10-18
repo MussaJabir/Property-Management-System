@@ -6,6 +6,8 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\Portal\LogoutController;
 use App\Http\Controllers\Portal\ReceiptDownloadController;
+use App\Http\Controllers\Rating\RenterRatingController;
+use App\Http\Controllers\Rating\StayRatingController;
 use App\Http\Middleware\EnsurePlanFeature;
 use App\Http\Middleware\EnsureRenterAuthenticated;
 use App\Http\Middleware\EnsureTenantActive;
@@ -49,6 +51,14 @@ Route::middleware([
     Route::get('/news', PublicPage::class)->defaults('slug', 'news')->name('public.news');
     Route::get('/contact', PublicPage::class)->defaults('slug', 'contact')->name('public.contact');
 
+    /* ----- Guest rating (Phase 4): signed link shared at check-out ----- */
+    Route::get('/rate/{booking}', [StayRatingController::class, 'show'])
+        ->middleware(['signed', 'throttle:30,1'])
+        ->name('rate.stay');
+    Route::post('/rate/{booking}', [StayRatingController::class, 'store'])
+        ->middleware(['signed', 'throttle:10,1'])
+        ->name('rate.stay.store');
+
     /* ----- Renter portal (Phase 8) ----- */
     Route::prefix('portal')->name('portal.')->middleware(EnsurePlanFeature::class.':renter_portal')->group(function () {
         // Guests
@@ -64,6 +74,7 @@ Route::middleware([
             Route::get('maintenance/create', MaintenanceCreate::class)->name('maintenance.create');
             Route::get('maintenance/{request}', MaintenanceShow::class)->name('maintenance.show');
             Route::get('profile', Profile::class)->name('profile');
+            Route::post('rating', RenterRatingController::class)->middleware('throttle:10,1')->name('rating.store');
             Route::post('locale', LocaleController::class)->name('locale.switch');
             Route::post('logout', LogoutController::class)->name('logout');
 
