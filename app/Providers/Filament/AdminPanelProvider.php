@@ -6,6 +6,7 @@ use App\Filament\Admin\Widgets\ClientsByPlanChartWidget;
 use App\Filament\Admin\Widgets\PlatformOverviewWidget;
 use App\Filament\Admin\Widgets\RecentClientsWidget;
 use App\Filament\Auth\Login;
+use App\Http\Controllers\Admin\FeedbackScreenshotController;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -19,6 +20,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /**
@@ -53,6 +55,11 @@ class AdminPanelProvider extends PanelProvider
                 ClientsByPlanChartWidget::class,
                 RecentClientsWidget::class,
             ])
+            ->authenticatedRoutes(function (): void {
+                Route::get('feedback/{report}/screenshot', FeedbackScreenshotController::class)
+                    ->whereNumber('report')
+                    ->name('feedback.screenshot');
+            })
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
