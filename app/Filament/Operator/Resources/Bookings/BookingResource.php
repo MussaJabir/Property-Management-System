@@ -62,7 +62,7 @@ class BookingResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['guest', 'unit.property', 'invoice']);
+        return parent::getEloquentQuery()->with(['guest', 'unit.property', 'invoice', 'rating']);
     }
 
     public static function getPages(): array
