@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Operator\Widgets;
 
 use App\Filament\Operator\Actions\RecordPaymentAction;
+use App\Filament\Operator\Actions\RequestPaymentAction;
 use App\Filament\Operator\Resources\Invoices\InvoiceResource;
 use App\Filament\Operator\Resources\MaintenanceRequests\MaintenanceRequestResource;
 use App\Filament\Operator\Resources\Payments\PaymentResource;
@@ -40,6 +41,12 @@ class NeedsAttentionWidget extends Widget implements HasActions, HasSchemas
     public function recordPaymentAction(): Action
     {
         return RecordPaymentAction::make()->size('sm');
+    }
+
+    /** Mobile money prompt for an overdue row, when Selcom is on. */
+    public function requestPaymentAction(): Action
+    {
+        return RequestPaymentAction::make()->size('sm')->link();
     }
 
     public static function canView(): bool

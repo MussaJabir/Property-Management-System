@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\Portal\LogoutController;
+use App\Http\Controllers\Portal\PayInvoiceController;
 use App\Http\Controllers\Portal\ReceiptDownloadController;
 use App\Http\Controllers\PwaController;
 use App\Http\Controllers\Rating\RenterRatingController;
@@ -72,6 +73,7 @@ Route::middleware([
             Route::get('/', Dashboard::class)->name('dashboard');
             Route::get('invoices', InvoicesIndex::class)->name('invoices.index');
             Route::get('invoices/{invoice}/receipt/{receipt}', ReceiptDownloadController::class)->name('invoices.receipt');
+            Route::post('invoices/{invoice}/pay', PayInvoiceController::class)->middleware('throttle:6,1')->name('invoices.pay');
             Route::get('maintenance', MaintenanceIndex::class)->name('maintenance.index');
             Route::get('maintenance/create', MaintenanceCreate::class)->name('maintenance.create');
             Route::get('maintenance/{request}', MaintenanceShow::class)->name('maintenance.show');
