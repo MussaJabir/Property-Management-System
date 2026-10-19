@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Operator\Pages;
 
 use App\Filament\Operator\Actions\FrontDeskActions;
+use App\Filament\Operator\Actions\RequestPaymentAction;
 use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Bookings\BookingResource;
 use App\Filament\Operator\Resources\Units\UnitResource;
@@ -99,6 +100,18 @@ class FrontDesk extends Page
     public function stayExtendAction(): Action
     {
         return FrontDeskActions::extend('stayExtend')->size('sm')->link();
+    }
+
+    /** Mobile money prompt for what a staying guest owes, when Selcom is on. */
+    public function stayRequestPaymentAction(): Action
+    {
+        return RequestPaymentAction::make('stayRequestPayment')->size('sm')->link();
+    }
+
+    /** Ask Selcom now whether a sent prompt has been paid. */
+    public function stayCheckPaymentAction(): Action
+    {
+        return RequestPaymentAction::check('stayCheckPayment')->size('sm')->link();
     }
 
     /** @return array<string, mixed> */

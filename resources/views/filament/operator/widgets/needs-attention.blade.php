@@ -25,7 +25,10 @@
                             <small>{{ $row['sub'] }}</small>
                         </div>
                         @if ($row['pay'])
-                            {{ ($this->recordPaymentAction)(['invoice' => $row['pay']]) }}
+                            <div class="pms-item-actions">
+                                {{ ($this->recordPaymentAction)(['invoice' => $row['pay']]) }}
+                                {{ ($this->requestPaymentAction)(['invoice' => $row['pay']]) }}
+                            </div>
                         @elseif ($row['url'])
                             <x-filament::button tag="a" :href="$row['url']" size="sm" :color="$row['primary'] ? 'primary' : 'gray'">
                                 {{ $row['action'] }}

@@ -42,4 +42,13 @@ return [
         'endpoint' => env('BEEM_ENDPOINT', 'https://apisms.beem.africa/v1/send'),
     ],
 
+    // Selcom Checkout API. Each client brings its own vendor ID, key and
+    // secret (Settings → Payments); only Selcom's addresses live here.
+    // Selcom gives these out with the API keys, so there are no defaults.
+    'selcom' => [
+        'sandbox_url' => env('SELCOM_SANDBOX_URL'),
+        'live_url' => env('SELCOM_LIVE_URL'),
+        'timeout' => (int) env('SELCOM_TIMEOUT', 30),
+    ],
+
 ];

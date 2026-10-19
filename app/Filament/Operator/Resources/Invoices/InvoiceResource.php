@@ -6,6 +6,7 @@ use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Operator\Resources\Invoices\Pages\EditInvoice;
 use App\Filament\Operator\Resources\Invoices\Pages\ListInvoices;
+use App\Filament\Operator\Resources\Invoices\RelationManagers\PaymentRequestsRelationManager;
 use App\Filament\Operator\Resources\Invoices\RelationManagers\PaymentsRelationManager;
 use App\Filament\Operator\Resources\Invoices\Schemas\InvoiceForm;
 use App\Filament\Operator\Resources\Invoices\Tables\InvoicesTable;
@@ -92,6 +93,7 @@ class InvoiceResource extends Resource
     {
         return [
             PaymentsRelationManager::class,
+            PaymentRequestsRelationManager::class,
         ];
     }
 

@@ -3,6 +3,7 @@
 namespace App\Filament\Operator\Resources\Invoices\Tables;
 
 use App\Filament\Operator\Actions\RecordPaymentAction;
+use App\Filament\Operator\Actions\RequestPaymentAction;
 use App\Models\Invoice;
 use App\Services\InvoicePdfGenerator;
 use Filament\Actions\Action;
@@ -102,6 +103,10 @@ class InvoicesTable
 
                 RecordPaymentAction::make()
                     ->visible(fn (Invoice $record): bool => $record->isOutstanding()),
+
+                RequestPaymentAction::make(),
+
+                RequestPaymentAction::check(),
 
                 ActionGroup::make([
                     EditAction::make(),

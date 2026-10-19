@@ -64,8 +64,12 @@
                         <small>{{ $booking->unit?->code }} · {{ __('since :date', ['date' => $booking->check_in_date->format('D d/m')]) }}</small>
                     </div>
                     @if ($canWork)
-                        {{ ($this->stayExtendAction)(['booking' => $booking->id]) }}
-                        {{ ($this->stayCheckOutAction)(['booking' => $booking->id]) }}
+                        <div class="pms-item-actions">
+                            {{ ($this->stayExtendAction)(['booking' => $booking->id]) }}
+                            {{ ($this->stayRequestPaymentAction)(['booking' => $booking->id]) }}
+                            {{ ($this->stayCheckPaymentAction)(['booking' => $booking->id]) }}
+                            {{ ($this->stayCheckOutAction)(['booking' => $booking->id]) }}
+                        </div>
                     @endif
                 </div>
             @empty
@@ -117,6 +121,8 @@
                                     @case('occupied')
                                     @case('leaving')
                                         {{ ($this->stayExtendAction)(['booking' => $room['booking']->id]) }}
+                                        {{ ($this->stayRequestPaymentAction)(['booking' => $room['booking']->id]) }}
+                                        {{ ($this->stayCheckPaymentAction)(['booking' => $room['booking']->id]) }}
                                         {{ ($this->stayCheckOutAction)(['booking' => $room['booking']->id]) }}
                                         @break
                                 @endswitch
