@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Livewire\Portal\Invoices;
 
 use App\Models\Invoice;
+use App\Models\Renter;
+use App\Services\Payments\PaymentRequester;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -17,6 +19,17 @@ class Index extends Component
 
     public string $status = 'all';
 
+    /**
+     * Whether the workspace takes mobile money through Selcom. Worked out
+     * on the first (tenant-routed) render and kept for later updates.
+     */
+    public bool $canPayByPhone = false;
+
+    public function mount(): void
+    {
+        $this->canPayByPhone = PaymentRequester::available();
+    }
+
     public function updatingStatus(): void
     {
         $this->resetPage();
@@ -26,6 +39,7 @@ class Index extends Component
     public function render(): View
     {
         $user = Auth::guard('renter')->user();
+        $renter = $user?->renter;
         $leaseIds = $user->renter?->leases()->pluck('id') ?? collect();
 
         $query = Invoice::query()
@@ -41,6 +55,7 @@ class Index extends Component
 
         return view('livewire.portal.invoices.index', [
             'invoices' => $query->paginate(15),
+            'payerPhone' => $renter instanceof Renter ? (string) $renter->phone : null,
         ]);
     }
 }
