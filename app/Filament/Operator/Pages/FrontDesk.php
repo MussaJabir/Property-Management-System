@@ -108,6 +108,12 @@ class FrontDesk extends Page
         return RequestPaymentAction::make('stayRequestPayment')->size('sm')->link();
     }
 
+    /** Ask Selcom now whether a sent prompt has been paid. */
+    public function stayCheckPaymentAction(): Action
+    {
+        return RequestPaymentAction::check('stayCheckPayment')->size('sm')->link();
+    }
+
     /** @return array<string, mixed> */
     protected function getViewData(): array
     {

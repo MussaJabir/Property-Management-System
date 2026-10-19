@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\Payments\SelcomWebhookController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\Portal\LogoutController;
 use App\Http\Controllers\Portal\PayInvoiceController;
@@ -88,4 +89,16 @@ Route::middleware([
                 ->name('onboarding.complete');
         });
     });
+});
+
+/*
+| Selcom payment callback. Outside the `web` group (no session or CSRF; a
+| server-to-server POST) and without EnsureTenantActive, so a payment that
+| went through is still recorded for a suspended workspace.
+*/
+Route::middleware([
+    InitializeTenancyByPath::class,
+    'throttle:120,1',
+])->prefix('/{tenant}')->group(function () {
+    Route::post('/payments/selcom/webhook', SelcomWebhookController::class)->name('selcom.webhook');
 });

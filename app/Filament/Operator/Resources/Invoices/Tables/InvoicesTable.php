@@ -106,6 +106,8 @@ class InvoicesTable
 
                 RequestPaymentAction::make(),
 
+                RequestPaymentAction::check(),
+
                 ActionGroup::make([
                     EditAction::make(),
 

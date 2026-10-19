@@ -6,6 +6,7 @@ namespace App\Services\Payments;
 
 use App\Exceptions\PaymentRequestRefused;
 use App\Exceptions\SelcomUnavailable;
+use App\Http\Controllers\Payments\SelcomWebhookController;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\PaymentRequest;
@@ -21,7 +22,7 @@ use Throwable;
  * push USSD prompt to their phone, where they confirm with their PIN.
  *
  * The request stays pending here; Selcom's webhook and the status checks
- * (next PRs) record the payment once Selcom confirms it.
+ * settle it through PaymentConfirmer once Selcom confirms the payment.
  *
  * Callers must run inside the invoice's tenancy.
  */
@@ -194,6 +195,8 @@ class PaymentRequester
             'merchant_remarks' => $label,
             'no_of_items' => 1,
             'expiry' => self::ORDER_EXPIRY_MINUTES,
+            // Base64-encoded by SelcomClient, as Selcom requires.
+            'webhook' => SelcomWebhookController::url(),
         ];
     }
 

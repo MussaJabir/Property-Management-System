@@ -8,12 +8,15 @@ use App\Exceptions\PaymentRequestRefused;
 use App\Filament\Operator\Resources\Payments\PaymentResource;
 use App\Models\Booking;
 use App\Models\Invoice;
+use App\Models\PaymentRequest;
+use App\Services\Payments\PaymentConfirmer;
 use App\Services\Payments\PaymentRequester;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -22,7 +25,8 @@ use Illuminate\Database\Eloquent\Model;
  * when Selcom is switched on in Settings → Payments.
  *
  * Works on an invoice row (record = Invoice) or with an `invoice` or
- * `booking` argument (front desk).
+ * `booking` argument (front desk). `check()` is its companion: ask Selcom
+ * now whether a prompt that was sent has been paid.
  */
 class RequestPaymentAction
 {
@@ -80,6 +84,47 @@ class RequestPaymentAction
                     ->duration(12000)
                     ->send();
             });
+    }
+
+    /**
+     * "Check payment": shown while a prompt for the invoice is waiting.
+     * Payments are also picked up automatically; this is for the front
+     * desk that wants to know right now.
+     */
+    public static function check(string $name = 'checkPayment'): Action
+    {
+        return Action::make($name)
+            ->label(__('Check payment'))
+            ->icon(Heroicon::OutlinedArrowPath)
+            ->color('warning')
+            ->authorize(fn (): bool => PaymentResource::canCreate())
+            ->visible(fn (?Model $record, array $arguments): bool => ($invoice = self::invoice($record, $arguments)) !== null
+                && self::waiting($invoice)->exists())
+            ->action(function (?Model $record, array $arguments): void {
+                $invoice = self::invoice($record, $arguments);
+                $confirmer = app(PaymentConfirmer::class);
+
+                $outcomes = $invoice === null ? [] : self::waiting($invoice)->get()
+                    ->map(fn (PaymentRequest $request): string => $confirmer->confirm($request))
+                    ->all();
+
+                if (in_array(PaymentConfirmer::OUTCOME_PAID, $outcomes, true)) {
+                    Notification::make()->success()->title(__('Payment received'))
+                        ->body(__('It has been recorded and the receipt issued.'))->send();
+                } elseif (in_array(PaymentConfirmer::OUTCOME_PENDING, $outcomes, true)) {
+                    Notification::make()->warning()->title(__('Not paid yet'))
+                        ->body(__('The payer has not confirmed yet. It is recorded automatically once they do.'))->send();
+                } else {
+                    Notification::make()->danger()->title(__('Not paid'))
+                        ->body(__('The payer cancelled or the network declined. You can send a new prompt.'))->send();
+                }
+            });
+    }
+
+    /** @return Builder<PaymentRequest> */
+    private static function waiting(Invoice $invoice): Builder
+    {
+        return PaymentRequest::query()->where('invoice_id', $invoice->id)->pending();
     }
 
     private static function invoice(?Model $record, array $arguments): ?Invoice
