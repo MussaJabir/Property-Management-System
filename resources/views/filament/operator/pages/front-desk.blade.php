@@ -67,6 +67,7 @@
                         <div class="pms-item-actions">
                             {{ ($this->stayExtendAction)(['booking' => $booking->id]) }}
                             {{ ($this->stayRequestPaymentAction)(['booking' => $booking->id]) }}
+                            {{ ($this->stayCheckPaymentAction)(['booking' => $booking->id]) }}
                             {{ ($this->stayCheckOutAction)(['booking' => $booking->id]) }}
                         </div>
                     @endif
@@ -121,6 +122,7 @@
                                     @case('leaving')
                                         {{ ($this->stayExtendAction)(['booking' => $room['booking']->id]) }}
                                         {{ ($this->stayRequestPaymentAction)(['booking' => $room['booking']->id]) }}
+                                        {{ ($this->stayCheckPaymentAction)(['booking' => $room['booking']->id]) }}
                                         {{ ($this->stayCheckOutAction)(['booking' => $room['booking']->id]) }}
                                         @break
                                 @endswitch
