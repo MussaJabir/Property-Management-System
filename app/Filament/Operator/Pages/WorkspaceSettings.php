@@ -2,12 +2,16 @@
 
 namespace App\Filament\Operator\Pages;
 
+use App\Exceptions\SelcomUnavailable;
 use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Support\ShortStays;
 use App\Models\Client;
+use App\Models\SelcomAccount;
 use App\Models\Subscription;
+use App\Services\Payments\Selcom\SelcomClient;
 use App\Services\RentInvoiceGenerator;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -19,19 +23,21 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Workspace Settings — Owner-only Filament page. Consolidates everything a
  * landlord configures into one tabbed screen: business profile, branding,
- * preferences, account security (password), and a read-only view of their
- * PMS subscription.
+ * preferences, Selcom payment keys, account security (password), and a
+ * read-only view of their PMS subscription.
  */
 class WorkspaceSettings extends Page implements HasForms
 {
@@ -53,6 +59,8 @@ class WorkspaceSettings extends Page implements HasForms
     public ?Client $client = null;
 
     public ?Subscription $subscription = null;
+
+    public ?SelcomAccount $selcom = null;
 
     public static function canAccess(): bool
     {
@@ -87,6 +95,8 @@ class WorkspaceSettings extends Page implements HasForms
             ->latest('started_at')
             ->first();
 
+        $this->selcom = SelcomAccount::forClient($this->client);
+
         $this->form->fill([
             'name' => $this->client->name,
             'contact_email' => $this->client->contact_email,
@@ -97,6 +107,9 @@ class WorkspaceSettings extends Page implements HasForms
             'auto_invoices' => RentInvoiceGenerator::enabledFor($this->client),
             'check_in_time' => ShortStays::checkInTime($this->client),
             'check_out_time' => ShortStays::checkOutTime($this->client),
+            'selcom_enabled' => $this->selcom !== null && $this->selcom->enabled,
+            'selcom_mode' => $this->selcom->mode ?? SelcomAccount::MODE_SANDBOX,
+            'selcom_vendor' => $this->selcom?->vendor,
         ]);
     }
 
@@ -179,6 +192,10 @@ class WorkspaceSettings extends Page implements HasForms
                                     ->helperText(__('Each active lease gets its rent invoice when a new period starts, and its first invoice (with the deposit) when it is activated.')),
                             ]),
 
+                        Tab::make(__('Payments'))
+                            ->icon('heroicon-o-device-phone-mobile')
+                            ->schema($this->paymentsTab()),
+
                         Tab::make('Security')
                             ->icon('heroicon-o-lock-closed')
                             ->schema([
@@ -226,6 +243,175 @@ class WorkspaceSettings extends Page implements HasForms
             ]);
     }
 
+    /**
+     * Selcom keys. The key and secret are never shown again once saved;
+     * leaving them blank keeps the saved ones. Payments can only be turned
+     * on after Test connection has worked with the saved keys.
+     *
+     * @return array<int, mixed>
+     */
+    private function paymentsTab(): array
+    {
+        $savedHint = fn (): ?string => $this->selcom?->hasCredentials() ? __('Saved. Leave blank to keep it.') : null;
+
+        return [
+            Placeholder::make('selcom_intro')
+                ->label('')
+                ->content(__('Let renters and guests pay invoices by mobile money through your own Selcom merchant account. Money goes straight to your Selcom account; ask Selcom for your vendor ID, API key and API secret.')),
+
+            Placeholder::make('selcom_status')
+                ->label(__('Connection'))
+                ->content(fn (): string => $this->selcomStatus()),
+
+            Select::make('selcom_mode')
+                ->label(__('Account type'))
+                ->options([
+                    SelcomAccount::MODE_SANDBOX => __('Sandbox (testing, no real money)'),
+                    SelcomAccount::MODE_LIVE => __('Live (real payments)'),
+                ])
+                ->default(SelcomAccount::MODE_SANDBOX)
+                ->required()
+                ->native(false),
+
+            TextInput::make('selcom_vendor')
+                ->label(__('Vendor ID'))
+                ->maxLength(50),
+
+            Grid::make(2)->schema([
+                TextInput::make('selcom_api_key')
+                    ->label(__('API key'))
+                    ->password()
+                    ->revealable()
+                    ->autocomplete('off')
+                    ->maxLength(255)
+                    ->placeholder($savedHint),
+                TextInput::make('selcom_api_secret')
+                    ->label(__('API secret'))
+                    ->password()
+                    ->revealable()
+                    ->autocomplete('off')
+                    ->maxLength(255)
+                    ->placeholder($savedHint),
+            ]),
+
+            Actions::make([
+                Action::make('testSelcom')
+                    ->label(__('Test connection'))
+                    ->icon('heroicon-o-signal')
+                    ->color('gray')
+                    ->disabled(fn (): bool => ! $this->selcom?->hasCredentials())
+                    ->tooltip(fn (): ?string => $this->selcom?->hasCredentials() ? null : __('Save your keys first.'))
+                    ->action(fn () => $this->testSelcom()),
+            ]),
+
+            Toggle::make('selcom_enabled')
+                ->label(__('Take payments through Selcom'))
+                ->helperText(__('Shows "Request payment" on invoices. Works once Test connection has passed.')),
+        ];
+    }
+
+    private function selcomStatus(): string
+    {
+        if (! $this->selcom?->hasCredentials()) {
+            return __('Not set up');
+        }
+
+        if ($this->selcom->verified_at === null) {
+            return __('Keys saved, not tested yet');
+        }
+
+        return __('Connected (tested :date)', ['date' => $this->selcom->verified_at->format('d/m/Y H:i')]);
+    }
+
+    /**
+     * Ask Selcom for today's orders with the saved keys: a read-only call
+     * that only works when the vendor, key and secret are right.
+     */
+    public function testSelcom(): void
+    {
+        $account = $this->selcom;
+
+        if ($account === null || ! $account->hasCredentials()) {
+            Notification::make()->warning()->title(__('Save your Selcom keys first'))->send();
+
+            return;
+        }
+
+        try {
+            $today = Carbon::today();
+            $response = SelcomClient::for($account)->listOrders($today, $today);
+        } catch (SelcomUnavailable $e) {
+            Notification::make()->danger()->title(__('Connection failed'))->body($e->getMessage())->send();
+
+            return;
+        }
+
+        if (! $response->successful()) {
+            Notification::make()->danger()->title(__('Selcom refused the keys'))
+                ->body(trim($response->resultCode.' '.$response->message))->send();
+
+            return;
+        }
+
+        $account->forceFill(['verified_at' => now()])->save();
+
+        Notification::make()->success()->title(__('Connected to Selcom'))
+            ->body(__('You can now turn on payments through Selcom.'))->send();
+    }
+
+    /**
+     * Save the Payments tab. Changing the account type or any key clears
+     * the last test, and payments stay off until a test passes.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function saveSelcom(array $data): void
+    {
+        $vendor = filled($data['selcom_vendor'] ?? null) ? trim((string) $data['selcom_vendor']) : null;
+        $key = $this->data['selcom_api_key'] ?? null;
+        $secret = $this->data['selcom_api_secret'] ?? null;
+        $wantsEnabled = (bool) ($data['selcom_enabled'] ?? false);
+
+        $account = $this->selcom ?? new SelcomAccount;
+
+        if (! $account->exists && $vendor === null && blank($key) && blank($secret) && ! $wantsEnabled) {
+            return;
+        }
+
+        $account->forceFill(['tenant_id' => $this->client?->getKey()]);
+        $account->mode = (string) ($data['selcom_mode'] ?? SelcomAccount::MODE_SANDBOX);
+        $account->vendor = $vendor;
+        if (filled($key)) {
+            $account->api_key = trim((string) $key);
+        }
+        if (filled($secret)) {
+            $account->api_secret = trim((string) $secret);
+        }
+
+        // The encrypted casts re-encrypt on every set, so compare the
+        // plain values rather than trusting isDirty() for the key/secret.
+        $changed = $account->isDirty(['mode', 'vendor'])
+            || (filled($key) && $key !== $account->getOriginal('api_key'))
+            || (filled($secret) && $secret !== $account->getOriginal('api_secret'));
+
+        if ($changed) {
+            $account->verified_at = null;
+        }
+
+        $account->enabled = $wantsEnabled && $account->hasCredentials() && $account->verified_at !== null;
+        $account->save();
+
+        $this->selcom = $account;
+        $this->data['selcom_api_key'] = null;
+        $this->data['selcom_api_secret'] = null;
+        $this->data['selcom_enabled'] = $account->enabled;
+
+        if ($wantsEnabled && ! $account->enabled) {
+            Notification::make()->warning()->title(__('Selcom payments are still off'))
+                ->body(__('Press Test connection, then turn payments on and save again.'))->send();
+        }
+    }
+
     public function save(): void
     {
         if (! $this->client) {
@@ -250,6 +436,8 @@ class WorkspaceSettings extends Page implements HasForms
             'brand_primary_color' => $data['brand_primary_color'],
             'settings' => $settings,
         ]);
+
+        $this->saveSelcom($data);
 
         // Security tab: update the signed-in user's password if a new one was
         // entered. Fields are dehydrated(false), so read raw form state.
