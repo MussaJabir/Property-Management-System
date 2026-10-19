@@ -120,6 +120,12 @@ class Invoice extends Model
         return $this->hasMany(Payment::class);
     }
 
+    /** Mobile money prompts sent through Selcom for this invoice. */
+    public function paymentRequests(): HasMany
+    {
+        return $this->hasMany(PaymentRequest::class);
+    }
+
     /* ----- State machine ----- */
 
     public function isDraft(): bool

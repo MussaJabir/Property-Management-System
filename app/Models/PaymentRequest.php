@@ -115,6 +115,11 @@ class PaymentRequest extends Model
         return $this->status === self::STATUS_PENDING;
     }
 
+    public function isExpired(): bool
+    {
+        return $this->status === self::STATUS_EXPIRED;
+    }
+
     /**
      * @param  Builder<self>  $query
      * @return Builder<self>

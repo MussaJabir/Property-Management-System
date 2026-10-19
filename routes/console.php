@@ -22,3 +22,11 @@ Schedule::command('billing:detect-overdue')
     ->dailyAt('06:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Mobile money prompts still waiting on Selcom: Selcom asks for a status
+// query every 3 minutes for unresolved transactions. Catches payments whose
+// callback never arrived and expires prompts nobody paid.
+Schedule::command('payments:check-selcom')
+    ->everyThreeMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();

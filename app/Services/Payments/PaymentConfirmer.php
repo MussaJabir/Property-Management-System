@@ -22,7 +22,8 @@ use Illuminate\Support\Facades\Log;
  *
  * Safe to call more than once and from several places at the same time
  * (webhook, "Check payment" button, scheduled checks): the request row is
- * locked and only a pending request is ever settled.
+ * locked and only an open request is ever settled. An expired request is
+ * still open to a late COMPLETED, so money that arrives late is recorded.
  *
  * Callers must run inside the request's tenancy.
  */
@@ -43,7 +44,7 @@ class PaymentConfirmer
     /** @return self::OUTCOME_* */
     public function confirm(PaymentRequest $request): string
     {
-        if (! $request->isPending()) {
+        if (! $request->isPending() && ! $request->isExpired()) {
             return self::OUTCOME_DONE;
         }
 
@@ -73,7 +74,7 @@ class PaymentConfirmer
         }
 
         if ($status === 'COMPLETED') {
-            return $this->settle($request, fn (PaymentRequest $locked) => $this->recordPayment($locked, $order))
+            return $this->settle($request, fn (PaymentRequest $locked) => $this->recordPayment($locked, $order), alsoExpired: true)
                 ? self::OUTCOME_PAID
                 : self::OUTCOME_DONE;
         }
@@ -85,27 +86,42 @@ class PaymentConfirmer
                     'failure_reason' => $status === 'REJECTED' ? __('Rejected by the mobile network') : __('Cancelled by the payer'),
                     'last_checked_at' => now(),
                 ])->save();
-            }) ? self::OUTCOME_CANCELLED : self::OUTCOME_DONE;
+            }, alsoExpired: true) ? self::OUTCOME_CANCELLED : self::OUTCOME_DONE;
         }
 
-        // PENDING, INPROGRESS, or something new: ask again later.
+        // PENDING, INPROGRESS, or something new: ask again later (an
+        // expired request stays expired meanwhile).
         $this->touch($request);
 
         return self::OUTCOME_PENDING;
     }
 
     /**
+     * Give up on a prompt nobody paid: mark it expired if it is still
+     * pending. A late payment can still settle it (see confirm()).
+     */
+    public function expire(PaymentRequest $request): bool
+    {
+        return $this->settle($request, function (PaymentRequest $locked): void {
+            $locked->forceFill([
+                'status' => PaymentRequest::STATUS_EXPIRED,
+                'failure_reason' => __('Not paid before the prompt expired'),
+            ])->save();
+        });
+    }
+
+    /**
      * Run $apply on the request under a row lock, only if it is still
-     * pending. Returns whether it ran.
+     * pending (or expired, when $alsoExpired). Returns whether it ran.
      *
      * @param  callable(PaymentRequest): void  $apply
      */
-    private function settle(PaymentRequest $request, callable $apply): bool
+    private function settle(PaymentRequest $request, callable $apply, bool $alsoExpired = false): bool
     {
-        $settled = DB::transaction(function () use ($request, $apply): bool {
+        $settled = DB::transaction(function () use ($request, $apply, $alsoExpired): bool {
             $locked = PaymentRequest::query()->whereKey($request->getKey())->lockForUpdate()->first();
 
-            if ($locked === null || ! $locked->isPending()) {
+            if ($locked === null || ! ($locked->isPending() || ($alsoExpired && $locked->isExpired()))) {
                 return false;
             }
 
@@ -157,6 +173,7 @@ class PaymentConfirmer
 
         $request->forceFill([
             'status' => PaymentRequest::STATUS_COMPLETED,
+            'failure_reason' => null,
             'payment_id' => $payment->id,
             'channel' => $channel,
             'selcom_transid' => $transid,
