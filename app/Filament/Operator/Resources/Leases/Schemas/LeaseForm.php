@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Leases\Schemas;
 
+use App\Filament\Operator\Support\RentFields;
 use App\Models\Lease;
 use App\Models\Renter;
 use App\Models\Unit;
@@ -25,8 +26,9 @@ use Filament\Schemas\Schema;
  *   - Create page: createForm() is one screen — unit, renter (added inline
  *     if new), rent, and "Start the lease now"; the rest under More details.
  *
- * Rent values are entered in WHOLE shillings (e.g. 350000) and dehydrated
- * to minor units (cents) for storage. Matches the convention from UnitForm.
+ * Rent is entered as a monthly amount in whole shillings and saved as the
+ * amount per billing period (see RentFields). Deposit is entered in whole
+ * shillings and dehydrated to minor units (cents).
  */
 class LeaseForm
 {
@@ -150,6 +152,7 @@ class LeaseForm
                     ->columns(3)
                     ->components([
                         $terms['start_date'],
+                        $terms['monthly_rent'],
                         $terms['rent_amount'],
                         $terms['deposit_amount'],
 
@@ -184,7 +187,8 @@ class LeaseForm
     public static function unitDefaults(Unit $unit): array
     {
         return [
-            'rent_amount' => (int) ($unit->rent_amount / 100),
+            'rent_amount' => $unit->rent_amount,
+            'monthly_rent' => RentFields::monthlyFrom($unit->rent_amount, RentFields::monthsFor($unit->billing_cycle, $unit->billing_cycle_months)),
             'currency' => $unit->rent_currency,
             'billing_cycle' => $unit->billing_cycle,
             'billing_cycle_months' => $unit->billing_cycle_months,
@@ -218,21 +222,7 @@ class LeaseForm
                 ->after('start_date')
                 ->helperText('Leave empty for an open-ended lease.'),
 
-            TextInput::make('rent_amount')
-                ->label('Rent per period')
-                ->prefix(fn (Get $get) => $get('currency') ?? 'TZS')
-                ->numeric()
-                ->required()
-                ->minValue(0)
-                ->step(1)
-                ->placeholder('350000')
-                ->helperText('Whole shillings.')
-                ->dehydrateStateUsing(fn ($state) => $state === null ? 0 : (int) round(((float) $state) * 100))
-                ->afterStateHydrated(function (TextInput $component, $state): void {
-                    if ($state !== null) {
-                        $component->state(((int) $state) / 100);
-                    }
-                }),
+            ...RentFields::make('currency'),
 
             Select::make('currency')
                 ->required()
@@ -276,6 +266,7 @@ class LeaseForm
                 ])
                 ->default(Lease::BILLING_MONTHLY)
                 ->live()
+                ->afterStateUpdated(fn (Get $get, Set $set) => RentFields::sync($get, $set))
                 ->native(false),
 
             TextInput::make('billing_cycle_months')
@@ -287,6 +278,8 @@ class LeaseForm
                 ->step(1)
                 ->required(fn (Get $get) => $get('billing_cycle') === Lease::BILLING_CUSTOM)
                 ->visible(fn (Get $get) => $get('billing_cycle') === Lease::BILLING_CUSTOM)
+                ->live(onBlur: true)
+                ->afterStateUpdated(fn (Get $get, Set $set) => RentFields::sync($get, $set))
                 ->columnSpanFull(),
 
             Textarea::make('terms_notes')
