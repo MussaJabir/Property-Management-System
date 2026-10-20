@@ -12,7 +12,7 @@
     $whatsapp = $client->whatsappUrl(__('Hello, I am interested in :room. Is it free?', ['room' => $unit->publicTitle()]));
 @endphp
 
-<div x-data="{ photos: false }" class="flex flex-col gap-6 pb-24 lg:pb-0">
+<div x-data="{ photos: false, booking: false }" class="flex flex-col gap-6 pb-24 lg:pb-0">
     <div class="flex flex-col gap-1.5">
         <a href="{{ url('/'.$client->slug.'/units') }}" class="text-sm text-[var(--muted)] hover:text-[var(--ink)]">← {{ __('All rooms') }}</a>
         <h1 class="text-[26px] font-extrabold leading-tight tracking-tight sm:text-[34px]">{{ $unit->publicTitle() }}</h1>
@@ -107,7 +107,7 @@
         </div>
 
         {{-- Booking box --}}
-        <aside id="book" class="flex w-full min-w-0 max-w-[400px] flex-[1_1_340px] scroll-mt-24 flex-col gap-4 rounded-[20px] border border-[var(--line)] p-6 shadow-[0_8px_28px_rgba(29,29,27,0.10)] lg:sticky lg:top-24">
+        <aside id="book" x-init="new IntersectionObserver(([e]) => booking = e.isIntersecting).observe($el)" class="flex w-full min-w-0 max-w-[400px] flex-[1_1_340px] scroll-mt-24 flex-col gap-4 rounded-[20px] border border-[var(--line)] p-6 shadow-[0_8px_28px_rgba(29,29,27,0.10)] lg:sticky lg:top-24">
             @foreach ($prices as $i => $price)
                 <div class="flex items-baseline gap-1.5">
                     <b class="{{ $i === 0 ? 'text-2xl' : 'text-lg' }} font-extrabold tnum">{{ $price['currency'] }} {{ $price['amount'] }}</b>
@@ -116,18 +116,7 @@
             @endforeach
 
             @if ($available)
-                @if ($whatsapp)
-                    <a href="{{ $whatsapp }}" target="_blank" rel="noopener"
-                       class="flex min-h-[52px] items-center justify-center gap-2 rounded-xl text-base font-bold text-white" style="background-color: var(--brand);">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.7A8.5 8.5 0 1 1 8 19.6L3 21z"/></svg>
-                        {{ $unit->takesShortStays() ? __('Book on WhatsApp') : __('Ask on WhatsApp') }}
-                    </a>
-                @endif
-                <a href="{{ url('/'.$client->slug.'/contact') }}"
-                   class="flex min-h-[52px] items-center justify-center rounded-xl border border-[var(--ink)] text-base font-bold text-[var(--ink)]">
-                    {{ __('Send a message') }}
-                </a>
-                <p class="text-center text-sm text-[var(--muted)]">{{ __('No payment now. We reply to confirm.') }}</p>
+                <livewire:public.request-booking :unit="$unit" :key="'request-'.$unit->id" />
             @else
                 <p class="rounded-xl bg-[#f4f2ee] px-4 py-3 text-[15px] font-semibold">{{ __('Not available right now') }}</p>
                 <a href="{{ url('/'.$client->slug.'/units') }}" class="text-center text-sm font-semibold underline">{{ __('See rooms that are free') }}</a>
@@ -149,7 +138,7 @@
 
     {{-- Phones: price and booking always at hand. --}}
     @if ($available && $headline)
-        <div class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2.5 border-t border-[var(--line)] bg-white px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_16px_rgba(29,29,27,0.06)] lg:hidden">
+        <div x-show="! booking" x-transition.opacity class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2.5 border-t border-[var(--line)] bg-white px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_16px_rgba(29,29,27,0.06)] lg:hidden">
             <div class="min-w-0 flex-1 text-base">
                 <b class="font-extrabold tnum">{{ $headline['currency'] }} {{ $headline['amount'] }}</b> {{ $headline['per'] }}
             </div>
