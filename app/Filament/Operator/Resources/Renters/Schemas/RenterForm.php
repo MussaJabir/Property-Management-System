@@ -14,6 +14,8 @@ class RenterForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            // One column, top to bottom, in the order it is filled in.
+            ->columns(1)
             ->components([
                 Section::make('Who is renting?')
                     ->columns(2)
@@ -55,21 +57,11 @@ class RenterForm
                             ->helperText('Tanzanian numbers are auto-formatted to international (+255…).')
                             ->maxLength(20),
 
-                        TextInput::make('alt_phone')
-                            ->label('Alternative phone')
-                            ->tel()
-                            ->placeholder('Optional')
-                            ->maxLength(20),
-
                         TextInput::make('email')
                             ->label('Email')
                             ->email()
+                            ->placeholder('Optional')
                             ->maxLength(150),
-
-                        Textarea::make('address')
-                            ->label('Residential / business address')
-                            ->rows(2)
-                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Identification')
@@ -87,21 +79,35 @@ class RenterForm
                             ->maxLength(50),
                     ]),
 
-                Section::make('Emergency contact')
+                Section::make('More details')
+                    ->description('Second phone, address, emergency contact and notes.')
                     ->columns(2)
                     ->collapsed()
                     ->components([
-                        TextInput::make('emergency_contact_name')->maxLength(150),
-                        TextInput::make('emergency_contact_phone')->tel()->maxLength(20),
-                    ]),
+                        TextInput::make('alt_phone')
+                            ->label('Second phone')
+                            ->tel()
+                            ->maxLength(20),
 
-                Section::make('Notes')
-                    ->collapsed()
-                    ->components([
+                        Textarea::make('address')
+                            ->label('Home or business address')
+                            ->rows(2)
+                            ->columnSpanFull(),
+
+                        TextInput::make('emergency_contact_name')
+                            ->label('Emergency contact name')
+                            ->maxLength(150),
+
+                        TextInput::make('emergency_contact_phone')
+                            ->label('Emergency contact phone')
+                            ->tel()
+                            ->maxLength(20),
+
                         Textarea::make('notes')
-                            ->hiddenLabel()
+                            ->label('Notes')
                             ->rows(3)
-                            ->placeholder('Internal notes — not visible to the renter.'),
+                            ->placeholder('Internal notes — not visible to the renter.')
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

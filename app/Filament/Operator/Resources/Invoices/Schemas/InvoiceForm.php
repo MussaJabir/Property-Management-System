@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Lease;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -20,6 +21,8 @@ class InvoiceForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            // One column, top to bottom, in the order it is filled in.
+            ->columns(1)
             ->components([
                 Section::make('Invoice header')
                     ->columns(2)
@@ -69,8 +72,9 @@ class InvoiceForm
                             ->label('Invoice number')
                             ->disabled()
                             ->dehydrated(false)
-                            ->placeholder('Auto-generated on Issue')
-                            ->helperText('Assigned when you issue the invoice — kept blank while drafting.'),
+                            ->placeholder('Given when the invoice is issued')
+                            // Always blank on a new invoice.
+                            ->hiddenOn('create'),
 
                         DatePicker::make('billing_period_start')
                             ->label('Period start')
@@ -94,11 +98,9 @@ class InvoiceForm
                             ->native(false)
                             ->default(now()->addDays(7)),
 
-                        Select::make('currency')
-                            ->required()
-                            ->options(['TZS' => 'TZS', 'USD' => 'USD'])
-                            ->default('TZS')
-                            ->native(false),
+                        // Always the lease's currency, set when it is picked.
+                        Hidden::make('currency')
+                            ->default('TZS'),
                     ]),
 
                 Section::make('Line items')

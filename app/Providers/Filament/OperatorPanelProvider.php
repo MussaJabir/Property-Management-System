@@ -109,8 +109,10 @@ class OperatorPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                // Signed-in staff only, not on the login page.
+                // Signed-in staff only, and only on Today: never over a
+                // form's Save button.
                 fn (): Htmlable => auth()->check() ? view('pwa.install', ['name' => 'PMS']) : new HtmlString(''),
+                scopes: Dashboard::class,
             )
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,

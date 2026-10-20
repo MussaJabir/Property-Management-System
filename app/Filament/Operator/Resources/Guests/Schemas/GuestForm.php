@@ -16,6 +16,8 @@ class GuestForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            // One column, top to bottom, in the order it is filled in.
+            ->columns(1)
             ->components([
                 Section::make(__('Guest'))
                     ->columns(2)
