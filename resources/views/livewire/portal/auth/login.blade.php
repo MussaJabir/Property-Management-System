@@ -10,16 +10,16 @@
 
         <form wire:submit="submit" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Phone') }}</label>
-                <input wire:model="phone" type="tel" inputmode="tel" autocomplete="username"
+                <label for="portal-phone" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Phone') }}</label>
+                <input id="portal-phone" wire:model="phone" type="tel" inputmode="tel" autocomplete="username"
                        placeholder="0712345678"
                        class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950">
                 @error('phone') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Password') }}</label>
-                <input wire:model="password" type="password" autocomplete="current-password"
+                <label for="portal-password" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Password') }}</label>
+                <input id="portal-password" wire:model="password" type="password" autocomplete="current-password"
                        class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950">
                 @error('password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>

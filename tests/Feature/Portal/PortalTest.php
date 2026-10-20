@@ -347,3 +347,30 @@ it('rejects an SVG maintenance photo upload', function () {
 
     expect(MaintenanceRequest::query()->count())->toBe(0);
 });
+
+it('links the sign-in labels to their fields', function () {
+    $this->get('/'.$this->client->slug.'/portal/login')->assertOk()
+        ->assertSee('<label for="portal-phone"', false)
+        ->assertSee('id="portal-phone"', false)
+        ->assertSee('<label for="portal-password"', false)
+        ->assertSee('id="portal-password"', false);
+});
+
+it('shows late rent as overdue on the dashboard, and invoices as cards on phones', function () {
+    Notification::fake();
+    tenancy()->initialize($this->client);
+    [$renter, $lease] = setupActiveLease();
+    $invoice = $lease->invoices()->first();
+    $invoice->forceFill(['due_date' => now()->subMonths(2)->toDateString()])->save();
+    $user = $renter->user;
+    $user->forceFill(['status' => User::STATUS_ACTIVE])->save();
+
+    $this->actingAs($user, 'renter')->get('/'.$this->client->slug.'/portal')->assertOk()
+        ->assertSeeText('Overdue')
+        ->assertSeeText('Since '.now()->subMonths(2)->format('d/m/Y'))
+        ->assertDontSeeText('Next due');
+
+    $this->actingAs($user, 'renter')->get('/'.$this->client->slug.'/portal/invoices')->assertOk()
+        ->assertSee('md:hidden', false)
+        ->assertSeeText('of TZS 50,000');
+});
