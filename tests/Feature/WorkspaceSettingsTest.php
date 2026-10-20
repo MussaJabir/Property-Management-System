@@ -2,10 +2,12 @@
 
 use App\Filament\Operator\Pages\WorkspaceSettings;
 use App\Models\Client;
+use App\Models\Plan;
 use App\Models\User;
 use App\Services\RentInvoiceGenerator;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -93,4 +95,34 @@ it('turns automatic rent invoices off and on from Preferences', function () {
         ->and($this->client->settings['default_locale'])->toBe('en');
 
     Livewire::test(WorkspaceSettings::class)->assertSet('data.auto_invoices', false);
+});
+
+it('shows the plan the workspace is on, with its limits, and no internal labels', function () {
+    $plan = Plan::create([
+        'name' => 'Pro', 'slug' => 'pro-test', 'price_tzs' => 14_900_000, 'billing_period' => 'monthly',
+        'max_properties' => 15, 'max_units' => 300, 'max_operators' => 30, 'features' => [],
+    ]);
+    $this->client->update(['plan_id' => $plan->id]);
+    $this->actingAs($this->owner, 'web');
+
+    Livewire::test(WorkspaceSettings::class)
+        ->assertSee($plan->name)
+        ->assertSee('What it includes')
+        ->assertSee('0 of 300 units')
+        ->assertDontSee('Security note')
+        ->assertDontSee('Sub help')
+        ->assertSee('Active');
+});
+
+it('keeps logos on public storage and shows them on the website', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+    Storage::disk('local')->put('client-logos/old.png', 'png-bytes');
+    $this->client->update(['logo_path' => 'client-logos/old.png']);
+
+    // A logo saved on the private disk before the move is copied over.
+    expect($this->client->fresh()->logoUrl())->toContain('client-logos/old.png')
+        ->and(Storage::disk('public')->exists('client-logos/old.png'))->toBeTrue();
+
+    $this->get('/setco/units')->assertOk()->assertSee('client-logos/old.png', false);
 });

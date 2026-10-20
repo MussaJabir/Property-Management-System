@@ -459,6 +459,7 @@ final class FrontDeskActions
     {
         return TextInput::make('nightly_rate')
             ->label(__('Rate a night'))
+            ->prefix(fn (Get $get): string => ($get('unit_id') !== null ? Unit::find($get('unit_id'))?->rent_currency : null) ?? 'TZS')
             ->numeric()
             ->required()
             ->minValue(0)
