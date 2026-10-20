@@ -58,7 +58,7 @@ it('goes from a new property straight to adding its units, property chosen', fun
         ->test(CreateUnit::class)
         ->assertFormFieldHidden('status')
         ->assertSchemaStateSet(['property_id' => $property->id])
-        ->fillForm(['code' => 'R1', 'type' => 'room', 'rent_amount' => 200_000, 'rent_currency' => 'TZS', 'billing_cycle' => 'monthly'])
+        ->fillForm(['code' => 'R1', 'type' => 'room', 'monthly_rent' => 200_000, 'rent_currency' => 'TZS', 'billing_cycle' => 'monthly'])
         ->call('create')
         ->assertHasNoFormErrors();
 
