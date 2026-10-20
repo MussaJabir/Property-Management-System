@@ -108,3 +108,17 @@ it('never returns another workspace\'s renters from search', function () {
 
     expect($titles)->toBe(['Juma Mine']);
 });
+
+it('keeps rarely used pages out of the menu, reachable from their parent page', function () {
+    $menu = $this->actingAs($this->owner, 'web')->get('/manage')->assertOk();
+
+    foreach (['/manage/locations"', '/manage/expense-categories"', '/manage/receipts"'] as $href) {
+        $menu->assertDontSee($href, false);
+    }
+    $menu->assertSee('Reviews');
+
+    $this->get('/manage/properties')->assertOk()->assertSee('/manage/locations', false);
+    $this->get('/manage/expenses')->assertOk()->assertSee('/manage/expense-categories', false);
+    $this->get('/manage/payments')->assertOk()->assertSee('/manage/receipts', false);
+    $this->get('/manage/locations')->assertOk();
+});

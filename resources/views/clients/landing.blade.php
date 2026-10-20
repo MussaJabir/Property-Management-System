@@ -49,8 +49,8 @@
     </div>
 
     <section class="hero">
-        @if ($client->logo_path)
-            <img src="{{ \Illuminate\Support\Facades\Storage::disk('local')->url($client->logo_path) }}" alt="{{ $client->name }} logo" style="width:84px;height:84px;border-radius:50%;object-fit:cover;margin-bottom:1rem;">
+        @if ($client->logoUrl())
+            <img src="{{ $client->logoUrl() }}" alt="{{ $client->name }} logo" style="width:84px;height:84px;border-radius:50%;object-fit:cover;margin-bottom:1rem;">
         @else
             <div class="avatar">{{ strtoupper($initials) }}</div>
         @endif

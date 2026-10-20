@@ -15,10 +15,13 @@
             </div>
 
             <div class="rounded-xl bg-white p-5 shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
-                <p class="text-xs font-medium uppercase tracking-wider text-zinc-500">{{ __('Next due') }}</p>
+                @php $late = $nextDue?->due_date?->lt(today()) ?? false; @endphp
+                <p @class(['text-xs font-medium uppercase tracking-wider', 'text-red-600' => $late, 'text-zinc-500' => ! $late])>{{ $late ? __('Overdue') : __('Next due') }}</p>
                 @if ($nextDue)
-                    <p class="mt-2 text-lg font-semibold">{{ $nextDue->due_date?->format('d/m/Y') }}</p>
-                    <p class="text-xs text-zinc-500">{{ $nextDue->invoice_number ?? __('Draft invoice') }}</p>
+                    <p @class(['mt-2 text-lg font-semibold', 'text-red-600' => $late])>
+                        {{ $late ? __('Since :date', ['date' => $nextDue->due_date->format('d/m/Y')]) : $nextDue->due_date?->format('d/m/Y') }}
+                    </p>
+                    <p class="text-xs text-zinc-500">{{ $nextDue->invoice_number ?? __('Draft invoice') }} · {{ $nextDue->formatted_balance }}</p>
                 @else
                     <p class="mt-2 text-lg font-semibold text-emerald-600">{{ __('Nothing due') }}</p>
                     <p class="text-xs text-zinc-500">{{ __('You are all paid up.') }}</p>

@@ -5,6 +5,7 @@ namespace App\Filament\Operator\Resources\Payments\Pages;
 use App\Filament\Operator\Concerns\RedirectsToIndex;
 use App\Filament\Operator\Resources\Payments\PaymentResource;
 use App\Models\Invoice;
+use App\Models\Payment;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreatePayment extends CreateRecord
@@ -12,6 +13,11 @@ class CreatePayment extends CreateRecord
     use RedirectsToIndex;
 
     protected static string $resource = PaymentResource::class;
+
+    public function getTitle(): string
+    {
+        return __('Record payment');
+    }
 
     /**
      * "Record payment" links from Today pass ?invoice=<id>: start with that
@@ -39,6 +45,7 @@ class CreatePayment extends CreateRecord
         // Stamp who recorded it. tenant_id is auto-filled by the
         // TenantScopedModel trait from the active tenant context.
         $data['received_by_user_id'] = auth()->id();
+        $data['status'] ??= Payment::STATUS_COMPLETED;
 
         return $data;
     }

@@ -4,15 +4,15 @@
 
     <form wire:submit="submit" class="mt-6 space-y-4 rounded-xl bg-white p-6 shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
         <div>
-            <label class="block text-sm font-medium">{{ __('Title') }}</label>
-            <input wire:model="title" type="text" maxlength="120"
+            <label for="portal-title" class="block text-sm font-medium">{{ __('Title') }}</label>
+            <input id="portal-title" wire:model="title" type="text" maxlength="120"
                    class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
             @error('title') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
         </div>
 
         <div>
-            <label class="block text-sm font-medium">{{ __('Unit') }}</label>
-            <select wire:model="unitId" class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
+            <label for="portal-unitId" class="block text-sm font-medium">{{ __('Unit') }}</label>
+            <select id="portal-unitId" wire:model="unitId" class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
                 @foreach ($units as $u)
                     <option value="{{ $u['id'] }}">{{ $u['label'] }}</option>
                 @endforeach
@@ -21,8 +21,8 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium">{{ __('Priority') }}</label>
-            <select wire:model="priority" class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
+            <label for="portal-priority" class="block text-sm font-medium">{{ __('Priority') }}</label>
+            <select id="portal-priority" wire:model="priority" class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950">
                 <option value="low">{{ __('Low') }}</option>
                 <option value="medium">{{ __('Medium') }}</option>
                 <option value="high">{{ __('High') }}</option>
@@ -31,15 +31,15 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium">{{ __('Description') }}</label>
-            <textarea wire:model="description" rows="5"
+            <label for="portal-description" class="block text-sm font-medium">{{ __('Description') }}</label>
+            <textarea id="portal-description" wire:model="description" rows="5"
                       class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"></textarea>
             @error('description') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
         </div>
 
         <div>
-            <label class="block text-sm font-medium">{{ __('Photos (optional)') }}</label>
-            <input wire:model="photos" type="file" multiple accept="image/*"
+            <label for="portal-photos" class="block text-sm font-medium">{{ __('Photos (optional)') }}</label>
+            <input id="portal-photos" wire:model="photos" type="file" multiple accept="image/*"
                    class="mt-1 block w-full text-sm">
             @error('photos.*') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             <div wire:loading wire:target="photos" class="mt-1 text-xs text-zinc-500">{{ __('Uploading…') }}</div>

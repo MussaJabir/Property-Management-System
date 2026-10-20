@@ -75,7 +75,11 @@ class Unit extends Model implements HasMedia
 
     public const BILLING_QUARTERLY = 'quarterly';
 
+    public const BILLING_SEMI_ANNUAL = 'semi_annual';
+
     public const BILLING_ANNUAL = 'annual';
+
+    public const BILLING_CUSTOM = 'custom';
 
     /**
      * Amenity catalog. Keys are stored in the `amenities` jsonb column; labels
@@ -278,6 +282,83 @@ class Unit extends Model implements HasMedia
         return $this->rent_currency.' '.number_format($major, 0, '.', ',');
     }
 
+    /**
+     * Prices shown on the public website: the nightly rate for rooms let
+     * by the night, the rent for rooms let on a lease, both for "both".
+     *
+     * @return list<array{amount: string, currency: string, per: string}>
+     */
+    public function publicPrices(): array
+    {
+        $prices = [];
+
+        if ($this->takesShortStays() && (int) $this->nightly_rate > 0) {
+            $prices[] = [
+                'amount' => number_format(((int) $this->nightly_rate) / 100, 0, '.', ','),
+                'currency' => $this->rent_currency,
+                'per' => __('night'),
+            ];
+        }
+
+        if ($this->rental_mode !== self::RENTAL_SHORT_STAY) {
+            $prices[] = [
+                'amount' => number_format($this->rent_amount / 100, 0, '.', ','),
+                'currency' => $this->rent_currency,
+                'per' => $this->rentPeriodLabel(),
+            ];
+        }
+
+        return $prices;
+    }
+
+    /** "Room 4 · Kariakoo Heights" on the public website. */
+    public function publicTitle(): string
+    {
+        return $this->property !== null ? $this->code.' · '.$this->property->name : $this->code;
+    }
+
+    /** How the room is let, as a short badge: "Short stay", "Monthly"… */
+    public function publicTag(): string
+    {
+        return match ($this->rental_mode) {
+            self::RENTAL_SHORT_STAY => __('Short stay'),
+            self::RENTAL_BOTH => __('Nightly or monthly'),
+            default => $this->rentPeriodLabel() === __('month') ? __('Monthly') : __('Long term'),
+        };
+    }
+
+    /**
+     * Key facts for room cards and pages: bedrooms, bathrooms, size.
+     *
+     * @return list<string>
+     */
+    public function publicFacts(): array
+    {
+        return array_values(array_filter([
+            $this->bedrooms ? trans_choice(':count bedroom|:count bedrooms', (int) $this->bedrooms) : null,
+            $this->bathrooms ? trans_choice(':count bathroom|:count bathrooms', (int) $this->bathrooms) : null,
+            $this->size_sqm ? rtrim(rtrim(number_format((float) $this->size_sqm, 2, '.', ','), '0'), '.').' m²' : null,
+        ]));
+    }
+
+    /** What one rent payment covers: "month", "6 months", "year"… */
+    public function rentPeriodLabel(): string
+    {
+        return match ($this->billing_cycle) {
+            self::BILLING_QUARTERLY => __('3 months'),
+            self::BILLING_SEMI_ANNUAL => __('6 months'),
+            self::BILLING_ANNUAL => __('year'),
+            self::BILLING_CUSTOM => __(':count months', ['count' => (int) $this->billing_cycle_months]),
+            default => __('month'),
+        };
+    }
+
+    /** Shown on the public website: see scopeListedPublicly(). */
+    public function isListedPublicly(): bool
+    {
+        return self::query()->whereKey($this->getKey())->listedPublicly()->exists();
+    }
+
     /* ----- Scopes ----- */
 
     public function scopeVacant(Builder $query): Builder
@@ -288,6 +369,21 @@ class Unit extends Model implements HasMedia
     public function scopeOccupied(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_OCCUPIED);
+    }
+
+    /**
+     * Units the public website offers: vacant ones, plus rooms let by the
+     * night that have a guest in tonight — they can still be booked for
+     * other dates. A room on an active lease is never offered.
+     */
+    public function scopeListedPublicly(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('status', self::STATUS_VACANT)
+            ->orWhere(fn (Builder $stay) => $stay
+                ->where('status', self::STATUS_OCCUPIED)
+                ->whereIn('rental_mode', [self::RENTAL_SHORT_STAY, self::RENTAL_BOTH])
+                ->whereDoesntHave('leases', fn (Builder $lease) => $lease->where('status', Lease::STATUS_ACTIVE))));
     }
 
     /** Units that can be let on a lease (long-term or both). */

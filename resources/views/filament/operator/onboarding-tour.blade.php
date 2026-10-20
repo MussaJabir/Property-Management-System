@@ -14,11 +14,6 @@
                 'description' => __('common.onboarding.operator.welcome_body'),
             ],
             [
-                'element' => 'a[href$="/manage/locations"]',
-                'title' => __('common.onboarding.operator.locations_title'),
-                'description' => __('common.onboarding.operator.locations_body'),
-            ],
-            [
                 'element' => 'a[href$="/manage/properties"]',
                 'title' => __('common.onboarding.operator.properties_title'),
                 'description' => __('common.onboarding.operator.properties_body'),

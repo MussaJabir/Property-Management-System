@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Observers\ClientObserver;
 use App\Observers\MaintenanceRequestObserver;
 use App\Observers\PaymentObserver;
+use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Telescope\TelescopeServiceProvider;
@@ -34,6 +35,10 @@ class AppServiceProvider extends ServiceProvider
         Client::observe(ClientObserver::class);
         Payment::observe(PaymentObserver::class);
         MaintenanceRequest::observe(MaintenanceRequestObserver::class);
+
+        // A required dropdown has no ✕ to empty it: it must keep a value.
+        Select::configureUsing(fn (Select $select) => $select
+            ->selectablePlaceholder(fn (Select $component): bool => ! $component->isRequired()));
 
         // Pin Livewire's temporary upload location to the PRIVATE disk.
         // Without this it defaults to config('filesystems.default') which is

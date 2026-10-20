@@ -18,6 +18,8 @@ class ExpenseForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            // One column, top to bottom, in the order it is filled in.
+            ->columns(1)
             ->components([
                 Section::make('Expense')
                     ->columns(2)

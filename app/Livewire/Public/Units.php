@@ -6,6 +6,7 @@ namespace App\Livewire\Public;
 
 use App\Models\Location;
 use App\Models\Property;
+use App\Models\Rating;
 use App\Models\Unit;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -35,6 +36,10 @@ class Units extends Component
     #[Url(as: 'max')]
     public ?int $maxRent = null;
 
+    /** '' = every room, 'night' = let by the night, 'month' = on a lease. */
+    #[Url(as: 'stay')]
+    public string $mode = '';
+
     /** @var array<int, string> selected amenity keys (AND-filtered) */
     #[Url(as: 'amenities')]
     public array $amenities = [];
@@ -44,11 +49,17 @@ class Units extends Component
         $this->resetPage();
     }
 
+    public function clearFilters(): void
+    {
+        $this->reset('search', 'type', 'mode', 'propertyId', 'locationId', 'minRent', 'maxRent', 'amenities');
+        $this->resetPage();
+    }
+
     #[Layout('components.layouts.public')]
     public function render(): View
     {
         $query = Unit::query()
-            ->where('status', Unit::STATUS_VACANT)
+            ->listedPublicly()
             ->with(['property.location', 'media', 'property.media'])
             ->orderByDesc('updated_at');
 
@@ -56,8 +67,15 @@ class Units extends Component
             $query->where(fn ($q) => $q
                 ->where('code', 'ilike', '%'.$this->search.'%')
                 ->orWhere('description', 'ilike', '%'.$this->search.'%')
+                ->orWhereHas('property', fn ($p) => $p->where('name', 'ilike', '%'.$this->search.'%'))
             );
         }
+
+        match ($this->mode) {
+            'night' => $query->shortStay(),
+            'month' => $query->longTerm(),
+            default => null,
+        };
 
         if ($this->type !== '') {
             $query->where('type', $this->type);
@@ -71,12 +89,14 @@ class Units extends Component
             $query->whereHas('property', fn ($q) => $q->where('location_id', $this->locationId));
         }
 
+        // Rent filters compare rent, so rooms let only by the night (no
+        // rent) drop out rather than matching any budget at 0.
         if ($this->minRent !== null && $this->minRent > 0) {
-            $query->where('rent_amount', '>=', $this->minRent * 100);
+            $query->longTerm()->where('rent_amount', '>=', $this->minRent * 100);
         }
 
         if ($this->maxRent !== null && $this->maxRent > 0) {
-            $query->where('rent_amount', '<=', $this->maxRent * 100);
+            $query->longTerm()->where('rent_amount', '<=', $this->maxRent * 100);
         }
 
         // Amenity filter: unit must have ALL selected amenities (AND).
@@ -85,11 +105,18 @@ class Units extends Component
             $query->whereJsonContains('amenities', $amenity);
         }
 
+        $listed = Unit::query()->listedPublicly();
+        $units = $query->paginate(12);
+
         return view('livewire.public.units', [
-            'units' => $query->paginate(12),
+            'units' => $units,
+            'ratings' => Rating::summaryForUnits($units->pluck('id')->all()),
             'properties' => Property::query()->orderBy('name')->get(['id', 'name']),
             'locations' => Location::query()->orderBy('region')->get(['id', 'region', 'district']),
-            'types' => ['room', 'apartment', 'business_frame', 'office', 'shop', 'warehouse'],
+            // Only types and ways of letting that are actually on offer.
+            'types' => (clone $listed)->distinct()->orderBy('type')->pluck('type')->filter()->values()->all(),
+            'hasShortStays' => (clone $listed)->shortStay()->exists(),
+            'hasLongTerm' => (clone $listed)->longTerm()->exists(),
             'amenityOptions' => Unit::amenityOptions(),
         ]);
     }

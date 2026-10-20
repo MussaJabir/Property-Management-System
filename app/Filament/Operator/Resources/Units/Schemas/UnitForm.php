@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Units\Schemas;
 
+use App\Filament\Operator\Support\RentFields;
 use App\Filament\Operator\Support\ShortStays;
 use App\Models\Property;
 use App\Models\Unit;
@@ -11,13 +12,19 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class UnitForm
 {
     public static function configure(Schema $schema): Schema
     {
+        [$monthlyRent, $rentAmount] = RentFields::make('rent_currency');
+
         return $schema
+            // One column, top to bottom, in the order it is filled in.
+            ->columns(1)
             ->components([
                 Section::make('Which unit?')
                     ->columns(2)
@@ -95,34 +102,9 @@ class UnitForm
                                 }
                             }),
 
-                        TextInput::make('rent_amount')
-                            ->label('Rent')
-                            ->hidden(fn (callable $get): bool => $get('rental_mode') === Unit::RENTAL_SHORT_STAY)
-                            ->prefix(fn (callable $get) => $get('rent_currency') ?? 'TZS')
-                            ->numeric()
-                            ->required()
-                            ->minValue(0)
-                            ->step(1)
-                            ->default(0)
-                            ->placeholder('350000')
-                            ->helperText('Amount in whole shillings — e.g. 350000 for TZS 350,000.')
-                            // Form shows whole shillings; DB stores cents for precision.
-                            ->dehydrateStateUsing(fn ($state) => $state === null ? 0 : (int) round(((float) $state) * 100))
-                            ->afterStateHydrated(function (TextInput $component, $state): void {
-                                if ($state !== null) {
-                                    $component->state(((int) $state) / 100);
-                                }
-                            }),
-
-                        Select::make('rent_currency')
-                            ->required()
-                            ->options([
-                                'TZS' => 'TZS',
-                                'USD' => 'USD',
-                            ])
-                            ->default('TZS')
-                            ->live()
-                            ->native(false),
+                        $monthlyRent
+                            ->hidden(fn (callable $get): bool => $get('rental_mode') === Unit::RENTAL_SHORT_STAY),
+                        $rentAmount,
 
                         Select::make('billing_cycle')
                             ->label('Billing cycle')
@@ -137,6 +119,7 @@ class UnitForm
                             ])
                             ->default('monthly')
                             ->live()
+                            ->afterStateUpdated(fn (Get $get, Set $set) => RentFields::sync($get, $set))
                             ->native(false),
 
                         TextInput::make('billing_cycle_months')
@@ -148,14 +131,28 @@ class UnitForm
                             ->step(1)
                             ->required(fn (callable $get) => $get('billing_cycle') === 'custom')
                             ->visible(fn (callable $get) => $get('billing_cycle') === 'custom')
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (Get $get, Set $set) => RentFields::sync($get, $set))
                             ->helperText('How often rent is invoiced, in months.')
                             ->columnSpanFull(),
                     ]),
 
-                Section::make('Specs')
+                Section::make('More details')
+                    ->description('Currency, bedrooms, bathrooms, size and description.')
                     ->columns(3)
                     ->collapsed()
                     ->components([
+                        Select::make('rent_currency')
+                            ->label('Currency')
+                            ->required()
+                            ->options([
+                                'TZS' => 'TZS',
+                                'USD' => 'USD',
+                            ])
+                            ->default('TZS')
+                            ->live()
+                            ->native(false),
+
                         TextInput::make('bedrooms')->numeric()->minValue(0),
                         TextInput::make('bathrooms')->numeric()->minValue(0),
                         TextInput::make('size_sqm')->label('Size (sqm)')->numeric()->minValue(0)->step(0.01),

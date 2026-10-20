@@ -33,6 +33,9 @@ class LocationResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
+    /** Kept out of the menu to keep it short. Reached from Properties ("Locations" button) and added inline in the property form. */
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function form(Schema $schema): Schema
     {
         return LocationForm::configure($schema);

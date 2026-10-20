@@ -32,6 +32,9 @@ class FrontDeskCalendar extends Page
 
     protected static ?int $navigationSort = 15;
 
+    /** Kept out of the menu to keep it short. Reached from the Front desk page ("Calendar" button). */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $slug = 'front-desk/calendar';
 
     protected string $view = 'filament.operator.pages.front-desk-calendar';

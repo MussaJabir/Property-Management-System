@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Filament\Operator\Resources\Leases\Pages\CreateLease;
+use App\Filament\Operator\Resources\Units\Pages\CreateUnit;
+use App\Filament\Operator\Resources\Units\Pages\EditUnit;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Lease;
@@ -60,7 +62,7 @@ it('starts a lease from one screen: unit, new renter added inline, first invoice
     $page = Livewire::test(CreateLease::class)
         ->fillForm(['unit_id' => $unit->id])
         // Rent and billing come from the unit.
-        ->assertSchemaStateSet(['rent_amount' => 450_000, 'billing_cycle' => 'quarterly', 'activate_now' => true])
+        ->assertSchemaStateSet(['rent_amount' => 450_000_00, 'monthly_rent' => 150_000, 'billing_cycle' => 'quarterly', 'activate_now' => true])
         ->callAction(TestAction::make('createOption')->schemaComponent('renter_id'), [
             'full_name' => 'Grace Mollel', 'phone' => '0754123456',
         ]);
@@ -108,9 +110,57 @@ it('preselects the unit from Today\'s vacant list, but only this workspace\'s un
 
     Livewire::withQueryParams(['unit' => $unit->id])
         ->test(CreateLease::class)
-        ->assertSchemaStateSet(['unit_id' => $unit->id, 'rent_amount' => 450_000]);
+        ->assertSchemaStateSet(['unit_id' => $unit->id, 'rent_amount' => 450_000_00, 'monthly_rent' => 150_000]);
 
     Livewire::withQueryParams(['unit' => $theirs->id])
         ->test(CreateLease::class)
         ->assertSchemaStateSet(['unit_id' => null]);
+});
+
+it('takes rent as a monthly amount and bills the whole period, showing the total', function () {
+    $unit = quickUnit($this->client, 300_000_00);
+    $unit->forceFill(['billing_cycle' => 'monthly'])->save();
+    quickSignIn($this->owner, $this->client);
+    $renter = Renter::create(['type' => Renter::TYPE_INDIVIDUAL, 'full_name' => 'Juma', 'phone' => '0713000444']);
+
+    Livewire::test(CreateLease::class)
+        ->fillForm(['unit_id' => $unit->id, 'renter_id' => $renter->id])
+        ->assertSchemaStateSet(['monthly_rent' => 300_000, 'rent_amount' => 300_000_00])
+        ->fillForm(['billing_cycle' => Lease::BILLING_SEMI_ANNUAL])
+        ->assertSchemaStateSet(['monthly_rent' => 300_000, 'rent_amount' => 1_800_000_00])
+        ->assertSee('Every 6 months: TZS 1,800,000')
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $lease = Lease::query()->sole();
+    expect($lease->rent_amount)->toBe(1_800_000_00)
+        ->and($lease->invoices()->sole()->total_amount)->toBe(1_800_000_00);
+});
+
+it('keeps a unit\'s saved rent untouched when its form is opened and saved', function () {
+    // 1,000,000 a quarter is 333,333.33 a month: the form must not round it away.
+    $unit = quickUnit($this->client, 1_000_000_00);
+    quickSignIn($this->owner, $this->client);
+
+    Livewire::test(EditUnit::class, ['record' => $unit->getKey()])
+        ->assertSchemaStateSet(['monthly_rent' => 333_333.33])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($unit->fresh()->rent_amount)->toBe(1_000_000_00);
+});
+
+it('saves a new unit\'s monthly rent as rent per billing period', function () {
+    tenancy()->initialize($this->client);
+    $location = Location::create(['name' => 'Mbezi', 'region' => 'Dar', 'district' => 'Kinondoni']);
+    $property = Property::create(['location_id' => $location->id, 'name' => 'Court', 'status' => 'active']);
+    quickSignIn($this->owner, $this->client);
+
+    Livewire::test(CreateUnit::class)
+        ->assertSchemaStateSet(['monthly_rent' => null])
+        ->fillForm(['property_id' => $property->id, 'code' => 'S1', 'type' => 'room', 'monthly_rent' => 250_000, 'billing_cycle' => 'annual'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Unit::query()->where('code', 'S1')->sole()->rent_amount)->toBe(3_000_000_00);
 });

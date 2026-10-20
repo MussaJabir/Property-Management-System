@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Leases\Tables;
 
+use App\Http\Controllers\Rating\LeaseRatingController;
 use App\Models\Lease;
 use App\Services\LeasePdfGenerator;
 use Filament\Actions\Action;
@@ -166,6 +167,13 @@ class LeasesTable
                             Notification::make()->title('Could not terminate')->body($e->getMessage())->danger()->send();
                         }
                     }),
+
+                Action::make('askForReview')
+                    ->label(__('Ask for a review'))
+                    ->icon(Heroicon::OutlinedStar)
+                    ->color('gray')
+                    ->visible(fn (Lease $record): bool => $record->isActive() && LeaseRatingController::whatsAppUrl($record) !== null)
+                    ->url(fn (Lease $record): ?string => LeaseRatingController::whatsAppUrl($record), shouldOpenInNewTab: true),
 
                 Action::make('download_pdf')
                     ->label('Download PDF')

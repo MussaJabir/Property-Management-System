@@ -144,7 +144,9 @@ it('sums the key figures and counts renters past due', function () {
     Livewire::test(WorkspaceOverviewWidget::class)
         ->assertSee('TZS 500,000')
         ->assertSee('1 renter past due')
-        ->assertSee('1 of 2 units occupied');
+        ->assertSee('1 of 2 units occupied')
+        // The note under "Collected this month" names last month as such.
+        ->assertSee('Last month ('.now()->subMonthNoOverflow()->translatedFormat('F').'): nothing');
 });
 
 it('shows the latest payments with their mobile money network', function () {
@@ -174,6 +176,42 @@ it('opens Record payment with the invoice and its balance filled in', function (
             'currency' => 'TZS',
             'amount' => 500_000,
         ]);
+});
+
+it('records a payment in a few taps: completed, with a receipt, network required for mobile money', function () {
+    ['invoice' => $invoice] = todayWorkspace($this->client, 'Mine');
+
+    actInWorkspace($this->owner, $this->client);
+
+    Livewire::withQueryParams(['invoice' => $invoice->id])
+        ->test(CreatePayment::class)
+        ->assertFormFieldHidden('status')
+        ->fillForm(['method' => Payment::METHOD_MOBILE_MONEY])
+        ->call('create')
+        ->assertHasFormErrors(['mobile_money_provider' => 'required'])
+        ->fillForm(['mobile_money_provider' => Payment::PROVIDER_MPESA, 'transaction_id' => 'QWE123'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $payment = Payment::query()->sole();
+    expect($payment->status)->toBe(Payment::STATUS_COMPLETED)
+        ->and($payment->amount)->toBe(500_000_00)
+        ->and($payment->currency)->toBe('TZS')
+        ->and($payment->receipt)->not->toBeNull()
+        ->and($invoice->fresh()->status)->toBe(Invoice::STATUS_PAID);
+});
+
+it('offers installing the app on Today only, never over a form', function () {
+    $this->actingAs($this->owner, 'web')->get('/manage')->assertOk()->assertSee('id="pms-install"', false);
+    $this->actingAs($this->owner, 'web')->get('/manage/payments/create')->assertOk()->assertDontSee('id="pms-install"', false);
+});
+
+it('uses plain wording on add pages', function () {
+    $this->actingAs($this->owner, 'web')->get('/manage/renters/create')
+        ->assertOk()
+        ->assertSee('Add Renter')
+        ->assertSee('Save &amp; add another', false)
+        ->assertDontSee('Create &amp; create another', false);
 });
 
 it('ignores another workspace\'s invoice in the Record payment link', function () {

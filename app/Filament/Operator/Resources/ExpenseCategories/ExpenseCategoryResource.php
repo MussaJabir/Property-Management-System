@@ -31,6 +31,9 @@ class ExpenseCategoryResource extends Resource
 
     protected static ?int $navigationSort = 60;
 
+    /** Kept out of the menu to keep it short. Reached from Expenses ("Categories" button). */
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function form(Schema $schema): Schema
     {
         return ExpenseCategoryForm::configure($schema);

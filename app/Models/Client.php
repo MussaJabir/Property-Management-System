@@ -6,10 +6,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Propaganistas\LaravelPhone\PhoneNumber;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
+use Throwable;
 
 /**
  * Client = the landlord / property-management company using PMS.
@@ -107,5 +110,61 @@ class Client extends BaseTenant implements TenantWithDatabase
     public function isSuspended(): bool
     {
         return $this->status === 'suspended';
+    }
+
+    /**
+     * Where workspace logos live: B2 when configured, else the public
+     * disk. Never the server's private disk: the website shows the logo.
+     */
+    public static function logoDisk(): string
+    {
+        return config('filesystems.default') === 'b2' ? 'b2' : 'public';
+    }
+
+    /**
+     * The logo's public address, or null when none is uploaded. Logos saved
+     * before this moved off the private disk are copied over the first time
+     * they are shown.
+     */
+    public function logoUrl(): ?string
+    {
+        $path = $this->logo_path;
+
+        if (! is_string($path) || $path === '') {
+            return null;
+        }
+
+        try {
+            $disk = Storage::disk(self::logoDisk());
+
+            if (! $disk->exists($path) && Storage::disk('local')->exists($path)) {
+                $disk->put($path, (string) Storage::disk('local')->get($path), 'public');
+            }
+
+            return $disk->exists($path) ? $disk->url($path) : null;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * A WhatsApp chat link to the workspace's contact phone, with $text
+     * already typed in, or null when there is no usable number.
+     */
+    public function whatsappUrl(?string $text = null): ?string
+    {
+        try {
+            $number = new PhoneNumber(trim((string) $this->contact_phone), 'TZ');
+
+            if (! $number->isValid()) {
+                return null;
+            }
+
+            $digits = ltrim($number->formatE164(), '+');
+        } catch (Throwable) {
+            return null;
+        }
+
+        return 'https://wa.me/'.$digits.($text !== null && $text !== '' ? '?text='.rawurlencode($text) : '');
     }
 }

@@ -3,9 +3,7 @@
 <div class="mx-auto max-w-md">
     <div class="rounded-2xl bg-white p-8 shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
         <div class="mb-6 text-center">
-            <div class="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-white" style="background-color: var(--brand);">
-                {{ mb_substr($client?->name ?? 'P', 0, 1) }}
-            </div>
+            <x-cms.brand-mark :client="$client" size="h-12 w-12" class="mx-auto mb-3 text-lg" />
             <h1 class="text-xl font-semibold">{{ $client?->name ?? 'Portal' }}</h1>
             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Activate your renter portal account') }}</p>
         </div>
@@ -15,15 +13,15 @@
                 <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('Choose a password to finish setting up your account.') }}</p>
 
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('New password') }}</label>
-                    <input wire:model="password" type="password" autocomplete="new-password"
+                    <label for="portal-password" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('New password') }}</label>
+                    <input id="portal-password" wire:model="password" type="password" autocomplete="new-password"
                            class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950">
                     @error('password') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Confirm password') }}</label>
-                    <input wire:model="password_confirmation" type="password" autocomplete="new-password"
+                    <label for="portal-password-confirmation" class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Confirm password') }}</label>
+                    <input id="portal-password-confirmation" wire:model="password_confirmation" type="password" autocomplete="new-password"
                            class="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950">
                 </div>
 

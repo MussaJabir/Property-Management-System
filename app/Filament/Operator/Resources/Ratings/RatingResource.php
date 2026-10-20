@@ -8,6 +8,8 @@ use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Ratings\Pages\ListRatings;
 use App\Models\Rating;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -17,7 +19,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * What guests and renters think: 1–5 stars and comments, newest first.
- * Read-only; ratings come from the guest link and the renter portal.
+ * Ratings come from the guest and renter links and the renter portal.
+ * Nothing shows on the public room pages until it is approved here
+ * ("Show on website"); a rating changed afterwards needs approving again.
  */
 class RatingResource extends Resource
 {
@@ -31,17 +35,17 @@ class RatingResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('Ratings');
+        return __('Reviews');
     }
 
     public static function getModelLabel(): string
     {
-        return __('Rating');
+        return __('Review');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Ratings');
+        return __('Reviews');
     }
 
     public static function getEloquentQuery(): Builder
@@ -71,13 +75,47 @@ class RatingResource extends Resource
                     ->label(__('When'))
                     ->date('d/m/Y')
                     ->sortable(),
+                TextColumn::make('published_at')
+                    ->label(__('Website'))
+                    ->badge()
+                    ->getStateUsing(fn (Rating $record): string => $record->isPublished() ? __('Shown') : __('Hidden'))
+                    ->color(fn (Rating $record): string => $record->isPublished() ? 'success' : 'gray'),
+            ])
+            ->recordActions([
+                Action::make('publish')
+                    ->label(__('Show on website'))
+                    ->icon(Heroicon::OutlinedEye)
+                    ->authorize(fn (Rating $record): bool => auth()->user()?->can('publish', $record) ?? false)
+                    ->visible(fn (Rating $record): bool => ! $record->isPublished())
+                    ->action(function (Rating $record): void {
+                        $record->forceFill(['published_at' => now()])->save();
+                        Notification::make()->success()->title(__('Shown on your website'))->send();
+                    }),
+                Action::make('unpublish')
+                    ->label(__('Hide'))
+                    ->icon(Heroicon::OutlinedEyeSlash)
+                    ->color('gray')
+                    ->authorize(fn (Rating $record): bool => auth()->user()?->can('publish', $record) ?? false)
+                    ->visible(fn (Rating $record): bool => $record->isPublished())
+                    ->action(function (Rating $record): void {
+                        $record->forceFill(['published_at' => null])->save();
+                        Notification::make()->success()->title(__('Hidden from your website'))->send();
+                    }),
             ])
             ->filters([
                 SelectFilter::make('source')->label(__('From'))->options(Rating::sourceLabels()),
+                SelectFilter::make('website')
+                    ->label(__('Website'))
+                    ->options(['shown' => __('Shown'), 'hidden' => __('Hidden')])
+                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        'shown' => $query->whereNotNull('published_at'),
+                        'hidden' => $query->whereNull('published_at'),
+                        default => $query,
+                    }),
                 SelectFilter::make('score')->label(__('Stars'))->options([5 => '★★★★★', 4 => '★★★★', 3 => '★★★', 2 => '★★', 1 => '★']),
             ])
             ->emptyStateHeading(__('No ratings yet'))
-            ->emptyStateDescription(__('Renters can rate from their portal. Guests get a link at check-out (Ask for a rating on WhatsApp).'));
+            ->emptyStateDescription(__('Guests get a link at check-out, renters from their lease (Ask for a review on WhatsApp). Approve the ones you want on your website.'));
     }
 
     public static function getPages(): array

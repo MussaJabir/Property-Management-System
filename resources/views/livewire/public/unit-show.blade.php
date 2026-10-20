@@ -1,188 +1,197 @@
 @php
-    use Illuminate\Support\Str;
+    use App\Filament\Operator\Support\ShortStays;
 
     $client = tenant();
-    $hasGallery = $gallery->isNotEmpty();
-    $usingPropertyPhotos = ! $unit->hasOwnPhotos() && $hasGallery;
-    $rentMajor = number_format($unit->rent_amount / 100, 0, '.', ',');
-    $region = $unit->property?->location?->region;
-    $district = $unit->property?->location?->district;
+    $available = $unit->isListedPublicly();
+    $prices = $unit->publicPrices();
+    $headline = $prices[0] ?? null;
+    $facts = $unit->publicFacts();
+    $location = $unit->property?->location;
+    $where = collect([$location?->district, $location?->region])->filter()->implode(', ');
+    $photos = $gallery->values();
+    $whatsapp = $client->whatsappUrl(__('Hello, I am interested in :room. Is it free?', ['room' => $unit->publicTitle()]));
 @endphp
 
-<div class="space-y-10 lg:space-y-14">
-    {{-- Breadcrumb --}}
-    <nav class="flex items-center gap-2 font-mono-ui text-[11px] uppercase tracking-[0.12em] text-zinc-500">
-        <a href="{{ url('/'.$client->slug.'/units') }}" class="hover:text-zinc-900">{{ __('Units') }}</a>
-        <span class="text-zinc-300">/</span>
-        <span class="text-zinc-900">{{ $unit->code }}</span>
-    </nav>
-
-    {{-- ─────────────── Gallery ─────────────── --}}
-    @if ($hasGallery)
-        <div x-data="{ active: '{{ $gallery->first()->getUrl('card') }}' }" class="space-y-3">
-            <div class="relative aspect-[16/10] w-full overflow-hidden rounded-3xl bg-zinc-100 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.3)] ring-1 ring-black/5 sm:aspect-[16/9]">
-                <img :src="active" alt="{{ $unit->property?->name }} — {{ $unit->code }}"
-                     class="h-full w-full object-cover transition-opacity duration-300">
-                @if ($usingPropertyPhotos)
-                    <div class="absolute left-4 top-4 inline-flex items-center bg-white/90 px-2.5 py-1 font-mono-ui text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-700 shadow-sm backdrop-blur-sm">
-                        {{ __('Property photos') }}
-                    </div>
-                @endif
-            </div>
-
-            @if ($gallery->count() > 1)
-                <div class="flex gap-3 overflow-x-auto pb-1">
-                    @foreach ($gallery as $photo)
-                        <button type="button"
-                                @click="active = '{{ $photo->getUrl('card') }}'"
-                                :class="active === '{{ $photo->getUrl('card') }}' ? 'ring-2 ring-offset-2' : 'ring-1 ring-zinc-200 opacity-80 hover:opacity-100'"
-                                style="--tw-ring-color: var(--brand);"
-                                class="relative h-20 w-28 shrink-0 cursor-pointer overflow-hidden rounded-xl bg-zinc-100 transition">
-                            <img src="{{ $photo->getUrl('thumb') }}" alt="" class="h-full w-full object-cover" loading="lazy">
-                        </button>
-                    @endforeach
-                </div>
+<div x-data="{ photos: false, booking: false }" class="flex flex-col gap-6 pb-24 lg:pb-0">
+    <div class="flex flex-col gap-1.5">
+        <a href="{{ url('/'.$client->slug.'/units') }}" class="text-sm text-[var(--muted)] hover:text-[var(--ink)]">← {{ __('All rooms') }}</a>
+        <h1 class="text-[26px] font-extrabold leading-tight tracking-tight sm:text-[34px]">{{ $unit->publicTitle() }}</h1>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px]">
+            @if ($where !== '')
+                <span class="text-[var(--muted)]">{{ $where }}</span>
             @endif
-        </div>
-    @else
-        {{-- No photos anywhere: branded gradient hero block --}}
-        <div class="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-3xl ring-1 ring-black/5"
-             style="background:
-                 radial-gradient(at 30% 20%, color-mix(in srgb, var(--brand) 25%, white) 0%, transparent 70%),
-                 linear-gradient(135deg, color-mix(in srgb, var(--brand) 18%, #fdfcf9) 0%, color-mix(in srgb, var(--brand) 6%, #fdfcf9) 100%);">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 80 80" class="h-24 w-24" style="color: color-mix(in srgb, var(--brand) 70%, transparent);">
-                <rect x="14" y="22" width="20" height="44" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
-                <rect x="36" y="14" width="30" height="52" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
-                <rect x="40" y="20" width="6" height="6" fill="currentColor" opacity="0.3"/>
-                <rect x="48" y="20" width="6" height="6" fill="currentColor" opacity="0.3"/>
-                <rect x="56" y="20" width="6" height="6" fill="currentColor" opacity="0.3"/>
-            </svg>
-        </div>
-    @endif
-
-    {{-- ─────────────── Details ─────────────── --}}
-    <div class="grid gap-10 lg:grid-cols-3">
-        {{-- Main column --}}
-        <div class="space-y-8 lg:col-span-2">
-            <div>
-                <span class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                    {{ str_replace('_', ' ', $unit->type ?? 'unit') }}@if ($region) · {{ $region }}@endif
-                </span>
-                <h1 class="mt-2 font-display font-extrabold leading-[0.95] tracking-tight text-zinc-900"
-                    style="font-size: clamp(2rem, 5vw, 3.25rem);">
-                    {{ $unit->property?->name ?? $unit->code }}
-                </h1>
-                <p class="mt-2 text-base text-zinc-500">
-                    {{ __('Unit') }} {{ $unit->code }}@if ($district) · {{ $district }}, {{ $region }}@endif
-                </p>
-            </div>
-
-            {{-- Specs strip --}}
-            @if ($unit->bedrooms || $unit->bathrooms || $unit->size_sqm)
-                <div class="flex flex-wrap gap-3">
-                    @if ($unit->bedrooms)
-                        <div class="flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-zinc-900/[0.06]">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-zinc-400"><path d="M2.25 4.5a.75.75 0 0 1 1.5 0v8.25h12V4.5a.75.75 0 0 1 1.5 0v9.75a.75.75 0 0 1-.75.75H3a.75.75 0 0 1-.75-.75V4.5Z" /></svg>
-                            <span class="font-mono-ui text-sm tnum"><span class="font-semibold">{{ $unit->bedrooms }}</span> {{ __('bd') }}</span>
-                        </div>
-                    @endif
-                    @if ($unit->bathrooms)
-                        <div class="flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-zinc-900/[0.06]">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-zinc-400"><path fill-rule="evenodd" d="M4.5 2A1.5 1.5 0 0 0 3 3.5v.5a.75.75 0 0 0 1.5 0v-.5h11v6h-11v-2a.75.75 0 0 0-1.5 0v3a.75.75 0 0 0 .75.75h12.5a.75.75 0 0 0 .75-.75v-7A1.5 1.5 0 0 0 15.5 2h-11Z" clip-rule="evenodd" /></svg>
-                            <span class="font-mono-ui text-sm tnum"><span class="font-semibold">{{ $unit->bathrooms }}</span> {{ __('ba') }}</span>
-                        </div>
-                    @endif
-                    @if ($unit->size_sqm)
-                        <div class="flex items-center gap-2 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-zinc-900/[0.06]">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-zinc-400"><path fill-rule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75Zm0 5A.75.75 0 0 1 2.75 9h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 9.75Zm0 5a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 14.75Z" clip-rule="evenodd" /></svg>
-                            <span class="font-mono-ui text-sm tnum"><span class="font-semibold">{{ $unit->size_sqm }}</span> m²</span>
-                        </div>
-                    @endif
-                </div>
-            @endif
-
-            {{-- Amenities --}}
-            @if (! empty($unit->amenityLabels()))
-                <div>
-                    <h2 class="font-display text-xl font-bold tracking-tight text-zinc-900">{{ __('amenities.heading') }}</h2>
-                    <div class="mt-4">
-                        <x-cms.amenity-list :unit="$unit" />
-                    </div>
-                </div>
-            @endif
-
-            {{-- Description --}}
-            @if ($unit->description)
-                <div>
-                    <h2 class="font-display text-xl font-bold tracking-tight text-zinc-900">{{ __('About this unit') }}</h2>
-                    <p class="mt-3 whitespace-pre-line text-base leading-relaxed text-zinc-600">{{ $unit->description }}</p>
-                </div>
-            @endif
-        </div>
-
-        {{-- Sticky rent / enquire card --}}
-        <div class="lg:col-span-1">
-            <div class="lg:sticky lg:top-24 space-y-4 rounded-2xl bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-zinc-900/[0.06]">
-                <div>
-                    <span class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{{ __('Rent') }}</span>
-                    <div class="mt-1 flex items-baseline gap-1.5">
-                        <span class="font-display text-4xl font-bold leading-none tracking-tight tnum" style="color: var(--brand);">{{ $rentMajor }}</span>
-                        <span class="font-mono-ui text-xs uppercase tracking-[0.1em] text-zinc-500">{{ $unit->rent_currency }} / {{ str_replace('_', ' ', $unit->billing_cycle) }}</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 border-t border-zinc-100 pt-4">
-                    <span class="relative inline-block h-2 w-2">
-                        <span class="absolute inline-block h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75"></span>
-                        <span class="relative inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-                    </span>
-                    <span class="font-mono-ui text-xs font-bold uppercase tracking-[0.1em] text-emerald-700">{{ __('Available') }}</span>
-                </div>
-
-                <a href="{{ url('/'.$client->slug.'/contact') }}"
-                   class="block w-full cursor-pointer rounded-full px-5 py-3.5 text-center text-sm font-bold tracking-tight text-white shadow-sm transition-opacity hover:opacity-90"
-                   style="background-color: var(--brand);">
-                    {{ __('Enquire about this unit') }}
+            @if ($summary)
+                <a href="#reviews" class="inline-flex items-center gap-1 font-semibold">
+                    <x-cms.star class="h-4 w-4" />{{ number_format($summary['average'], 1) }}
+                    <span class="font-normal underline">{{ trans_choice(':count review|:count reviews', $summary['count']) }}</span>
                 </a>
-                @if ($client?->contact_email)
-                    <a href="mailto:{{ $client->contact_email }}?subject={{ rawurlencode(__('Enquiry').': '.($unit->property?->name ?? '').' — '.$unit->code) }}"
-                       class="block text-center text-xs text-zinc-500 underline decoration-zinc-300 underline-offset-4 hover:decoration-zinc-900">
-                        {{ $client->contact_email }}
-                    </a>
-                @endif
-            </div>
+            @endif
+            <span class="rounded-full bg-[#f1efea] px-2.5 py-0.5 text-xs font-bold">{{ $unit->publicTag() }}</span>
         </div>
     </div>
 
-    {{-- ─────────────── More units ─────────────── --}}
-    @if ($more->isNotEmpty())
-        <div class="space-y-6 border-t border-zinc-900/[0.08] pt-12">
-            <h2 class="font-display text-2xl font-bold tracking-tight text-zinc-900">{{ __('More available units') }}</h2>
-            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($more as $u)
-                    @php $img = $u->coverImageUrl('thumb'); @endphp
-                    <a href="{{ url('/'.$client->slug.'/units/'.$u->id) }}"
-                       class="group block overflow-hidden rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-zinc-900/[0.06] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_48px_rgba(0,0,0,0.1)]">
-                        <div class="relative aspect-[4/3] overflow-hidden">
-                            @if ($img)
-                                <img src="{{ $img }}" alt="{{ $u->property?->name }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy">
-                            @else
-                                <div class="flex h-full w-full items-center justify-center" style="background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 18%, #fdfcf9) 0%, color-mix(in srgb, var(--brand) 6%, #fdfcf9) 100%);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 80 80" class="h-14 w-14" style="color: color-mix(in srgb, var(--brand) 70%, transparent);"><rect x="14" y="22" width="20" height="44" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="36" y="14" width="30" height="52" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="p-5">
-                            <p class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{{ $u->property?->location?->region ?? __('Tanzania') }}</p>
-                            <h3 class="mt-2 font-display text-lg font-bold tracking-tight text-zinc-900">{{ $u->property?->name ?? $u->code }}</h3>
-                            <div class="mt-3 flex items-baseline gap-1.5">
-                                <span class="font-display text-2xl font-bold leading-none tracking-tight tnum" style="color: var(--brand);">{{ number_format($u->rent_amount / 100, 0, '.', ',') }}</span>
-                                <span class="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-zinc-500">{{ $u->rent_currency }} / {{ str_replace('_', ' ', $u->billing_cycle) }}</span>
-                            </div>
-                        </div>
-                    </a>
+    {{-- Photos: one large and up to four small; all of them in an overlay. --}}
+    @if ($photos->isNotEmpty())
+        <div class="relative">
+            <div class="flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-2xl md:grid md:h-[428px] md:grid-cols-4 md:grid-rows-2 md:overflow-hidden md:rounded-[20px]">
+                @foreach ($photos->take(5) as $i => $photo)
+                    <button type="button" @click="photos = true"
+                            class="{{ $i === 0 ? 'md:col-span-2 md:row-span-2' : 'max-md:hidden' }} aspect-[4/3] w-full shrink-0 snap-center bg-[#ece9e3] md:aspect-auto">
+                        <img src="{{ $photo->getUrl('card') }}" alt="{{ $unit->publicTitle() }}" class="h-full w-full object-cover" @if ($i > 0) loading="lazy" @endif>
+                    </button>
                 @endforeach
             </div>
+            @if ($photos->count() > 1)
+                <button type="button" @click="photos = true"
+                        class="absolute bottom-3 right-3 min-h-[40px] rounded-xl border border-[var(--ink)] bg-white px-3.5 text-sm font-semibold">
+                    {{ __('Show all :count photos', ['count' => $photos->count()]) }}
+                </button>
+            @endif
+        </div>
+
+        <div x-show="photos" x-cloak x-transition.opacity @keydown.escape.window="photos = false"
+             class="fixed inset-0 z-50 overflow-y-auto bg-white" role="dialog" aria-modal="true" aria-label="{{ __('Photos') }}">
+            <div class="sticky top-0 flex items-center justify-between border-b border-[var(--line)] bg-white px-4 py-3">
+                <span class="font-bold">{{ $unit->publicTitle() }}</span>
+                <button type="button" @click="photos = false" class="min-h-[44px] rounded-xl px-4 font-semibold hover:bg-[#f4f2ee]">{{ __('Close') }}</button>
+            </div>
+            <div class="mx-auto flex max-w-3xl flex-col gap-3 p-4">
+                @foreach ($photos as $photo)
+                    <img src="{{ $photo->getUrl() }}" alt="{{ $unit->publicTitle() }}" loading="lazy" class="w-full rounded-xl">
+                @endforeach
+            </div>
+        </div>
+    @else
+        <div class="flex aspect-[16/7] items-center justify-center rounded-[20px] bg-[#ece9e3]">
+            <x-cms.photo-icon class="h-14 w-14 text-black/30" />
+        </div>
+    @endif
+
+    <div class="flex flex-wrap items-start gap-12">
+        <div class="flex min-w-0 flex-[999_1_560px] flex-col gap-8">
+            @if ($facts !== [])
+                <div class="flex flex-wrap gap-x-7 gap-y-2 text-base">
+                    @foreach ($facts as $fact)
+                        <span>{{ $fact }}</span>
+                    @endforeach
+                </div>
+            @endif
+
+            @if ($unit->description)
+                <section class="flex flex-col gap-2.5 border-t border-[var(--line)] pt-7">
+                    <h2 class="text-[22px] font-bold">{{ __('About this room') }}</h2>
+                    <p class="max-w-[62ch] whitespace-pre-line text-base leading-relaxed text-[#3d3b37]">{{ $unit->description }}</p>
+                </section>
+            @endif
+
+            @if ($unit->amenityLabels() !== [])
+                <section class="flex flex-col gap-3.5 border-t border-[var(--line)] pt-7">
+                    <h2 class="text-[22px] font-bold">{{ __('What this room has') }}</h2>
+                    <ul class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-6 gap-y-3.5 text-base">
+                        @foreach ($unit->amenityLabels() as $label)
+                            <li class="flex items-center gap-3">
+                                <svg class="h-[22px] w-[22px] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg>
+                                {{ $label }}
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
+            @if ($summary)
+                <section id="reviews" x-data="{ all: false }" class="flex scroll-mt-24 flex-col gap-5 border-t border-[var(--line)] pt-7">
+                    <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                        <h2 class="inline-flex items-center gap-2 text-[22px] font-bold">
+                            <x-cms.star class="h-5 w-5" />
+                            {{ number_format($summary['average'], 1) }} · {{ trans_choice(':count review|:count reviews', $summary['count']) }}
+                        </h2>
+                        <span class="text-sm text-[var(--muted)]">{{ __('From people who stayed. Checked by the owner before they appear.') }}</span>
+                    </div>
+                    @if ($reviews->isNotEmpty())
+                        <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-10 gap-y-7">
+                            @foreach ($reviews as $i => $review)
+                                <article @if ($i >= 4) x-show="all" x-cloak @endif class="flex flex-col gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <span class="grid h-10 w-10 place-items-center rounded-full bg-[#f1efea] text-[15px] font-bold">{{ mb_substr($review->publicName(), 0, 1) }}</span>
+                                        <span class="flex flex-col">
+                                            <b class="text-[15px]">{{ $review->publicName() }}</b>
+                                            <span class="text-[13px] text-[var(--muted)]">{{ $review->created_at?->translatedFormat('F Y') }}</span>
+                                        </span>
+                                    </div>
+                                    <span class="text-[13px] tracking-[2px]" aria-label="{{ __(':score out of 5 stars', ['score' => $review->score]) }}">{{ str_repeat('★', $review->score) }}{{ str_repeat('☆', 5 - $review->score) }}</span>
+                                    <p class="whitespace-pre-line text-[15px] leading-relaxed text-[#3d3b37]">{{ $review->comment }}</p>
+                                </article>
+                            @endforeach
+                        </div>
+                        @if ($reviews->count() > 4)
+                            <button type="button" x-show="! all" @click="all = true"
+                                    class="min-h-[44px] self-start rounded-xl border border-[var(--ink)] px-4 text-[15px] font-semibold">
+                                {{ __('Show all :count reviews', ['count' => $reviews->count()]) }}
+                            </button>
+                        @endif
+                    @endif
+                </section>
+            @endif
+
+            <section class="flex flex-col gap-2.5 border-t border-[var(--line)] pt-7">
+                <h2 class="text-[22px] font-bold">{{ __('Where it is') }}</h2>
+                <p class="text-base text-[#3d3b37]">
+                    {{ collect([$unit->property?->name, $where])->filter()->implode(' · ') }}.
+                    {{ __('The exact location is shared when your booking is confirmed.') }}
+                </p>
+                @if ($unit->takesShortStays())
+                    <p class="text-[15px] text-[var(--muted)]">
+                        {{ __('Check in from :in · check out by :out', ['in' => ShortStays::checkInTime($client), 'out' => ShortStays::checkOutTime($client)]) }}
+                    </p>
+                @endif
+            </section>
+        </div>
+
+        {{-- Booking box --}}
+        <aside id="book" x-init="new IntersectionObserver(([e]) => booking = e.isIntersecting).observe($el)" class="flex w-full min-w-0 max-w-[400px] flex-[1_1_340px] scroll-mt-24 flex-col gap-4 rounded-[20px] border border-[var(--line)] p-6 shadow-[0_8px_28px_rgba(29,29,27,0.10)] lg:sticky lg:top-24">
+            @foreach ($prices as $i => $price)
+                <div class="flex items-baseline gap-1.5">
+                    <b class="{{ $i === 0 ? 'text-2xl' : 'text-lg' }} font-extrabold tnum">{{ $price['currency'] }} {{ $price['amount'] }}</b>
+                    <span class="text-base text-[var(--muted)]">{{ $price['per'] }}</span>
+                </div>
+            @endforeach
+
+            @if ($available)
+                <livewire:public.request-booking :unit="$unit" :key="'request-'.$unit->id" />
+            @else
+                <p class="rounded-xl bg-[#f4f2ee] px-4 py-3 text-[15px] font-semibold">{{ __('Not available right now') }}</p>
+                <a href="{{ url('/'.$client->slug.'/units') }}" class="text-center text-sm font-semibold underline">{{ __('See rooms that are free') }}</a>
+            @endif
+        </aside>
+    </div>
+
+    {{-- More rooms --}}
+    @if ($more->isNotEmpty())
+        <section class="flex flex-col gap-6 border-t border-[var(--line)] pt-10">
+            <h2 class="text-[22px] font-bold">{{ __('More rooms') }}</h2>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-8">
+                @foreach ($more as $u)
+                    <x-cms.room-card :unit="$u" :rating="$ratings[$u->id] ?? null" />
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    {{-- Phones: price and booking always at hand. --}}
+    @if ($available && $headline)
+        <div x-show="! booking" x-transition.opacity class="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2.5 border-t border-[var(--line)] bg-white px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-4px_16px_rgba(29,29,27,0.06)] lg:hidden">
+            <div class="min-w-0 flex-1 text-base">
+                <b class="font-extrabold tnum">{{ $headline['currency'] }} {{ $headline['amount'] }}</b> {{ $headline['per'] }}
+            </div>
+            @if ($whatsapp)
+                <a href="{{ $whatsapp }}" target="_blank" rel="noopener" aria-label="{{ __('Book on WhatsApp') }}"
+                   class="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[var(--ink)]">
+                    <x-cms.whatsapp-icon class="h-[22px] w-[22px]" />
+                </a>
+            @endif
+            <a href="#book" class="inline-flex min-h-[48px] shrink-0 items-center rounded-xl px-5 text-[15px] font-bold text-white" style="background-color: var(--brand);">
+                {{ $unit->takesShortStays() ? __('Book') : __('Enquire') }}
+            </a>
         </div>
     @endif
 </div>

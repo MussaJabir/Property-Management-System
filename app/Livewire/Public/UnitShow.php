@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Public;
 
+use App\Models\Rating;
 use App\Models\Unit;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -33,18 +34,33 @@ class UnitShow extends Component
             ? $this->unit->getMedia('photos')
             : ($this->unit->property?->getMedia('photos') ?? collect());
 
-        // A few other vacant units from the same client to keep browsing.
+        // A few other available units from the same client to keep browsing.
         $more = Unit::query()
-            ->where('status', Unit::STATUS_VACANT)
+            ->listedPublicly()
             ->whereKeyNot($this->unit->getKey())
             ->with(['property.location', 'media', 'property.media'])
             ->latest('updated_at')
             ->limit(3)
             ->get();
 
+        // Approved reviews only; the landlord chooses what shows.
+        $reviews = Rating::query()
+            ->published()
+            ->forUnit($this->unit->getKey())
+            ->whereNotNull('comment')
+            ->with(['booking.guest', 'lease.renter'])
+            ->latest('published_at')
+            ->limit(12)
+            ->get();
+
+        $ratings = Rating::summaryForUnits([$this->unit->getKey(), ...$more->pluck('id')->all()]);
+
         return view('livewire.public.unit-show', [
             'gallery' => $gallery,
             'more' => $more,
+            'reviews' => $reviews,
+            'summary' => $ratings[$this->unit->getKey()] ?? null,
+            'ratings' => $ratings,
         ]);
     }
 }
