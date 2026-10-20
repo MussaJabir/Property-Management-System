@@ -8,7 +8,7 @@
     $client = tenant();
 
     $units = Unit::query()
-        ->where('status', Unit::STATUS_VACANT)
+        ->listedPublicly()
         ->with(['property.location', 'property.media'])
         ->orderByDesc('updated_at')
         ->limit($limit)
@@ -104,14 +104,7 @@
                         <p class="mt-0.5 text-sm text-zinc-500">{{ __('Unit') }} {{ $unit->code }}</p>
 
                         <div class="mt-4 flex items-baseline justify-between border-t border-zinc-100 pt-4">
-                            <div>
-                                <span class="font-display text-2xl font-bold leading-none tracking-tight tnum" style="color: var(--brand);">
-                                    {{ number_format($unit->rent_amount / 100, 0, '.', ',') }}
-                                </span>
-                                <span class="ml-1 font-mono-ui text-[10px] uppercase tracking-[0.1em] text-zinc-500">
-                                    {{ $unit->rent_currency }} / {{ str_replace('_', ' ', $unit->billing_cycle) }}
-                                </span>
-                            </div>
+                            <x-cms.unit-price :unit="$unit" size="sm" />
                         </div>
                     </div>
 

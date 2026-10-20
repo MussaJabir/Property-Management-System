@@ -33,9 +33,9 @@ class UnitShow extends Component
             ? $this->unit->getMedia('photos')
             : ($this->unit->property?->getMedia('photos') ?? collect());
 
-        // A few other vacant units from the same client to keep browsing.
+        // A few other available units from the same client to keep browsing.
         $more = Unit::query()
-            ->where('status', Unit::STATUS_VACANT)
+            ->listedPublicly()
             ->whereKeyNot($this->unit->getKey())
             ->with(['property.location', 'media', 'property.media'])
             ->latest('updated_at')
