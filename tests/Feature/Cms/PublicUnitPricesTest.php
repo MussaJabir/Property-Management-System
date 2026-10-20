@@ -114,3 +114,31 @@ it('filters rooms by how they are let', function () {
         ->set('mode', 'night')->assertSee('NIGHTONLY')->assertDontSee('MONTHONLY')
         ->set('mode', 'month')->assertSee('MONTHONLY')->assertDontSee('NIGHTONLY');
 });
+
+it('keeps a visitor\'s filter clicks inside the workspace (Livewire updates have no tenant in the URL)', function () {
+    tenancy()->initialize($this->client);
+    publicUnit($this->property, ['code' => 'MINE1', 'type' => 'apartment', 'rent_amount' => 300_000_00]);
+    Tenancy::end();
+
+    $other = Client::create(['slug' => 'otherprice', 'name' => 'Other Price', 'status' => 'active']);
+    tenancy()->initialize($other);
+    $loc = Location::create(['name' => 'Far', 'region' => 'Arusha', 'district' => 'Arusha']);
+    $prop = Property::create(['location_id' => $loc->id, 'name' => 'Far Block', 'status' => 'active']);
+    publicUnit($prop, ['code' => 'THEIRS1', 'type' => 'apartment', 'rent_amount' => 300_000_00]);
+    Tenancy::end();
+
+    $page = $this->get('/priceco/units')->assertOk();
+    preg_match('/wire:snapshot="([^"]+)"/', $page->getContent(), $m);
+    $snapshot = html_entity_decode($m[1]);
+    // A real visitor's next request starts with no workspace set.
+    Tenancy::end();
+
+    $update = $this->withHeaders(['X-Livewire' => 'true'])->postJson(app('livewire')->getUpdateUri(), [
+        '_token' => csrf_token(),
+        'components' => [['snapshot' => $snapshot, 'updates' => ['type' => 'apartment'], 'calls' => []]],
+    ]);
+
+    $update->assertOk();
+    $html = $update->json('components.0.effects.html');
+    expect($html)->toContain('MINE1')->not->toContain('THEIRS1');
+});

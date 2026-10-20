@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Http\Middleware\EnsureTenantActive;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 use Stancl\JobPipeline\JobPipeline;
 use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Listeners;
@@ -90,6 +92,15 @@ class TenancyServiceProvider extends ServiceProvider
         $this->mapRoutes();
 
         $this->makeTenancyMiddlewareHighestPriority();
+
+        // Livewire's background requests (/livewire/update) carry no
+        // {tenant} in their URL. Re-run these from the page's own route so
+        // a visitor's filter click on /{tenant}/units stays in that
+        // workspace instead of failing (or seeing every workspace's data).
+        Livewire::addPersistentMiddleware([
+            Middleware\InitializeTenancyByPath::class,
+            EnsureTenantActive::class,
+        ]);
     }
 
     protected function bootEvents()
