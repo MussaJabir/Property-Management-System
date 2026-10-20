@@ -60,9 +60,7 @@
 <header class="sticky top-0 z-30 border-b border-[var(--line)] bg-white/95 backdrop-blur">
     <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:gap-8 sm:px-6">
         <a href="{{ url('/'.$clientSlug) }}" class="flex min-w-0 items-center gap-2.5 text-[var(--ink)]">
-            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-base font-extrabold text-white" style="background-color: var(--brand);">
-                {{ mb_substr($client?->name ?? 'S', 0, 1) }}
-            </span>
+            <x-cms.brand-mark :client="$client" class="text-base" />
             <span class="truncate text-[17px] font-bold">{{ $client?->name }}</span>
         </a>
 

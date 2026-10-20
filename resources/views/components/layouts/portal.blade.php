@@ -91,9 +91,7 @@
     <header class="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <a href="{{ url('/'.$clientSlug.'/portal') }}" class="flex items-center gap-2 text-sm font-semibold">
-                <span class="inline-flex h-7 w-7 items-center justify-center rounded-md text-white" style="background-color: var(--brand);">
-                    {{ mb_substr($client?->name ?? 'P', 0, 1) }}
-                </span>
+                <x-cms.brand-mark :client="$client" size="h-7 w-7" />
                 <span>{{ $client?->name }}</span>
             </a>
             <nav class="hidden gap-1 md:flex">

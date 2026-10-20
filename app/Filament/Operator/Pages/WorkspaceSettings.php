@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\SelcomAccount;
 use App\Models\Subscription;
 use App\Services\Payments\Selcom\SelcomClient;
+use App\Services\Plans\PlanUsage;
 use App\Services\RentInvoiceGenerator;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -138,7 +139,7 @@ class WorkspaceSettings extends Page implements HasForms
                                     ->label('Phone number')
                                     ->tel()
                                     ->maxLength(20)
-                                    ->helperText('Country code (+255…) or local (0712…).'),
+                                    ->helperText(__('Your WhatsApp number. Visitors to your website book and ask questions on it. Local (0712…) or international (+255…).')),
                             ]),
 
                         Tab::make('Branding')
@@ -147,8 +148,12 @@ class WorkspaceSettings extends Page implements HasForms
                                 FileUpload::make('logo_path')
                                     ->label('Logo')
                                     ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                                    ->disk('local')
+                                    // Public storage (B2 in production), never the
+                                    // server's own disk: the website shows it.
+                                    ->disk(Client::logoDisk())
+                                    ->visibility('public')
                                     ->directory('client-logos')
+                                    ->helperText(__('Shown on your website and renter portal. A square image works best.'))
                                     ->imageEditor()
                                     ->maxSize(2048),
 
@@ -167,6 +172,7 @@ class WorkspaceSettings extends Page implements HasForms
                                         'sw' => 'Kiswahili',
                                     ])
                                     ->default('en')
+                                    ->required()
                                     ->native(false),
 
                                 Grid::make(2)
@@ -197,7 +203,7 @@ class WorkspaceSettings extends Page implements HasForms
                             ->badge(SelcomAccount::platformReady() ? null : __('Coming soon'))
                             ->schema(SelcomAccount::platformReady() ? $this->paymentsTab() : [
                                 Placeholder::make('selcom_coming_soon')
-                                    ->label('')
+                                    ->label(__('Mobile money payments'))
                                     ->content(__('Automatic mobile money payments are coming soon: renters and guests will get a payment prompt on their phone, and payments will be recorded for you. Until then, record payments with "Record payment".')),
                             ]),
 
@@ -205,7 +211,7 @@ class WorkspaceSettings extends Page implements HasForms
                             ->icon('heroicon-o-lock-closed')
                             ->schema([
                                 Placeholder::make('security_note')
-                                    ->label('')
+                                    ->label(__('Your password'))
                                     ->content('Change the password for your own account. Leave blank to keep your current password.'),
 
                                 TextInput::make('new_password')
@@ -229,19 +235,24 @@ class WorkspaceSettings extends Page implements HasForms
                             ->icon('heroicon-o-credit-card')
                             ->schema([
                                 Placeholder::make('plan')
-                                    ->label('Current plan')
-                                    ->content(fn (): string => $this->subscription->plan->name ?? '—'),
+                                    ->label(__('Current plan'))
+                                    ->content(fn (): string => $this->planName()),
+
+                                Placeholder::make('plan_limits')
+                                    ->label(__('What it includes'))
+                                    ->content(fn (): string => $this->planLimits()),
 
                                 Placeholder::make('sub_status')
-                                    ->label('Status')
-                                    ->content(fn (): string => ucfirst($this->subscription->status ?? 'none')),
+                                    ->label(__('Status'))
+                                    ->content(fn (): string => $this->subscriptionStatus()),
 
                                 Placeholder::make('renews')
-                                    ->label('Renews / expires')
+                                    ->label(__('Paid until'))
+                                    ->visible(fn (): bool => $this->subscription?->ends_at !== null)
                                     ->content(fn (): string => $this->subscription?->ends_at?->format('d/m/Y') ?? '—'),
 
                                 Placeholder::make('sub_help')
-                                    ->label('')
+                                    ->label(__('Need a different plan?'))
                                     ->content('To change your plan or settle your subscription, contact the BJP Technologies team.'),
                             ]),
                     ]),
@@ -261,7 +272,7 @@ class WorkspaceSettings extends Page implements HasForms
 
         return [
             Placeholder::make('selcom_intro')
-                ->label('')
+                ->label(__('Mobile money payments'))
                 ->content(__('Let renters and guests pay invoices by mobile money through your own Selcom merchant account. Money goes straight to your Selcom account; ask Selcom for your vendor ID, API key and API secret.')),
 
             Placeholder::make('selcom_status')
@@ -313,6 +324,46 @@ class WorkspaceSettings extends Page implements HasForms
                 ->label(__('Take payments through Selcom'))
                 ->helperText(__('Shows "Request payment" on invoices. Works once Test connection has passed.')),
         ];
+    }
+
+    /** The plan from the subscription, else the plan BJP set on the workspace. */
+    private function planName(): string
+    {
+        $plan = $this->subscription->plan ?? $this->client?->plan;
+
+        return $plan !== null ? $plan->name : __('No plan (no limits)');
+    }
+
+    private function planLimits(): string
+    {
+        $usage = $this->client !== null ? PlanUsage::for($this->client) : null;
+
+        if ($usage === null || $usage->plan() === null) {
+            return __('Everything, with no limits.');
+        }
+
+        $part = fn (string $resource, string $label): string => $usage->limit($resource) !== null
+            ? __(':used of :limit :what', ['used' => number_format($usage->used($resource)), 'limit' => number_format((int) $usage->limit($resource)), 'what' => $label])
+            : __('Unlimited :what', ['what' => $label]);
+
+        return implode(' · ', [
+            $part(PlanUsage::PROPERTIES, __('properties')),
+            $part(PlanUsage::UNITS, __('units')),
+            $part(PlanUsage::STAFF, __('staff')),
+        ]);
+    }
+
+    private function subscriptionStatus(): string
+    {
+        if ($this->subscription !== null) {
+            return __(ucfirst((string) $this->subscription->status));
+        }
+
+        if ($this->client?->trial_ends_at !== null && $this->client->trial_ends_at->isFuture()) {
+            return __('Free trial until :date', ['date' => $this->client->trial_ends_at->format('d/m/Y')]);
+        }
+
+        return $this->client?->isActive() ? __('Active') : __(ucfirst((string) $this->client?->status));
     }
 
     private function selcomStatus(): string

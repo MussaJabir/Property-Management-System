@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Clients\Schemas;
 
+use App\Models\Client;
 use App\Models\Plan;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
@@ -121,7 +122,8 @@ class ClientForm
                         FileUpload::make('logo_path')
                             ->label('Logo')
                             ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                            ->disk('local')
+                            ->disk(Client::logoDisk())
+                            ->visibility('public')
                             ->directory('client-logos')
                             ->imageEditor()
                             ->maxSize(2048)
