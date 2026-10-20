@@ -13,7 +13,7 @@ class ListLeases extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('New lease'),
+            CreateAction::make()->label(__('Add Lease')),
         ];
     }
 }

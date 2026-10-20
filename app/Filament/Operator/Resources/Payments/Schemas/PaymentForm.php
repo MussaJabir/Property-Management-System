@@ -5,9 +5,11 @@ namespace App\Filament\Operator\Resources\Payments\Schemas;
 use App\Models\Invoice;
 use App\Models\Payment;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -18,6 +20,8 @@ class PaymentForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            // One column, top to bottom, in the order it is filled in.
+            ->columns(1)
             ->components([
                 Section::make('Which invoice?')
                     ->columns(2)
@@ -70,52 +74,60 @@ class PaymentForm
                                 }
                             }),
 
-                        Select::make('currency')
-                            ->required()
-                            ->options(['TZS' => 'TZS', 'USD' => 'USD'])
-                            ->default('TZS')
-                            ->native(false),
+                        // Always the invoice's currency, set when it is picked.
+                        Hidden::make('currency')
+                            ->default('TZS'),
 
                         DatePicker::make('payment_date')
+                            ->label('Date paid')
                             ->required()
                             ->default(now())
                             ->displayFormat('d/m/Y')
                             ->native(false),
                     ]),
 
-                Section::make('Method')
+                Section::make('How was it paid?')
                     ->columns(2)
                     ->components([
-                        Select::make('method')
+                        ToggleButtons::make('method')
+                            ->hiddenLabel()
                             ->required()
+                            ->inline()
                             ->options([
                                 Payment::METHOD_CASH => 'Cash',
-                                Payment::METHOD_BANK_TRANSFER => 'Bank transfer',
                                 Payment::METHOD_MOBILE_MONEY => 'Mobile money',
+                                Payment::METHOD_BANK_TRANSFER => 'Bank transfer',
                                 Payment::METHOD_CHEQUE => 'Cheque',
                                 Payment::METHOD_CARD => 'Card',
                             ])
                             ->default(Payment::METHOD_CASH)
                             ->live()
-                            ->native(false),
+                            ->columnSpanFull(),
 
-                        Select::make('mobile_money_provider')
-                            ->label('Mobile money provider')
+                        ToggleButtons::make('mobile_money_provider')
+                            ->label('Network')
+                            ->inline()
                             ->options(Payment::providerLabels())
                             ->visible(fn (Get $get) => $get('method') === Payment::METHOD_MOBILE_MONEY)
                             ->required(fn (Get $get) => $get('method') === Payment::METHOD_MOBILE_MONEY)
-                            ->native(false),
-
-                        TextInput::make('reference_number')
-                            ->label('Reference / cheque no.')
-                            ->maxLength(60),
+                            ->columnSpanFull(),
 
                         TextInput::make('transaction_id')
                             ->label('Transaction ID')
+                            ->placeholder('From the payment SMS')
                             ->visible(fn (Get $get) => $get('method') === Payment::METHOD_MOBILE_MONEY)
                             ->maxLength(60),
 
+                        TextInput::make('reference_number')
+                            ->label(fn (Get $get): string => $get('method') === Payment::METHOD_CHEQUE ? 'Cheque number' : 'Reference')
+                            ->placeholder('Optional')
+                            ->visible(fn (Get $get) => $get('method') !== Payment::METHOD_CASH)
+                            ->maxLength(60),
+
+                        // New payments are completed (and get a receipt);
+                        // the status only changes later, e.g. a refund.
                         Select::make('status')
+                            ->hiddenOn('create')
                             ->required()
                             ->options([
                                 Payment::STATUS_PENDING => 'Pending',

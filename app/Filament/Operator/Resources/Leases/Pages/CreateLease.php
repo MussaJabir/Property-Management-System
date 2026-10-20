@@ -33,7 +33,7 @@ class CreateLease extends CreateRecord
 
     public function getTitle(): string
     {
-        return __('New lease');
+        return __('Add Lease');
     }
 
     protected function getCreateFormAction(): Action

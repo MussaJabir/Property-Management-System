@@ -171,7 +171,9 @@
 @endif
 
 @if ($authenticated && $user)
-    @include('pwa.install', ['name' => $client?->name])
+    @if (request()->routeIs('portal.dashboard'))
+        @include('pwa.install', ['name' => $client?->name])
+    @endif
 @endif
 
 @fluxScripts

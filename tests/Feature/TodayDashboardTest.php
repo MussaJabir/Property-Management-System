@@ -176,6 +176,42 @@ it('opens Record payment with the invoice and its balance filled in', function (
         ]);
 });
 
+it('records a payment in a few taps: completed, with a receipt, network required for mobile money', function () {
+    ['invoice' => $invoice] = todayWorkspace($this->client, 'Mine');
+
+    actInWorkspace($this->owner, $this->client);
+
+    Livewire::withQueryParams(['invoice' => $invoice->id])
+        ->test(CreatePayment::class)
+        ->assertFormFieldHidden('status')
+        ->fillForm(['method' => Payment::METHOD_MOBILE_MONEY])
+        ->call('create')
+        ->assertHasFormErrors(['mobile_money_provider' => 'required'])
+        ->fillForm(['mobile_money_provider' => Payment::PROVIDER_MPESA, 'transaction_id' => 'QWE123'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $payment = Payment::query()->sole();
+    expect($payment->status)->toBe(Payment::STATUS_COMPLETED)
+        ->and($payment->amount)->toBe(500_000_00)
+        ->and($payment->currency)->toBe('TZS')
+        ->and($payment->receipt)->not->toBeNull()
+        ->and($invoice->fresh()->status)->toBe(Invoice::STATUS_PAID);
+});
+
+it('offers installing the app on Today only, never over a form', function () {
+    $this->actingAs($this->owner, 'web')->get('/manage')->assertOk()->assertSee('id="pms-install"', false);
+    $this->actingAs($this->owner, 'web')->get('/manage/payments/create')->assertOk()->assertDontSee('id="pms-install"', false);
+});
+
+it('uses plain wording on add pages', function () {
+    $this->actingAs($this->owner, 'web')->get('/manage/renters/create')
+        ->assertOk()
+        ->assertSee('Add Renter')
+        ->assertSee('Save &amp; add another', false)
+        ->assertDontSee('Create &amp; create another', false);
+});
+
 it('ignores another workspace\'s invoice in the Record payment link', function () {
     ['invoice' => $theirs] = todayWorkspace($this->other, 'Theirs');
 

@@ -2,7 +2,7 @@
      desktop Chrome/Edge), or a one-line hint on iPhone Safari. Hidden once
      installed or dismissed (remembered on this device). --}}
 <div id="pms-install" hidden
-     style="position:fixed;inset-inline:16px;bottom:16px;z-index:60;display:flex;justify-content:center;pointer-events:none">
+     style="position:fixed;inset-inline:16px;bottom:16px;z-index:60;display:flex;justify-content:flex-end;pointer-events:none">
     <div style="pointer-events:auto;display:flex;align-items:center;gap:10px;max-width:420px;padding:10px 12px 10px 14px;border-radius:14px;background:#0b4f4a;color:#fff;box-shadow:0 8px 24px rgb(0 0 0 / 20%);font:500 14px/1.35 ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
         <img src="/images/pwa/icon-192.png" alt="" width="32" height="32" style="border-radius:8px;flex:none">
         <span id="pms-install-text" style="flex:1">{{ __('Install :name on this device for one-tap access.', ['name' => $name ?? 'PMS']) }}</span>
