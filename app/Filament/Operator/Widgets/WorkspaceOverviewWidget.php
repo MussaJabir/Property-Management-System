@@ -58,10 +58,10 @@ class WorkspaceOverviewWidget extends BaseWidget
 
         if ($collectedLastMonth > 0) {
             $change = (int) round(($collectedThisMonth - $collectedLastMonth) / $collectedLastMonth * 100);
-            $collectedNote = __(':change% vs :month', ['change' => ($change >= 0 ? '+' : '').$change, 'month' => $lastMonthName]);
+            $collectedNote = __(':change% vs last month (:month)', ['change' => ($change >= 0 ? '+' : '').$change, 'month' => $lastMonthName]);
         } else {
             $change = null;
-            $collectedNote = __('Nothing collected in :month', ['month' => $lastMonthName]);
+            $collectedNote = __('Last month (:month): nothing', ['month' => $lastMonthName]);
         }
 
         /* ---- Outstanding / overdue (point-in-time receivables) ---- */

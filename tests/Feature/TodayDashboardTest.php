@@ -144,7 +144,9 @@ it('sums the key figures and counts renters past due', function () {
     Livewire::test(WorkspaceOverviewWidget::class)
         ->assertSee('TZS 500,000')
         ->assertSee('1 renter past due')
-        ->assertSee('1 of 2 units occupied');
+        ->assertSee('1 of 2 units occupied')
+        // The note under "Collected this month" names last month as such.
+        ->assertSee('Last month ('.now()->subMonthNoOverflow()->translatedFormat('F').'): nothing');
 });
 
 it('shows the latest payments with their mobile money network', function () {
