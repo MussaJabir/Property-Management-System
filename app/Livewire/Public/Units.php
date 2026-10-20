@@ -48,7 +48,7 @@ class Units extends Component
     public function render(): View
     {
         $query = Unit::query()
-            ->where('status', Unit::STATUS_VACANT)
+            ->listedPublicly()
             ->with(['property.location', 'media', 'property.media'])
             ->orderByDesc('updated_at');
 
@@ -71,12 +71,14 @@ class Units extends Component
             $query->whereHas('property', fn ($q) => $q->where('location_id', $this->locationId));
         }
 
+        // Rent filters compare rent, so rooms let only by the night (no
+        // rent) drop out rather than matching any budget at 0.
         if ($this->minRent !== null && $this->minRent > 0) {
-            $query->where('rent_amount', '>=', $this->minRent * 100);
+            $query->longTerm()->where('rent_amount', '>=', $this->minRent * 100);
         }
 
         if ($this->maxRent !== null && $this->maxRent > 0) {
-            $query->where('rent_amount', '<=', $this->maxRent * 100);
+            $query->longTerm()->where('rent_amount', '<=', $this->maxRent * 100);
         }
 
         // Amenity filter: unit must have ALL selected amenities (AND).

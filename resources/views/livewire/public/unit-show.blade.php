@@ -4,7 +4,7 @@
     $client = tenant();
     $hasGallery = $gallery->isNotEmpty();
     $usingPropertyPhotos = ! $unit->hasOwnPhotos() && $hasGallery;
-    $rentMajor = number_format($unit->rent_amount / 100, 0, '.', ',');
+    $available = $unit->isListedPublicly();
     $region = $unit->property?->location?->region;
     $district = $unit->property?->location?->district;
 @endphp
@@ -124,19 +124,21 @@
         <div class="lg:col-span-1">
             <div class="lg:sticky lg:top-24 space-y-4 rounded-2xl bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.06)] ring-1 ring-zinc-900/[0.06]">
                 <div>
-                    <span class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{{ __('Rent') }}</span>
-                    <div class="mt-1 flex items-baseline gap-1.5">
-                        <span class="font-display text-4xl font-bold leading-none tracking-tight tnum" style="color: var(--brand);">{{ $rentMajor }}</span>
-                        <span class="font-mono-ui text-xs uppercase tracking-[0.1em] text-zinc-500">{{ $unit->rent_currency }} / {{ str_replace('_', ' ', $unit->billing_cycle) }}</span>
-                    </div>
+                    <span class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{{ __('Price') }}</span>
+                    <x-cms.unit-price :unit="$unit" size="lg" class="mt-1" />
                 </div>
 
                 <div class="flex items-center gap-2 border-t border-zinc-100 pt-4">
-                    <span class="relative inline-block h-2 w-2">
-                        <span class="absolute inline-block h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75"></span>
-                        <span class="relative inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-                    </span>
-                    <span class="font-mono-ui text-xs font-bold uppercase tracking-[0.1em] text-emerald-700">{{ __('Available') }}</span>
+                    @if ($available)
+                        <span class="relative inline-block h-2 w-2">
+                            <span class="absolute inline-block h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75"></span>
+                            <span class="relative inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+                        </span>
+                        <span class="font-mono-ui text-xs font-bold uppercase tracking-[0.1em] text-emerald-700">{{ __('Available') }}</span>
+                    @else
+                        <span class="inline-block h-2 w-2 rounded-full bg-zinc-400"></span>
+                        <span class="font-mono-ui text-xs font-bold uppercase tracking-[0.1em] text-zinc-500">{{ __('Not available right now') }}</span>
+                    @endif
                 </div>
 
                 <a href="{{ url('/'.$client->slug.'/contact') }}"
@@ -175,10 +177,7 @@
                         <div class="p-5">
                             <p class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">{{ $u->property?->location?->region ?? __('Tanzania') }}</p>
                             <h3 class="mt-2 font-display text-lg font-bold tracking-tight text-zinc-900">{{ $u->property?->name ?? $u->code }}</h3>
-                            <div class="mt-3 flex items-baseline gap-1.5">
-                                <span class="font-display text-2xl font-bold leading-none tracking-tight tnum" style="color: var(--brand);">{{ number_format($u->rent_amount / 100, 0, '.', ',') }}</span>
-                                <span class="font-mono-ui text-[10px] uppercase tracking-[0.1em] text-zinc-500">{{ $u->rent_currency }} / {{ str_replace('_', ' ', $u->billing_cycle) }}</span>
-                            </div>
+                            <x-cms.unit-price :unit="$u" size="sm" class="mt-3" />
                         </div>
                     </a>
                 @endforeach

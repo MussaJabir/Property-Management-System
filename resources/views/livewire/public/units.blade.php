@@ -197,14 +197,7 @@
                         </p>
 
                         <div class="mt-5 flex items-baseline justify-between border-t border-zinc-100 pt-5">
-                            <div>
-                                <span class="font-display text-3xl font-bold leading-none tracking-tight tnum" style="color: var(--brand);">
-                                    {{ number_format($unit->rent_amount / 100, 0, '.', ',') }}
-                                </span>
-                                <span class="ml-1 font-mono-ui text-[10px] uppercase tracking-[0.1em] text-zinc-500">
-                                    {{ $unit->rent_currency }} / {{ str_replace('_', ' ', $unit->billing_cycle) }}
-                                </span>
-                            </div>
+                            <x-cms.unit-price :unit="$unit" />
                         </div>
 
                         @if ($unit->bedrooms || $unit->bathrooms || $unit->size_sqm)
