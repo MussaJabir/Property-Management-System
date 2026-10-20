@@ -311,6 +311,36 @@ class Unit extends Model implements HasMedia
         return $prices;
     }
 
+    /** "Room 4 · Kariakoo Heights" on the public website. */
+    public function publicTitle(): string
+    {
+        return $this->property !== null ? $this->code.' · '.$this->property->name : $this->code;
+    }
+
+    /** How the room is let, as a short badge: "Short stay", "Monthly"… */
+    public function publicTag(): string
+    {
+        return match ($this->rental_mode) {
+            self::RENTAL_SHORT_STAY => __('Short stay'),
+            self::RENTAL_BOTH => __('Nightly or monthly'),
+            default => $this->rentPeriodLabel() === __('month') ? __('Monthly') : __('Long term'),
+        };
+    }
+
+    /**
+     * Key facts for room cards and pages: bedrooms, bathrooms, size.
+     *
+     * @return list<string>
+     */
+    public function publicFacts(): array
+    {
+        return array_values(array_filter([
+            $this->bedrooms ? trans_choice(':count bedroom|:count bedrooms', (int) $this->bedrooms) : null,
+            $this->bathrooms ? trans_choice(':count bathroom|:count bathrooms', (int) $this->bathrooms) : null,
+            $this->size_sqm ? rtrim(rtrim(number_format((float) $this->size_sqm, 2, '.', ','), '0'), '.').' m²' : null,
+        ]));
+    }
+
     /** What one rent payment covers: "month", "6 months", "year"… */
     public function rentPeriodLabel(): string
     {
