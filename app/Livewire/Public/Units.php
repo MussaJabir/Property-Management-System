@@ -6,6 +6,7 @@ namespace App\Livewire\Public;
 
 use App\Models\Location;
 use App\Models\Property;
+use App\Models\Rating;
 use App\Models\Unit;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -105,9 +106,11 @@ class Units extends Component
         }
 
         $listed = Unit::query()->listedPublicly();
+        $units = $query->paginate(12);
 
         return view('livewire.public.units', [
-            'units' => $query->paginate(12),
+            'units' => $units,
+            'ratings' => Rating::summaryForUnits($units->pluck('id')->all()),
             'properties' => Property::query()->orderBy('name')->get(['id', 'name']),
             'locations' => Location::query()->orderBy('region')->get(['id', 'region', 'district']),
             // Only types and ways of letting that are actually on offer.

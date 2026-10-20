@@ -1,4 +1,4 @@
-@props(['unit'])
+@props(['unit', 'rating' => null])
 
 @php
     // One room in a grid: photo, how it is let, name, key facts, price.
@@ -24,7 +24,14 @@
         <span class="absolute left-3 top-3 rounded-full bg-white px-2.5 py-1 text-xs font-bold text-[var(--ink)] shadow-sm">{{ $unit->publicTag() }}</span>
     </div>
     <div class="flex flex-col gap-0.5">
-        <span class="text-base font-bold leading-snug group-hover:underline">{{ $unit->publicTitle() }}</span>
+        <div class="flex items-baseline justify-between gap-3">
+            <span class="text-base font-bold leading-snug group-hover:underline">{{ $unit->publicTitle() }}</span>
+            @if ($rating)
+                <span class="inline-flex shrink-0 items-center gap-1 text-sm font-semibold" aria-label="{{ __(':score out of 5 from :count reviews', ['score' => $rating['average'], 'count' => $rating['count']]) }}">
+                    <x-cms.star class="h-3.5 w-3.5" />{{ number_format($rating['average'], 1) }}
+                </span>
+            @endif
+        </div>
         @if ($facts !== [])
             <span class="text-sm text-[var(--muted)]">{{ implode(' · ', $facts) }}</span>
         @endif

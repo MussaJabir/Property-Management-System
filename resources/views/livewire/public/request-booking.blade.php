@@ -93,6 +93,6 @@
                 {{ $kind === 'stay' ? __('Book on WhatsApp') : __('Ask on WhatsApp') }}
             </a>
         @endif
-        <p class="text-center text-sm text-[var(--muted)]">{{ __('No payment now. The front desk confirms by phone.') }}</p>
+        <p class="text-center text-sm text-[var(--muted)]">{{ $kind === 'stay' ? __('No payment now. The front desk confirms by phone.') : __('No payment now. We call you back.') }}</p>
     @endif
 </div>

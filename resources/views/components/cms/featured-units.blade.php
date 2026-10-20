@@ -13,6 +13,8 @@
         ->orderByDesc('updated_at')
         ->limit($limit)
         ->get();
+
+    $ratings = \App\Models\Rating::summaryForUnits($units->pluck('id')->all());
 @endphp
 
 <section class="flex flex-col gap-6">
@@ -37,7 +39,7 @@
     @else
         <div class="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-8">
             @foreach ($units as $unit)
-                <x-cms.room-card :unit="$unit" />
+                <x-cms.room-card :unit="$unit" :rating="$ratings[$unit->id] ?? null" />
             @endforeach
         </div>
     @endif
