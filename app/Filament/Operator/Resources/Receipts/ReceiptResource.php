@@ -29,6 +29,9 @@ class ReceiptResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
+    /** Kept out of the menu to keep it short. Reached from Payments ("Receipts" button). */
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function form(Schema $schema): Schema
     {
         // Receipts are issued by the Payment observer, never created manually.

@@ -35,17 +35,17 @@ class RatingResource extends Resource
 
     public static function getNavigationLabel(): string
     {
-        return __('Ratings');
+        return __('Reviews');
     }
 
     public static function getModelLabel(): string
     {
-        return __('Rating');
+        return __('Review');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('Ratings');
+        return __('Reviews');
     }
 
     public static function getEloquentQuery(): Builder
