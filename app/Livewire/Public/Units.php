@@ -35,12 +35,22 @@ class Units extends Component
     #[Url(as: 'max')]
     public ?int $maxRent = null;
 
+    /** '' = every room, 'night' = let by the night, 'month' = on a lease. */
+    #[Url(as: 'stay')]
+    public string $mode = '';
+
     /** @var array<int, string> selected amenity keys (AND-filtered) */
     #[Url(as: 'amenities')]
     public array $amenities = [];
 
     public function updating($name, $value): void
     {
+        $this->resetPage();
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset('search', 'type', 'mode', 'propertyId', 'locationId', 'minRent', 'maxRent', 'amenities');
         $this->resetPage();
     }
 
@@ -56,8 +66,15 @@ class Units extends Component
             $query->where(fn ($q) => $q
                 ->where('code', 'ilike', '%'.$this->search.'%')
                 ->orWhere('description', 'ilike', '%'.$this->search.'%')
+                ->orWhereHas('property', fn ($p) => $p->where('name', 'ilike', '%'.$this->search.'%'))
             );
         }
+
+        match ($this->mode) {
+            'night' => $query->shortStay(),
+            'month' => $query->longTerm(),
+            default => null,
+        };
 
         if ($this->type !== '') {
             $query->where('type', $this->type);
@@ -87,11 +104,16 @@ class Units extends Component
             $query->whereJsonContains('amenities', $amenity);
         }
 
+        $listed = Unit::query()->listedPublicly();
+
         return view('livewire.public.units', [
             'units' => $query->paginate(12),
             'properties' => Property::query()->orderBy('name')->get(['id', 'name']),
             'locations' => Location::query()->orderBy('region')->get(['id', 'region', 'district']),
-            'types' => ['room', 'apartment', 'business_frame', 'office', 'shop', 'warehouse'],
+            // Only types and ways of letting that are actually on offer.
+            'types' => (clone $listed)->distinct()->orderBy('type')->pluck('type')->filter()->values()->all(),
+            'hasShortStays' => (clone $listed)->shortStay()->exists(),
+            'hasLongTerm' => (clone $listed)->longTerm()->exists(),
             'amenityOptions' => Unit::amenityOptions(),
         ]);
     }

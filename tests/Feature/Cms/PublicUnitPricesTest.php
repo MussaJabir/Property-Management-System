@@ -37,8 +37,8 @@ it('shows nightly rooms per night, not as 0 a month', function () {
     $room = publicUnit($this->property, ['code' => 'N1', 'rental_mode' => Unit::RENTAL_SHORT_STAY, 'nightly_rate' => 80_000_00]);
     Tenancy::end();
 
-    $this->get('/priceco/units')->assertOk()->assertSeeText('80,000')->assertSeeText('TZS / night')->assertDontSeeText('/ month');
-    $this->get('/priceco/units/'.$room->id)->assertOk()->assertSeeText('TZS / night')->assertDontSeeText('/ month');
+    $this->get('/priceco/units')->assertOk()->assertSeeTextInOrder(['TZS 80,000', 'night'])->assertDontSeeText('TZS 0');
+    $this->get('/priceco/units/'.$room->id)->assertOk()->assertSeeTextInOrder(['TZS 80,000', 'night'])->assertDontSeeText('month');
 });
 
 it('shows both prices for rooms let both ways, and the real rent period', function () {
@@ -50,9 +50,8 @@ it('shows both prices for rooms let both ways, and the real rent period', functi
     Tenancy::end();
 
     $this->get('/priceco/units/'.$room->id)->assertOk()
-        ->assertSeeText('TZS / night')
-        ->assertSeeText('1,800,000')
-        ->assertSeeText('TZS / 6 months');
+        ->assertSeeTextInOrder(['TZS 60,000', 'night'])
+        ->assertSeeTextInOrder(['TZS 1,800,000', '6 months']);
 });
 
 it('keeps a nightly room listed while a guest is in, but never a leased one', function () {
@@ -85,4 +84,33 @@ it('compares rent filters with rent only, so nightly-only rooms do not match any
         ->set('maxRent', 400000)
         ->assertSee('FLAT1')
         ->assertDontSee('NIGHT1');
+});
+
+it('offers WhatsApp with the room already named, when the workspace has a phone', function () {
+    $this->client->update(['contact_phone' => '0712 000 111']);
+    tenancy()->initialize($this->client);
+    $room = publicUnit($this->property, ['code' => 'W1', 'rental_mode' => Unit::RENTAL_SHORT_STAY, 'nightly_rate' => 50_000_00]);
+    Tenancy::end();
+
+    $this->get('/priceco/units/'.$room->id)->assertOk()
+        ->assertSee('https://wa.me/255712000111?text='.rawurlencode('Hello, I am interested in W1 · Lodge. Is it free?'), false)
+        ->assertSeeText('Book on WhatsApp');
+});
+
+it('hides WhatsApp buttons when the workspace has no phone', function () {
+    tenancy()->initialize($this->client);
+    $room = publicUnit($this->property, ['code' => 'W2', 'rent_amount' => 300_000_00]);
+    Tenancy::end();
+
+    $this->get('/priceco/units/'.$room->id)->assertOk()->assertDontSee('wa.me', false);
+});
+
+it('filters rooms by how they are let', function () {
+    tenancy()->initialize($this->client);
+    publicUnit($this->property, ['code' => 'NIGHTONLY', 'rental_mode' => Unit::RENTAL_SHORT_STAY, 'nightly_rate' => 50_000_00]);
+    publicUnit($this->property, ['code' => 'MONTHONLY', 'rent_amount' => 300_000_00]);
+
+    Livewire::test(Units::class)
+        ->set('mode', 'night')->assertSee('NIGHTONLY')->assertDontSee('MONTHONLY')
+        ->set('mode', 'month')->assertSee('MONTHONLY')->assertDontSee('NIGHTONLY');
 });

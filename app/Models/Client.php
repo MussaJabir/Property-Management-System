@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Propaganistas\LaravelPhone\PhoneNumber;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
+use Throwable;
 
 /**
  * Client = the landlord / property-management company using PMS.
@@ -107,5 +109,26 @@ class Client extends BaseTenant implements TenantWithDatabase
     public function isSuspended(): bool
     {
         return $this->status === 'suspended';
+    }
+
+    /**
+     * A WhatsApp chat link to the workspace's contact phone, with $text
+     * already typed in, or null when there is no usable number.
+     */
+    public function whatsappUrl(?string $text = null): ?string
+    {
+        try {
+            $number = new PhoneNumber(trim((string) $this->contact_phone), 'TZ');
+
+            if (! $number->isValid()) {
+                return null;
+            }
+
+            $digits = ltrim($number->formatE164(), '+');
+        } catch (Throwable) {
+            return null;
+        }
+
+        return 'https://wa.me/'.$digits.($text !== null && $text !== '' ? '?text='.rawurlencode($text) : '');
     }
 }
