@@ -9,6 +9,7 @@ use App\Http\Controllers\Portal\LogoutController;
 use App\Http\Controllers\Portal\PayInvoiceController;
 use App\Http\Controllers\Portal\ReceiptDownloadController;
 use App\Http\Controllers\PwaController;
+use App\Http\Controllers\Rating\LeaseRatingController;
 use App\Http\Controllers\Rating\RenterRatingController;
 use App\Http\Controllers\Rating\StayRatingController;
 use App\Http\Middleware\EnsurePlanFeature;
@@ -61,6 +62,14 @@ Route::middleware([
     Route::post('/rate/{booking}', [StayRatingController::class, 'store'])
         ->middleware(['signed', 'throttle:10,1'])
         ->name('rate.stay.store');
+
+    /* ----- Renter review: signed link sent on WhatsApp from Leases ----- */
+    Route::get('/rate/lease/{lease}', [LeaseRatingController::class, 'show'])
+        ->middleware(['signed', 'throttle:30,1'])
+        ->name('rate.lease');
+    Route::post('/rate/lease/{lease}', [LeaseRatingController::class, 'store'])
+        ->middleware(['signed', 'throttle:10,1'])
+        ->name('rate.lease.store');
 
     /* ----- Renter portal (Phase 8) ----- */
     Route::prefix('portal')->name('portal.')->middleware(EnsurePlanFeature::class.':renter_portal')->group(function () {

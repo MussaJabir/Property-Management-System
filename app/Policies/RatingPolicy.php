@@ -7,7 +7,10 @@ namespace App\Policies;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
-/** Ratings are read-only for staff; renters and guests write them. */
+/**
+ * Renters and guests write ratings; staff only read them, and approve
+ * which ones show on the public website (publish).
+ */
 class RatingPolicy extends OperatorResourcePolicy
 {
     protected string $domain = 'tenancy';
@@ -26,6 +29,12 @@ class RatingPolicy extends OperatorResourcePolicy
     public function update(User $user, Model $record): bool
     {
         return false;
+    }
+
+    /** Show on, or hide from, the public room pages. */
+    public function publish(User $user, Model $record): bool
+    {
+        return $this->canManage($user) || $user->can('frontdesk.manage');
     }
 
     public function delete(User $user, Model $record): bool
