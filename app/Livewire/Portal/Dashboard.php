@@ -42,7 +42,7 @@ class Dashboard extends Component
             'renter' => $renter,
             'lease' => $lease,
             'nextDue' => $nextDue,
-            'outstanding' => 'TZS '.number_format($outstandingCents / 100, 0, '.', ','),
+            'outstanding' => ($lease !== null ? $lease->currency : 'TZS').' '.number_format($outstandingCents / 100, 0, '.', ','),
             'rating' => $lease?->rating,
         ]);
     }

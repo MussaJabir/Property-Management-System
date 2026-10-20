@@ -5,7 +5,8 @@
 
 @php
     $client = tenant();
-    $brand = $client?->brand_primary_color ?: '#0F766E';
+    // Same readable brand colour as the public website.
+    $brand = \App\Support\BrandColor::readable($client?->brand_primary_color);
     $user = auth('renter')->user();
     $renter = $user?->renter;
     $clientSlug = $client?->slug;
@@ -77,9 +78,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title.' · ' : '' }}{{ $client?->name ?? 'Portal' }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
-    <style>:root { --brand: {{ $brand }}; --pms-tour-accent: {{ $brand }}; --pms-tour-accent-hover: {{ $brand }}; }</style>
+    {{-- Same type as the public website. --}}
+    <style>:root { --brand: {{ $brand }}; --pms-tour-accent: {{ $brand }}; --pms-tour-accent-hover: {{ $brand }}; } body { font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif; }</style>
     {{-- Installable renter app, on portal pages only (not the guest rating page). --}}
     @if ($clientSlug && request()->is($clientSlug.'/portal*'))
         @include('pwa.head', ['manifest' => url('/'.$clientSlug.'/portal/manifest.webmanifest'), 'theme' => $brand, 'title' => $client?->name])

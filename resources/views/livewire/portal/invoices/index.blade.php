@@ -1,5 +1,3 @@
-@php $client = tenant(); @endphp
-
 <div>
     <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <h1 class="text-2xl font-semibold">{{ __('Invoices') }}</h1>
@@ -24,7 +22,45 @@
         </div>
     @enderror
 
-    <div class="mt-4 overflow-hidden rounded-xl bg-white shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
+    {{-- Phones: one card per invoice. --}}
+    <div class="mt-4 flex flex-col gap-3 md:hidden">
+        @forelse ($invoices as $invoice)
+            <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        @if ($invoice->balanceDue() > 0)
+                            <p class="text-lg font-semibold">{{ $invoice->formatted_balance }}</p>
+                            <p class="text-xs text-zinc-500">{{ __('of :total', ['total' => $invoice->formatted_total]) }}</p>
+                        @else
+                            <p class="text-lg font-semibold">{{ $invoice->formatted_total }}</p>
+                            <p class="text-xs text-zinc-500">{{ __('Paid in full') }}</p>
+                        @endif
+                    </div>
+                    @include('livewire.portal.invoices.partials.status')
+                </div>
+                <dl class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                        <dt class="text-xs text-zinc-500">{{ __('Due') }}</dt>
+                        <dd>{{ optional($invoice->due_date)->format('d/m/Y') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-zinc-500">{{ __('Period') }}</dt>
+                        <dd>{{ optional($invoice->billing_period_start)->format('d/m') }} – {{ optional($invoice->billing_period_end)->format('d/m/Y') }}</dd>
+                    </div>
+                </dl>
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-100 pt-2 text-xs text-zinc-500 dark:border-zinc-800">
+                    <span>{{ $invoice->invoice_number ?? '—' }}</span>
+                    <span class="flex flex-wrap items-center gap-2">{{ __('Receipts') }}: @include('livewire.portal.invoices.partials.receipts')</span>
+                </div>
+                <div class="mt-3 empty:hidden">@include('livewire.portal.invoices.partials.pay')</div>
+            </div>
+        @empty
+            <p class="rounded-xl bg-white px-4 py-8 text-center text-sm text-zinc-500 shadow-sm dark:bg-zinc-900">{{ __('No invoices yet.') }}</p>
+        @endforelse
+    </div>
+
+    {{-- Larger screens: the full table, scrolling inside its box if needed. --}}
+    <div class="mt-4 hidden overflow-x-auto rounded-xl bg-white shadow-sm md:block dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
         <table class="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
             <thead class="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500 dark:bg-zinc-950">
                 <tr>
@@ -40,60 +76,20 @@
             <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
                 @forelse ($invoices as $invoice)
                     <tr>
-                        <td class="px-4 py-3 font-medium">{{ $invoice->invoice_number ?? '—' }}</td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">
+                        <td class="whitespace-nowrap px-4 py-3 font-medium">{{ $invoice->invoice_number ?? '—' }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-zinc-600 dark:text-zinc-300">
                             {{ optional($invoice->billing_period_start)->format('d/m/Y') }} →
                             {{ optional($invoice->billing_period_end)->format('d/m/Y') }}
                         </td>
-                        <td class="px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ optional($invoice->due_date)->format('d/m/Y') }}</td>
-                        <td class="px-4 py-3 text-right">{{ $invoice->formatted_total }}</td>
-                        <td class="px-4 py-3 text-right font-semibold">{{ $invoice->formatted_balance }}</td>
-                        <td class="px-4 py-3">
-                            @php
-                                $colors = [
-                                    'paid' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
-                                    'overdue' => 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
-                                    'partial' => 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
-                                    'unpaid' => 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
-                                ];
-                                $cls = $colors[$invoice->status] ?? 'bg-zinc-100 text-zinc-700';
-                            @endphp
-                            <span class="rounded-full px-2 py-0.5 text-xs font-medium {{ $cls }}">{{ ucfirst($invoice->status) }}</span>
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            @php
-                                $receipts = $invoice->payments->map(fn ($p) => $p->receipt)->filter();
-                            @endphp
-                            @forelse ($receipts as $receipt)
-                                <a href="{{ url('/'.$client->slug.'/portal/invoices/'.$invoice->id.'/receipt/'.$receipt->id) }}"
-                                   class="text-xs text-sky-600 hover:underline dark:text-sky-400">
-                                    {{ $receipt->receipt_number ?? __('PDF') }}
-                                </a><br>
-                            @empty
-                                <span class="text-xs text-zinc-400">—</span>
-                            @endforelse
-                        </td>
+                        <td class="whitespace-nowrap px-4 py-3 text-zinc-600 dark:text-zinc-300">{{ optional($invoice->due_date)->format('d/m/Y') }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right">{{ $invoice->formatted_total }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right font-semibold">{{ $invoice->formatted_balance }}</td>
+                        <td class="px-4 py-3">@include('livewire.portal.invoices.partials.status')</td>
+                        <td class="px-4 py-3 text-right">@include('livewire.portal.invoices.partials.receipts')</td>
                     </tr>
                     @if ($canPayByPhone && $invoice->isOutstanding() && $invoice->currency === 'TZS' && $invoice->balanceDue() >= 100)
                         <tr class="bg-zinc-50/60 dark:bg-zinc-950/40">
-                            <td colspan="7" class="px-4 py-3">
-                                <form method="POST"
-                                      action="{{ route('portal.invoices.pay', ['tenant' => tenant('id'), 'invoice' => $invoice->id]) }}"
-                                      class="flex flex-wrap items-center gap-2">
-                                    @csrf
-                                    <span class="text-sm text-zinc-700 dark:text-zinc-300">
-                                        {{ __('Pay :amount by mobile money:', ['amount' => $invoice->formatted_balance]) }}
-                                    </span>
-                                    <input type="tel" name="phone" required maxlength="20" inputmode="tel" autocomplete="tel"
-                                           value="{{ old('phone', $payerPhone) }}"
-                                           aria-label="{{ __('Mobile money number') }}"
-                                           class="w-44 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm shadow-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950">
-                                    <button type="submit"
-                                            class="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200">
-                                        {{ __('Send payment prompt') }}
-                                    </button>
-                                </form>
-                            </td>
+                            <td colspan="7" class="px-4 py-3">@include('livewire.portal.invoices.partials.pay')</td>
                         </tr>
                     @endif
                 @empty

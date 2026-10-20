@@ -12,7 +12,7 @@ namespace App\Support;
  */
 final class BrandColor
 {
-    public const FALLBACK = '#0F766E';
+    public const FALLBACK = '#0f766e';
 
     public static function readable(?string $hex): string
     {
@@ -23,7 +23,7 @@ final class BrandColor
             $rgb = array_map(fn (float $c): float => $c * 0.9, $rgb);
         }
 
-        return sprintf('#%02X%02X%02X', ...array_map(fn (float $c): int => (int) round($c), $rgb));
+        return sprintf('#%02x%02x%02x', ...array_map(fn (float $c): int => (int) round($c), $rgb));
     }
 
     public static function contrastWithWhite(array $rgb): float
