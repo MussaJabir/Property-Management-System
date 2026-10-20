@@ -170,7 +170,7 @@ class RentInvoiceGenerator
      * The lease's due day in the period's first month, but never before the
      * period starts or after it ends.
      */
-    private function dueDate(Lease $lease, Carbon $start, Carbon $end): Carbon
+    public function dueDate(Lease $lease, Carbon $start, Carbon $end): Carbon
     {
         $day = max(1, min(28, (int) ($lease->payment_due_day ?: 1)));
         $due = $start->copy()->setDay($day);
