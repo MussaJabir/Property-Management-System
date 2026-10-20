@@ -194,7 +194,12 @@ class WorkspaceSettings extends Page implements HasForms
 
                         Tab::make(__('Payments'))
                             ->icon('heroicon-o-device-phone-mobile')
-                            ->schema($this->paymentsTab()),
+                            ->badge(SelcomAccount::platformReady() ? null : __('Coming soon'))
+                            ->schema(SelcomAccount::platformReady() ? $this->paymentsTab() : [
+                                Placeholder::make('selcom_coming_soon')
+                                    ->label('')
+                                    ->content(__('Automatic mobile money payments are coming soon: renters and guests will get a payment prompt on their phone, and payments will be recorded for you. Until then, record payments with "Record payment".')),
+                            ]),
 
                         Tab::make('Security')
                             ->icon('heroicon-o-lock-closed')
@@ -367,6 +372,11 @@ class WorkspaceSettings extends Page implements HasForms
      */
     private function saveSelcom(array $data): void
     {
+        // Coming soon: the tab has no fields, so there is nothing to save.
+        if (! SelcomAccount::platformReady()) {
+            return;
+        }
+
         $vendor = filled($data['selcom_vendor'] ?? null) ? trim((string) $data['selcom_vendor']) : null;
         $key = $this->data['selcom_api_key'] ?? null;
         $secret = $this->data['selcom_api_secret'] ?? null;

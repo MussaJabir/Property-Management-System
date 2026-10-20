@@ -73,6 +73,15 @@ class SelcomAccount extends Model
     }
 
     /** Selcom's API address for this account's mode, from config. */
+    /**
+     * Has PMS been connected to Selcom at all (an address set for sandbox
+     * or live)? Until then automatic payments are shown as coming soon.
+     */
+    public static function platformReady(): bool
+    {
+        return filled(config('services.selcom.sandbox_url')) || filled(config('services.selcom.live_url'));
+    }
+
     public function baseUrl(): ?string
     {
         $url = config('services.selcom.'.$this->mode.'_url');

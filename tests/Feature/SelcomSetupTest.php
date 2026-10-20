@@ -224,3 +224,17 @@ it('gives payment requests unique Selcom references', function () {
 
     expect($a)->toMatch('/^PMS[A-Z0-9]{16}$/')->and($a)->not->toBe($b);
 });
+
+it('shows automatic payments as coming soon until PMS is connected to Selcom', function () {
+    config(['services.selcom.sandbox_url' => null, 'services.selcom.live_url' => null]);
+    $this->actingAs($this->owner, 'web');
+
+    Livewire::test(WorkspaceSettings::class)
+        ->assertSee('Coming soon')
+        ->assertSee('Automatic mobile money payments are coming soon')
+        ->assertDontSee('Vendor ID')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(SelcomAccount::query()->withoutGlobalScopes()->count())->toBe(0);
+});
