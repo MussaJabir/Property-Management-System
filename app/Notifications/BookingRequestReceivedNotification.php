@@ -59,11 +59,11 @@ class BookingRequestReceivedNotification extends Notification
         $r = $this->request;
 
         return $r->isStay()
-            ? __(':name wants :nights night(s) from :from, :guests guest(s).', [
+            ? __(':name wants :nights from :from, :guests.', [
                 'name' => $r->full_name,
-                'nights' => $r->nights(),
+                'nights' => trans_choice(':count night|:count nights', $r->nights()),
                 'from' => $r->check_in_date?->format('d/m/Y'),
-                'guests' => $r->guests_count,
+                'guests' => trans_choice(':count guest|:count guests', (int) $r->guests_count),
             ])
             : __(':name asked about the room, moving in around :date.', [
                 'name' => $r->full_name,

@@ -21,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
+use Livewire\Component;
 use RuntimeException;
 
 /**
@@ -124,7 +125,8 @@ class BookingRequestResource extends Resource
                     ->action(function (BookingRequest $r): void {
                         $r->markHandled(auth()->id());
                         Notification::make()->success()->title(__('Marked as called back'))->send();
-                    }),
+                    })
+                    ->after(self::refreshMenuBadge()),
                 Action::make('decline')
                     ->label(__('Decline'))
                     ->icon(Heroicon::OutlinedXMark)
@@ -137,7 +139,8 @@ class BookingRequestResource extends Resource
                     ->action(function (BookingRequest $r, array $data): void {
                         $r->decline($data['reason'] ?? null, auth()->id());
                         Notification::make()->success()->title(__('Request declined'))->send();
-                    }),
+                    })
+                    ->after(self::refreshMenuBadge()),
                 Action::make('whatsapp')
                     ->label(__('WhatsApp'))
                     ->icon(Heroicon::OutlinedChatBubbleLeftRight)
@@ -169,6 +172,12 @@ class BookingRequestResource extends Resource
         ];
     }
 
+    /** Reload the list so the menu's "new requests" count goes down too. */
+    private static function refreshMenuBadge(): \Closure
+    {
+        return fn (Component $livewire) => $livewire->redirect(self::getUrl('index'), navigate: true);
+    }
+
     private static function confirmAction(): Action
     {
         return Action::make('confirm')
@@ -197,16 +206,17 @@ class BookingRequestResource extends Resource
                         'date' => $booking->check_in_date->format('d/m/Y'),
                     ]))
                     ->send();
-            });
+            })
+            ->after(self::refreshMenuBadge());
     }
 
     private static function wants(BookingRequest $r): string
     {
         return $r->isStay()
-            ? __(':nights night(s) from :from · :guests guest(s)', [
-                'nights' => $r->nights(),
+            ? __(':nights from :from · :guests', [
+                'nights' => trans_choice(':count night|:count nights', $r->nights()),
                 'from' => $r->check_in_date?->format('d/m/Y'),
-                'guests' => $r->guests_count,
+                'guests' => trans_choice(':count guest|:count guests', (int) $r->guests_count),
             ])
             : ($r->move_in_date !== null
                 ? __('Monthly · move in around :date', ['date' => $r->move_in_date->format('d/m/Y')])

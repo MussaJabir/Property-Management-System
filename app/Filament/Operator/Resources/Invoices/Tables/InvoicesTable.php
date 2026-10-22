@@ -109,7 +109,10 @@ class InvoicesTable
                 RequestPaymentAction::check(),
 
                 ActionGroup::make([
-                    EditAction::make(),
+                    // Issued invoices open read-only (see EditInvoice).
+                    EditAction::make()
+                        ->label(fn (Invoice $record): string => $record->isDraft() ? __('Edit') : __('Open'))
+                        ->icon(fn (Invoice $record): Heroicon => $record->isDraft() ? Heroicon::PencilSquare : Heroicon::OutlinedEye),
 
                     Action::make('download_pdf')
                         ->label('Download PDF')

@@ -29,14 +29,28 @@ class PropertyForm
 
                         Select::make('location_id')
                             ->label('Location')
-                            ->options(fn () => Location::pluck('name', 'id'))
+                            // "Njiro · Arusha City, Arusha", so same-named areas differ.
+                            ->options(fn () => Location::query()->orderBy('name')->get()
+                                ->mapWithKeys(fn (Location $location): array => [
+                                    $location->id => $location->name.' · '.collect([$location->district, $location->region])->filter()->implode(', '),
+                                ]))
                             ->required()
                             ->searchable()
                             ->preload()
+                            ->createOptionModalHeading(__('Add a location'))
                             ->createOptionForm([
-                                TextInput::make('name')->required(),
-                                TextInput::make('region')->required(),
-                                TextInput::make('district')->required(),
+                                TextInput::make('name')
+                                    ->label(__('Area'))
+                                    ->placeholder(__('e.g. Njiro, Mikocheni, Kariakoo'))
+                                    ->required(),
+                                TextInput::make('district')
+                                    ->label(__('District'))
+                                    ->placeholder(__('e.g. Arusha City, Kinondoni'))
+                                    ->required(),
+                                TextInput::make('region')
+                                    ->label(__('Region'))
+                                    ->placeholder(__('e.g. Arusha, Dar es Salaam'))
+                                    ->required(),
                             ])
                             ->createOptionUsing(fn (array $data) => Location::create($data)->id),
 

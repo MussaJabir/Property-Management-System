@@ -45,8 +45,31 @@ final class RentFields
                 ->helperText(fn (Get $get): ?string => self::periodTotal($get, $get($currencyField) ?? 'TZS')),
 
             Hidden::make('rent_amount')
-                ->default(0),
+                ->default(0)
+                // Always save what the monthly field shows. "Save & add
+                // another" can leave the field showing the last unit's rent
+                // while this resets to 0; an unchanged record still matches.
+                ->dehydrateStateUsing(fn (mixed $state, Get $get): int => self::periodCents($state, $get)),
         ];
+    }
+
+    /** The per-period rent to save: kept when it matches the monthly field. */
+    public static function periodCents(mixed $state, Get $get): int
+    {
+        $current = is_numeric($state) ? (int) $state : 0;
+        $monthly = $get('monthly_rent');
+
+        if (! is_numeric($monthly)) {
+            return $current;
+        }
+
+        $months = self::months($get);
+
+        if (self::monthlyFrom($current, $months) == (float) $monthly) {
+            return $current;
+        }
+
+        return (int) round(((float) $monthly) * 100 * $months);
     }
 
     /** Recalculate the per-period rent from the monthly rent and the cycle. */
