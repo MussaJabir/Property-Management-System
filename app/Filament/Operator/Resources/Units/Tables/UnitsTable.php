@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Units\Tables;
 
+use App\Models\Unit;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -49,15 +50,21 @@ class UnitsTable
                     })
                     ->color('gray'),
 
+                // Nightly rate for short stays, rent for leases, both for "both".
                 TextColumn::make('formatted_rent')
                     ->label('Rent')
+                    ->getStateUsing(fn (Unit $record): array => array_map(
+                        fn (array $price): string => $price['currency'].' '.$price['amount'].' / '.$price['per'],
+                        $record->publicPrices(),
+                    ) ?: [$record->formatted_rent])
+                    ->listWithLineBreaks()
                     ->sortable(query: fn ($query, string $direction) => $query->orderBy('rent_amount', $direction)),
 
                 TextColumn::make('billing_cycle')
                     ->label('Cycle')
                     ->badge()
                     ->color('gray')
-                    ->formatStateUsing(fn (string $state, $record): string => match ($state) {
+                    ->formatStateUsing(fn (string $state, Unit $record): string => $record->rental_mode === Unit::RENTAL_SHORT_STAY ? __('Nightly') : match ($state) {
                         'monthly' => 'Monthly',
                         'quarterly' => 'Every 3 months',
                         'semi_annual' => 'Every 6 months',

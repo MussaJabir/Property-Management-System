@@ -17,6 +17,12 @@ class CreateUnit extends CreateRecord
     #[Url]
     public ?string $property = null;
 
+    /** "Save & add another" keeps the property, type and how it is let. */
+    protected function preserveFormDataWhenCreatingAnother(array $data): array
+    {
+        return array_intersect_key($data, array_flip(['property_id', 'type', 'rental_mode']));
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['status'] ??= 'vacant';

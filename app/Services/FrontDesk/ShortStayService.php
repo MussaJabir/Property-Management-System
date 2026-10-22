@@ -205,9 +205,9 @@ class ShortStayService
         ]);
 
         $invoice->items()->create([
-            'description' => __(':unit · :nights night(s) :from – :to', [
+            'description' => __(':unit · :nights :from – :to', [
                 'unit' => $booking->unit !== null ? $booking->unit->code : '',
-                'nights' => $booking->nights(),
+                'nights' => trans_choice(':count night|:count nights', $booking->nights()),
                 'from' => $booking->check_in_date->format('d/m/Y'),
                 'to' => $booking->check_out_date->format('d/m/Y'),
             ]),

@@ -40,11 +40,14 @@ class PaymentsTable
                 TextColumn::make('method')
                     ->badge()
                     ->color('gray')
-                    ->formatStateUsing(fn (string $state): string => str_replace('_', ' ', ucfirst($state))),
+                    ->formatStateUsing(fn (string $state, Payment $record): string => $record->method_label),
 
+                // The M-Pesa / bank code staff look payments up by.
                 TextColumn::make('reference_number')
-                    ->label('Reference')
-                    ->searchable()
+                    ->label('Transaction ID')
+                    ->getStateUsing(fn (Payment $record): ?string => $record->transaction_id ?: $record->reference_number)
+                    ->searchable(['transaction_id', 'reference_number'])
+                    ->copyable()
                     ->placeholder('—')
                     ->toggleable(),
 
