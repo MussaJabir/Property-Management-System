@@ -194,3 +194,24 @@ it('never shows another workspace\'s requests', function () {
 
     Livewire::test(ListBookingRequests::class)->assertCountTableRecords(0);
 });
+
+it('clears "dates taken" once the visitor picks other dates', function () {
+    app(ShortStayService::class)->book($this->room, ['full_name' => 'Walk-in', 'phone' => '0714000111'], today()->addDays(3), today()->addDays(4));
+
+    requestStay($this->room)
+        ->assertHasErrors('check_in')
+        ->set('check_in', today()->addDays(10)->toDateString())
+        ->assertHasNoErrors('check_in');
+});
+
+it('shows staff "3 nights · 2 guests", not "night(s)"', function () {
+    requestStay($this->room);
+
+    $this->actingAs($this->owner, 'web');
+    Filament::setCurrentPanel(Filament::getPanel('operator'));
+
+    Livewire::test(ListBookingRequests::class)
+        ->assertSeeText('3 nights from')
+        ->assertSeeText('2 guests')
+        ->assertDontSeeText('night(s)');
+});

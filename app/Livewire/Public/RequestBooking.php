@@ -65,6 +65,14 @@ class RequestBooking extends Component
         $this->check_out = today()->addDay()->toDateString();
     }
 
+    /** New dates or a new choice clear the old "dates taken" message. */
+    public function updated(string $property): void
+    {
+        if (in_array($property, ['check_in', 'check_out', 'move_in', 'kind'], true)) {
+            $this->resetErrorBag(['check_in', 'check_out', 'move_in']);
+        }
+    }
+
     public function submit(ShortStayService $stays): void
     {
         $unit = $this->unit();

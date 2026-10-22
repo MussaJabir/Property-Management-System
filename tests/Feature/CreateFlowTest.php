@@ -9,6 +9,7 @@ use App\Filament\Operator\Resources\Renters\Pages\CreateRenter;
 use App\Filament\Operator\Resources\Renters\RenterResource;
 use App\Filament\Operator\Resources\Units\Pages\CreateUnit;
 use App\Filament\Operator\Resources\Units\UnitResource;
+use App\Filament\Operator\Support\RentFields;
 use App\Models\Client;
 use App\Models\Location;
 use App\Models\Property;
@@ -90,4 +91,26 @@ it('takes a new renter on to a lease when a unit is free, else back to the list'
     Livewire::withQueryParams(['renter' => $renter->id])
         ->test(CreateLease::class)
         ->assertSchemaStateSet(['renter_id' => $renter->id]);
+});
+
+it('saves the shown rent on "Save & add another", never zero', function () {
+    $property = Property::create(['location_id' => $this->location->id, 'name' => 'Njiro Plaza', 'status' => 'active']);
+
+    $page = Livewire::withQueryParams(['property' => $property->id])
+        ->test(CreateUnit::class)
+        ->fillForm(['code' => 'G1', 'type' => 'business_frame', 'monthly_rent' => 350_000, 'billing_cycle' => 'semi_annual'])
+        ->call('create', another: true)
+        ->assertHasNoFormErrors();
+
+    // The next form still shows a rent; saving it as is must store that rent.
+    $shown = $page->get('data.monthly_rent');
+    $page->fillForm(['code' => 'G2', 'type' => 'business_frame'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Unit::query()->where('code', 'G1')->sole()->rent_amount)->toBe(2_100_000_00);
+
+    $g2 = Unit::query()->where('code', 'G2')->sole();
+    expect($g2->rent_amount)->toBeGreaterThan(0)
+        ->and($g2->rent_amount)->toBe((int) round((float) $shown * 100 * RentFields::monthsFor($g2->billing_cycle, $g2->billing_cycle_months)));
 });
