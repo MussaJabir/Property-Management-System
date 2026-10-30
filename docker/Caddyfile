@@ -1,0 +1,28 @@
+# PMS edge on a dedicated host: HTTPS (Let's Encrypt, automatic renewal) in
+# front of the app container. Used with docker-compose.caddy.yml only.
+{
+	email {$ACME_EMAIL}
+}
+
+{$PMS_DOMAIN:pms.bjptechnologies.co.tz} {
+	encode zstd gzip
+
+	# Same upload limit as the app's nginx and php.ini.
+	request_body {
+		max_size 16MB
+	}
+
+	# Caddy sets X-Forwarded-For / -Proto itself; the app trusts the Docker
+	# network (bootstrap/app.php), so Laravel sees https and the client IP.
+	reverse_proxy app:8080 {
+		flush_interval -1
+		transport http {
+			read_timeout 120s
+		}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+}

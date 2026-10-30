@@ -81,7 +81,7 @@ jobs:
           host: ${{ secrets.PROD_SSH_HOST }}
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_KEY }}
-          source: docker/docker-compose.production.yml
+          source: docker/docker-compose.production.yml,docker/docker-compose.caddy.yml,docker/Caddyfile
           target: /opt/pms/
           strip_components: 1
 
@@ -99,12 +99,19 @@ jobs:
             # Pin the deployed SHA so docker compose pulls the right tag.
             export PMS_TAG="${{ needs.build-and-push.outputs.sha }}"
 
+            # A dedicated host (PMS_EDGE=caddy in .env) also runs Caddy for
+            # HTTPS. COMPOSE_FILE makes every compose command below use both.
+            export COMPOSE_FILE=docker-compose.production.yml
+            if grep -q '^PMS_EDGE=caddy' .env; then
+              export COMPOSE_FILE=docker-compose.production.yml:docker-compose.caddy.yml
+            fi
+
             # Authenticate to GHCR if image is private.
             echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin || true
 
             # Pull the new image and roll the stack.
-            docker compose -f docker-compose.production.yml --env-file .env pull
-            docker compose -f docker-compose.production.yml --env-file .env up -d
+            docker compose --env-file .env pull
+            docker compose --env-file .env up -d
 
             # Wait for the app container to be healthy. Uses if/then/fi
             # (NOT `[ ] && break`) because under `set -e` + remote bash, a
@@ -120,26 +127,26 @@ jobs:
             done
             if [ "$status" != "healthy" ]; then
               echo "❌ app container never became healthy. Last status: $status"
-              docker compose -f docker-compose.production.yml logs --tail=100 app
+              docker compose logs --tail=100 app
               exit 1
             fi
 
             # Run migrations against the new image.
-            docker compose -f docker-compose.production.yml --env-file .env exec -T app \
+            docker compose --env-file .env exec -T app \
               php artisan migrate --force
 
             # Publish Filament's bundled CSS/JS/fonts into public/. Already baked
             # into the image, but re-publishing here keeps things in sync when a
             # Filament plugin is added without a fresh image rebuild.
-            docker compose -f docker-compose.production.yml --env-file .env exec -T app \
+            docker compose --env-file .env exec -T app \
               php artisan filament:assets
 
             # Cache config/routes/views for the running image.
-            docker compose -f docker-compose.production.yml --env-file .env exec -T app \
+            docker compose --env-file .env exec -T app \
               php artisan config:cache
-            docker compose -f docker-compose.production.yml --env-file .env exec -T app \
+            docker compose --env-file .env exec -T app \
               php artisan route:cache
-            docker compose -f docker-compose.production.yml --env-file .env exec -T app \
+            docker compose --env-file .env exec -T app \
               php artisan view:cache
 
             # Prune dangling images to reclaim disk on the small box.

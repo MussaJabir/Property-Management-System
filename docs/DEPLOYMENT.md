@@ -151,6 +151,33 @@ crontab -e
 # 30 2 * * *  /opt/pms/repo/docker/backup-postgres.sh >> /opt/pms/backups/backup.log 2>&1
 ```
 
+## Dedicated host (Hetzner, with Caddy)
+
+On a server that only runs PMS, Caddy (a container) is the edge instead of host
+nginx and certbot. It listens on 80/443 and renews certificates by itself.
+
+1. Server prep: Docker only, a `deploy` user in the `docker` group, firewall open
+   on 22/80/443.
+2. `sudo mkdir -p /opt/pms && sudo chown deploy:deploy /opt/pms`, then put the
+   `.env` in `/opt/pms` (same `APP_KEY` as the old server) and add:
+   ```
+   PMS_EDGE=caddy
+   ACME_EMAIL=info@bjptechnologies.co.tz
+   ```
+3. Point the GitHub secrets `PROD_SSH_HOST` / `PROD_SSH_USER` / `PROD_SSH_KEY` at
+   the new host and run the deploy workflow. It copies
+   `docker-compose.caddy.yml` and `Caddyfile` and, because of `PMS_EDGE=caddy`,
+   runs both compose files.
+4. Point the DNS A record at the new IP. Caddy gets the certificate on the first
+   request after DNS resolves.
+
+Manual commands on this host need both files, e.g.:
+```bash
+cd /opt/pms
+export COMPOSE_FILE=docker-compose.production.yml:docker-compose.caddy.yml
+docker compose --env-file .env ps
+```
+
 ## Rollback
 
 ```bash
