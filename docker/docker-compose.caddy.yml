@@ -1,0 +1,37 @@
+# Edge for a dedicated host (Hetzner): Caddy terminates HTTPS on 80/443 and
+# proxies to the app container. Layered on top of the main stack:
+#
+#   docker compose -f docker-compose.production.yml -f docker-compose.caddy.yml \
+#       --env-file .env up -d
+#
+# The deploy workflow adds this file when the server's .env has PMS_EDGE=caddy.
+# Not used on the old Oracle box, where host nginx is the edge.
+
+services:
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+      PMS_DOMAIN: ${PMS_DOMAIN:-pms.bjptechnologies.co.tz}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+volumes:
+  caddy_data:
+    name: pms_caddy_data
+  caddy_config:
+    name: pms_caddy_config
