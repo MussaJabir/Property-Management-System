@@ -6,11 +6,13 @@ use App\Filament\Operator\Support\RentFields;
 use App\Filament\Operator\Support\ShortStays;
 use App\Models\Property;
 use App\Models\Unit;
+use App\Services\Plans\PlanUsage;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -190,6 +192,19 @@ class UnitForm
                             ->maxSize(5120)
                             ->panelLayout('grid')
                             ->columnSpanFull(),
+                    ]),
+
+                Section::make(__('PMS marketplace'))
+                    ->visible(fn (): bool => PlanUsage::forCurrentUser()?->hasFeature('marketplace_listing') ?? true)
+                    ->components([
+                        Toggle::make('on_marketplace')
+                            ->label(__('Show this unit on the PMS marketplace'))
+                            ->default(false)
+                            ->helperText(fn (?Unit $record): string => __('Renters find it at :url while it is free, and contact you directly. Included in your plan.', [
+                                'url' => preg_replace('#^https?://#', '', rtrim((string) config('app.url'), '/')).'/browse',
+                            ]).($record?->isFeatured()
+                                ? ' '.__('Featured until :date: shown first in search.', ['date' => $record->featured_until?->format('d/m/Y')])
+                                : '')),
                     ]),
             ]);
     }
