@@ -4,6 +4,7 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Operator\OperatorActivationController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\PwaController;
+use App\Livewire\Marketplace\Browse;
 use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,9 @@ Route::post('locale', LocaleController::class)->name('locale.switch');
 Route::get('service-worker.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-worker');
 Route::get('manage/manifest.webmanifest', [PwaController::class, 'operatorManifest'])->name('pwa.operator-manifest');
 Route::get('.well-known/assetlinks.json', [PwaController::class, 'assetLinks'])->name('pwa.asset-links');
+
+// PMS marketplace: vacant units from every client that listed them.
+Route::get('browse', Browse::class)->name('marketplace.browse');
 
 // Privacy policy (public; also the link the Play Store listing points to).
 Route::view('privacy', 'privacy')->name('privacy');
