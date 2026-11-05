@@ -17,6 +17,10 @@ Route::post('locale', LocaleController::class)->name('locale.switch');
 // single-segment paths aren't taken for a client slug.
 Route::get('service-worker.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-worker');
 Route::get('manage/manifest.webmanifest', [PwaController::class, 'operatorManifest'])->name('pwa.operator-manifest');
+Route::get('.well-known/assetlinks.json', [PwaController::class, 'assetLinks'])->name('pwa.asset-links');
+
+// Privacy policy (public; also the link the Play Store listing points to).
+Route::view('privacy', 'privacy')->name('privacy');
 
 // Onboarding tour: mark finished/skipped for the signed-in operator (web guard).
 // No `auth` middleware needed — the controller stamps only the currently

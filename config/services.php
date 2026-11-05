@@ -51,4 +51,16 @@ return [
         'timeout' => (int) env('SELCOM_TIMEOUT', 30),
     ],
 
+    // Play Store app (Trusted Web Activity). The SHA-256 fingerprints of the
+    // keys that sign the Android app, comma separated: our upload key and
+    // Google's app-signing key from Play Console. Served as assetlinks.json
+    // so the app opens PMS full-screen without a browser bar.
+    'android' => [
+        'package' => env('ANDROID_PACKAGE', 'tz.co.bjptechnologies.pms'),
+        'sha256_fingerprints' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('ANDROID_SHA256_FINGERPRINTS', '')),
+        ))),
+    ],
+
 ];

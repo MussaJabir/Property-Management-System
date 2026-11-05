@@ -828,6 +828,7 @@
                 <ul class="mt-4 space-y-2.5 text-sm text-slate-600">
                     <li><a href="https://bjptechnologies.co.tz" target="_blank" rel="noopener" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_about') }}</a></li>
                     <li><a href="mailto:{{ __('landing.footer_email') }}?subject=PMS%20demo%20request" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_demo') }}</a></li>
+                    <li><a href="{{ route('privacy') }}" class="transition-colors hover:text-slate-900">{{ __('privacy.footer_link') }}</a></li>
                 </ul>
             </div>
 

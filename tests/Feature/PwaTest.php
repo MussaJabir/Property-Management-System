@@ -83,3 +83,33 @@ it('offers staff the install prompt once signed in', function () {
         ->assertSee('id="pms-install"', false)
         ->assertSee('beforeinstallprompt', false);
 });
+
+it('serves an empty assetlinks.json until the Android key fingerprints are set', function () {
+    config(['services.android.sha256_fingerprints' => []]);
+
+    $this->get('/.well-known/assetlinks.json')->assertOk()->assertExactJson([]);
+});
+
+it('links the Play Store app to the site with the configured fingerprints', function () {
+    config([
+        'services.android.package' => 'tz.co.bjptechnologies.pms',
+        'services.android.sha256_fingerprints' => ['AA:BB', 'CC:DD'],
+    ]);
+
+    $this->get('/.well-known/assetlinks.json')
+        ->assertOk()
+        ->assertJsonPath('0.relation.0', 'delegate_permission/common.handle_all_urls')
+        ->assertJsonPath('0.target.namespace', 'android_app')
+        ->assertJsonPath('0.target.package_name', 'tz.co.bjptechnologies.pms')
+        ->assertJsonPath('0.target.sha256_cert_fingerprints', ['AA:BB', 'CC:DD']);
+});
+
+it('shows the privacy policy publicly, linked from the home page', function () {
+    $this->get('/privacy')
+        ->assertOk()
+        ->assertSee('Privacy policy')
+        ->assertSee('Personal Data Protection Act, 2022')
+        ->assertSee('info@bjptechnologies.co.tz');
+
+    $this->get('/')->assertSee(route('privacy'), false);
+});
