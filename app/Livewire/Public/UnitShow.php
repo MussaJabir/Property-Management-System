@@ -61,6 +61,23 @@ class UnitShow extends Component
             'reviews' => $reviews,
             'summary' => $ratings[$this->unit->getKey()] ?? null,
             'ratings' => $ratings,
+        ])->layoutData([
+            'title' => $this->unit->publicTitle(),
+            'description' => $this->shareDescription(),
+            'image' => $this->unit->coverImageUrl('card'),
         ]);
+    }
+
+    /** "TZS 65,000 / night · Njiro, Arusha City · 1 bedroom" for link previews. */
+    private function shareDescription(): string
+    {
+        $price = $this->unit->publicPrices()[0] ?? null;
+        $location = $this->unit->property?->location;
+
+        return collect([
+            $price ? $price['currency'].' '.$price['amount'].' / '.$price['per'] : null,
+            $location ? collect([$location->name, $location->district])->filter()->unique()->implode(', ') : null,
+            implode(' · ', $this->unit->publicFacts()) ?: null,
+        ])->filter()->implode(' · ');
     }
 }

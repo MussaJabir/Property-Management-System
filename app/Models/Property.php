@@ -50,6 +50,7 @@ class Property extends Model implements HasMedia
         'status',
     ];
 
+    /** @return BelongsTo<Location, $this> */
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);

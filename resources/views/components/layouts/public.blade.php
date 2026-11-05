@@ -1,4 +1,4 @@
-@props(['title' => null])
+@props(['title' => null, 'description' => null, 'image' => null])
 
 @php
     use App\Models\CmsPage;
@@ -27,6 +27,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title.' · ' : '' }}{{ $client?->name ?? 'Site' }}</title>
+    {{-- Link previews (WhatsApp, Facebook) when a page is shared. --}}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ $client?->name ?? 'PMS' }}">
+    <meta property="og:title" content="{{ $title ? $title.' · ' : '' }}{{ $client?->name ?? 'PMS' }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    @if ($description)
+        <meta name="description" content="{{ $description }}">
+        <meta property="og:description" content="{{ $description }}">
+    @endif
+    @if ($image)
+        <meta property="og:image" content="{{ $image }}">
+    @endif
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
