@@ -24,6 +24,7 @@ class Plan extends Model
         'cms_website' => 'Website / CMS pages',
         'maintenance' => 'Maintenance tracking',
         'short_stays' => 'Short stays & front desk',
+        'marketplace_listing' => 'Listed on the PMS marketplace',
         'reports' => 'Reports & Excel export',
         'custom_roles' => 'Custom staff roles & permissions',
         'email_notifications' => 'Email notifications',

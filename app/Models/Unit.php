@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -31,6 +32,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  *
  * @property string $rental_mode
  * @property int|null $nightly_rate
+ * @property bool $on_marketplace
+ * @property Carbon|null $featured_until
  * @property-read Property|null $property
  */
 class Unit extends Model implements HasMedia
@@ -120,6 +123,8 @@ class Unit extends Model implements HasMedia
         'size_sqm',
         'description',
         'amenities',
+        'on_marketplace',
+        'featured_until',
     ];
 
     protected function casts(): array
@@ -131,6 +136,8 @@ class Unit extends Model implements HasMedia
             'bathrooms' => 'integer',
             'size_sqm' => 'decimal:2',
             'amenities' => 'array',
+            'on_marketplace' => 'boolean',
+            'featured_until' => 'datetime',
         ];
     }
 
@@ -384,6 +391,12 @@ class Unit extends Model implements HasMedia
                 ->where('status', self::STATUS_OCCUPIED)
                 ->whereIn('rental_mode', [self::RENTAL_SHORT_STAY, self::RENTAL_BOTH])
                 ->whereDoesntHave('leases', fn (Builder $lease) => $lease->where('status', Lease::STATUS_ACTIVE))));
+    }
+
+    /** Boosted: shown first on the PMS marketplace until featured_until. */
+    public function isFeatured(): bool
+    {
+        return $this->featured_until !== null && $this->featured_until->isFuture();
     }
 
     /** Units that can be let on a lease (long-term or both). */

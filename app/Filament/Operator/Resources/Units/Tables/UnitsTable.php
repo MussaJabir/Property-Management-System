@@ -3,16 +3,22 @@
 namespace App\Filament\Operator\Resources\Units\Tables;
 
 use App\Models\Unit;
+use App\Services\Plans\PlanUsage;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class UnitsTable
 {
@@ -74,6 +80,17 @@ class UnitsTable
                     })
                     ->toggleable(),
 
+                IconColumn::make('on_marketplace')
+                    ->label(__('Marketplace'))
+                    ->boolean()
+                    ->trueIcon(fn (Unit $record): string => $record->isFeatured() ? 'heroicon-s-star' : 'heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-minus')
+                    ->tooltip(fn (Unit $record): ?string => $record->isFeatured()
+                        ? __('Featured until :date', ['date' => $record->featured_until?->format('d/m/Y')])
+                        : null)
+                    ->visible(fn (): bool => self::marketplaceEnabled())
+                    ->toggleable(),
+
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -101,6 +118,9 @@ class UnitsTable
                         'shop' => 'Shop',
                         'warehouse' => 'Warehouse',
                     ]),
+                TernaryFilter::make('on_marketplace')
+                    ->label(__('On the marketplace'))
+                    ->visible(fn (): bool => self::marketplaceEnabled()),
                 SelectFilter::make('billing_cycle')
                     ->label('Billing cycle')
                     ->options([
@@ -117,11 +137,44 @@ class UnitsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('listOnMarketplace')
+                        ->label(__('List on marketplace'))
+                        ->icon('heroicon-o-building-storefront')
+                        ->visible(fn (): bool => self::marketplaceEnabled())
+                        ->action(fn (Collection $records) => self::setMarketplace($records, true))
+                        ->deselectRecordsAfterCompletion(),
+                    BulkAction::make('removeFromMarketplace')
+                        ->label(__('Remove from marketplace'))
+                        ->icon('heroicon-o-eye-slash')
+                        ->color('gray')
+                        ->visible(fn (): bool => self::marketplaceEnabled())
+                        ->action(fn (Collection $records) => self::setMarketplace($records, false))
+                        ->deselectRecordsAfterCompletion(),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
             ])
             ->defaultSort('code');
+    }
+
+    /** The client's plan includes the PMS marketplace. */
+    private static function marketplaceEnabled(): bool
+    {
+        return PlanUsage::forCurrentUser()?->hasFeature('marketplace_listing') ?? true;
+    }
+
+    /** @param  Collection<int, Unit>  $records */
+    private static function setMarketplace(Collection $records, bool $on): void
+    {
+        $records->each(fn (Unit $unit) => $unit->update(['on_marketplace' => $on]));
+
+        Notification::make()
+            ->success()
+            ->title($on
+                ? trans_choice(':count unit listed on the marketplace|:count units listed on the marketplace', $records->count())
+                : trans_choice(':count unit removed from the marketplace|:count units removed from the marketplace', $records->count()))
+            ->body($on ? __('Only vacant units are shown to renters.') : null)
+            ->send();
     }
 }
