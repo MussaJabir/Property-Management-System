@@ -72,6 +72,28 @@ class PwaController
         ]);
     }
 
+    /**
+     * Digital Asset Links for the Play Store app: proves the Android app
+     * belongs to this site, so it opens PMS full-screen (no browser bar).
+     * Empty until the signing-key fingerprints are set in the environment.
+     */
+    public function assetLinks(): JsonResponse
+    {
+        /** @var list<string> $fingerprints */
+        $fingerprints = config('services.android.sha256_fingerprints', []);
+
+        $links = $fingerprints === [] ? [] : [[
+            'relation' => ['delegate_permission/common.handle_all_urls'],
+            'target' => [
+                'namespace' => 'android_app',
+                'package_name' => (string) config('services.android.package'),
+                'sha256_cert_fingerprints' => $fingerprints,
+            ],
+        ]];
+
+        return response()->json($links, 200, ['Cache-Control' => 'no-cache'], JSON_UNESCAPED_SLASHES);
+    }
+
     /** @param  array<string, mixed>  $fields */
     private function manifest(array $fields): JsonResponse
     {

@@ -79,6 +79,9 @@ x-app-env: &app-env
   BEEM_SECRET: ${BEEM_SECRET:-}
   BEEM_SOURCE_ADDR: ${BEEM_SOURCE_ADDR:-PMS}
 
+  # Play Store app: fingerprints of the Android signing keys (assetlinks.json).
+  ANDROID_SHA256_FINGERPRINTS: ${ANDROID_SHA256_FINGERPRINTS:-}
+
 services:
   app:
     image: ghcr.io/mussajabir/pms:${PMS_TAG:-latest}
