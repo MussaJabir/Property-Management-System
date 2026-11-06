@@ -125,7 +125,7 @@ it('filters by stay, monthly price whatever the cycle, bedrooms and amenities', 
         ->and(listedCodes(['amenities' => ['wifi', 'parking']]))->toBe(['SIXMONTH']);
 });
 
-it('serves the browse page with links to each landlord room page', function () {
+it('serves the browse page with links to each marketplace room page', function () {
     [$unit] = landlordWithUnits('njiro', ['plan_id' => $this->pro->id], [['code' => 'R101']]);
     landlordWithUnits('demo-ws', ['is_demo' => true], [['code' => 'D9']]);
 
@@ -133,10 +133,10 @@ it('serves the browse page with links to each landlord room page', function () {
         ->assertOk()
         ->assertSee('Ona nyumba bila kulipa dalali')
         ->assertSee('R101 · Njiro Court')
-        ->assertSee('/njiro/units/'.$unit->id, false)
+        ->assertSee('/browse/njiro/'.$unit->id, false)
         ->assertSee('Listed by Njiro Homes')
         ->assertSee('Demo listing, not available to book')
-        ->assertDontSee('/demo-ws/units/', false)
+        ->assertDontSee('/browse/demo-ws/', false)
         ->assertSee('og:title', false);
 });
 

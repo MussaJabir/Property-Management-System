@@ -1,10 +1,13 @@
-@props(['unit', 'rating' => null])
+@props(['unit', 'rating' => null, 'query' => []])
 
 @php
     /** @var \App\Models\Unit $unit */
     $client = $unit->ownerClient();
     $isDemo = (bool) $client?->is_demo;
-    $url = url('/'.$client?->slug.'/units/'.$unit->id);
+    // The marketplace room page, carrying this search for its Back link;
+    // shared links point at the room alone.
+    $roomUrl = route('marketplace.room', ['tenant' => $client?->slug, 'unit' => $unit->id]);
+    $url = $query === [] ? $roomUrl : $roomUrl.'?'.http_build_query($query);
     $img = $unit->coverImageUrl('card');
     $prices = $unit->publicPrices();
     $price = $prices[0] ?? null;
@@ -17,7 +20,7 @@
     $share = 'https://wa.me/?text='.rawurlencode(__('marketplace.share_text', [
         'title' => $unit->publicTitle(),
         'price' => $price ? $price['currency'].' '.$price['amount'].' / '.$price['per'] : '',
-        'url' => $url,
+        'url' => $roomUrl,
     ]));
 @endphp
 

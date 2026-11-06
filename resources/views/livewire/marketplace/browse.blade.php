@@ -64,6 +64,12 @@
     <main class="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-10 pt-6 sm:px-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <p class="text-sm text-slate-600" wire:loading.class="opacity-50">
+                @if ($landlordName)
+                    <span class="mr-1 inline-flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 font-semibold text-teal-800">
+                        {{ __('marketplace.places_by', ['name' => $landlordName]) }}
+                        <button type="button" wire:click="$set('landlord', '')" class="-mr-1 inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-full hover:bg-teal-100" aria-label="{{ __('marketplace.show_everyone') }}">×</button>
+                    </span>
+                @endif
                 <strong class="text-slate-900">
                     @if (trim($search) !== '')
                         {{ trans_choice('marketplace.count_in', $units->total(), ['area' => trim($search)]) }}
@@ -101,7 +107,7 @@
         @else
             <div class="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" wire:loading.class="opacity-60">
                 @foreach ($units as $unit)
-                    <x-marketplace.listing-card :unit="$unit" :rating="$ratings[$unit->id] ?? null" />
+                    <x-marketplace.listing-card :unit="$unit" :rating="$ratings[$unit->id] ?? null" :query="$searchQuery" />
                 @endforeach
             </div>
 

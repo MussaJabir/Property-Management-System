@@ -10,6 +10,7 @@ use App\Models\SystemSetting;
 use App\Models\Unit;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Stancl\Tenancy\Database\TenantScope;
 
@@ -36,8 +37,41 @@ final class ListingSearch
 
     public const SORT_PRICE = 'price';
 
+    /** The /browse filters, as they appear in its address. */
+    public const QUERY_KEYS = ['q', 'stay', 'max', 'bedrooms', 'amenities', 'sort', 'landlord'];
+
     /**
-     * @param  array{q?: string, stay?: string, max?: int|null, bedrooms?: int|null, amenities?: list<string>, sort?: string}  $filters
+     * Only the known /browse filters that are set, so a room page can link
+     * back to the same search.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public static function browseQuery(array $input): array
+    {
+        $query = [];
+
+        foreach (self::QUERY_KEYS as $key) {
+            $value = $input[$key] ?? null;
+
+            if ($key === 'amenities') {
+                $value = array_values(array_intersect((array) $value, Unit::AMENITIES));
+            } elseif (is_scalar($value)) {
+                $value = trim((string) $value);
+            } else {
+                $value = null;
+            }
+
+            if ($value !== null && $value !== '' && $value !== [] && ! ($key === 'sort' && $value === self::SORT_FEATURED)) {
+                $query[$key] = $value;
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * @param  array{q?: string, stay?: string, max?: int|null, bedrooms?: int|null, amenities?: list<string>, sort?: string, landlord?: string}  $filters
      * @return LengthAwarePaginator<int, Unit>
      */
     public function search(array $filters = [], int $perPage = self::PER_PAGE): LengthAwarePaginator
@@ -79,12 +113,61 @@ final class ListingSearch
             ->listedPublicly();
     }
 
+    /** Whether this unit shows on the marketplace right now. */
+    public function isListed(Unit $unit): bool
+    {
+        return $this->listed()->whereKey($unit->getKey())->exists();
+    }
+
+    /** How many places a landlord has on the marketplace. */
+    public function countFor(Client $client): int
+    {
+        return $this->listed()->where('units.tenant_id', $client->getKey())->count();
+    }
+
+    /**
+     * Other listed places in the same region, from any landlord: featured
+     * first, never demo ones. Runs outside any workspace so every landlord's
+     * rooms (and their property and photos) load.
+     *
+     * @return Collection<int, Unit>
+     */
+    public function nearby(Unit $unit, int $limit = 4): Collection
+    {
+        $region = $unit->property?->location?->region;
+
+        return tenancy()->central(function () use ($unit, $region, $limit): Collection {
+            $query = $this->listed()
+                ->whereKeyNot($unit->getKey())
+                ->whereIn('units.tenant_id', Client::query()->where('is_demo', false)->select('id'))
+                ->with(['tenant', 'property.location', 'media', 'property.media']);
+
+            if ($region) {
+                $query->whereHas('property', fn (Builder $p) => $p
+                    ->withoutGlobalScope(TenantScope::class)
+                    ->whereHas('location', fn (Builder $l) => $l
+                        ->withoutGlobalScope(TenantScope::class)
+                        ->where('region', $region)));
+            }
+
+            $this->applySort($query, self::SORT_FEATURED);
+
+            return $query->limit($limit)->get();
+        });
+    }
+
     /**
      * @param  Builder<Unit>  $query
      * @param  array<string, mixed>  $filters
      */
     private function applyFilters(Builder $query, array $filters): void
     {
+        $landlord = trim((string) ($filters['landlord'] ?? ''));
+
+        if ($landlord !== '') {
+            $query->where('units.tenant_id', $landlord);
+        }
+
         $search = trim((string) ($filters['q'] ?? ''));
 
         if ($search !== '') {
