@@ -27,6 +27,7 @@ use Throwable;
  * @property array<string, mixed>|null $settings
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $limits_waived_until
+ * @property bool $is_demo
  */
 class Client extends BaseTenant implements TenantWithDatabase
 {
@@ -72,6 +73,7 @@ class Client extends BaseTenant implements TenantWithDatabase
             'trial_ends_at',
             'limits_waived_until',
             'settings',
+            'is_demo',
         ];
     }
 
@@ -79,6 +81,7 @@ class Client extends BaseTenant implements TenantWithDatabase
     {
         return [
             'settings' => 'array',
+            'is_demo' => 'boolean',
             'trial_ends_at' => 'datetime',
             'limits_waived_until' => 'datetime',
         ];

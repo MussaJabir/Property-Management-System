@@ -4,6 +4,8 @@ namespace App\Filament\Admin\Resources\Clients\Schemas;
 
 use App\Models\Client;
 use App\Models\Plan;
+use App\Support\ReservedSlugs;
+use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -11,6 +13,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -45,6 +48,11 @@ class ClientForm
                             ->maxLength(60)
                             ->alphaDash()
                             ->unique(ignoreRecord: true)
+                            ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                                if (is_string($value) && ReservedSlugs::isReserved($value)) {
+                                    $fail('This address is used by PMS itself. Choose another one.');
+                                }
+                            })
                             ->disabledOn('edit')
                             ->dehydrated()
                             ->helperText(fn (string $operation): ?string => $operation === 'create'
@@ -106,6 +114,11 @@ class ClientForm
                             ])
                             ->default('trial')
                             ->native(false),
+
+                        Toggle::make('is_demo')
+                            ->label('Demo workspace')
+                            ->helperText('Its rooms show on the PMS marketplace with a Demo badge, after real listings, and cannot be booked.')
+                            ->columnSpanFull(),
 
                         DateTimePicker::make('trial_ends_at')
                             ->label('Trial ends on')

@@ -51,6 +51,12 @@ return [
         'timeout' => (int) env('SELCOM_TIMEOUT', 30),
     ],
 
+    // BJP Technologies' own WhatsApp: "List your property" on the
+    // marketplace opens a chat with this number.
+    'bjp' => [
+        'whatsapp' => env('BJP_WHATSAPP', '255764764011'),
+    ],
+
     // Play Store app (Trusted Web Activity). The SHA-256 fingerprints of the
     // keys that sign the Android app, comma separated: our upload key and
     // Google's app-signing key from Play Console. Served as assetlinks.json

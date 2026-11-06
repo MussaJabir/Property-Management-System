@@ -45,6 +45,7 @@ class SeedDemoClient extends Command
                 'slug' => $slug,
                 'name' => 'Demo Seed Co.',
                 'status' => 'active',
+                'is_demo' => true,
                 'brand_primary_color' => '#0F766E',
             ]);
 

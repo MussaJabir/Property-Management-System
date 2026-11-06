@@ -53,6 +53,7 @@
                 <a href="#pricing" class="transition-colors hover:text-slate-900">{{ __('landing.nav_pricing') }}</a>
             @endif
             <a href="#faq" class="transition-colors hover:text-slate-900">{{ __('landing.nav_faq') }}</a>
+            <a href="{{ route('marketplace.browse') }}" class="font-semibold text-teal-700 transition-colors hover:text-teal-900">{{ __('landing.nav_browse') }}</a>
         </nav>
 
         <div class="flex items-center gap-2 sm:gap-3">
@@ -69,6 +70,9 @@
                 </form>
             @endif
 
+            <a href="{{ route('marketplace.browse') }}" class="inline-flex text-sm font-semibold text-teal-700 transition-colors hover:text-teal-900 md:hidden">
+                {{ __('landing.nav_browse') }}
+            </a>
             <a href="/admin/login" class="hidden cursor-pointer text-sm font-medium text-slate-700 transition-colors hover:text-slate-900 lg:inline-flex">
                 {{ __('landing.cta_sign_in') }}
             </a>
@@ -819,6 +823,7 @@
                         <li><a href="#pricing" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_pricing') }}</a></li>
                     @endif
                     <li><a href="#faq" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_faq') }}</a></li>
+                    <li><a href="{{ route('marketplace.browse') }}" class="transition-colors hover:text-slate-900">{{ __('landing.nav_browse') }}</a></li>
                     <li><a href="/admin/login" class="transition-colors hover:text-slate-900">{{ __('landing.footer_link_sign_in') }}</a></li>
                 </ul>
             </div>
