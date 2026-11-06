@@ -38,7 +38,14 @@ final class ListingSearch
     public const SORT_PRICE = 'price';
 
     /** The /browse filters, as they appear in its address. */
-    public const QUERY_KEYS = ['q', 'stay', 'max', 'bedrooms', 'amenities', 'sort', 'landlord'];
+    public const QUERY_KEYS = ['q', 'stay', 'max', 'bedrooms', 'amenities', 'sort', 'landlord', 'type'];
+
+    /** Kinds of place a visitor can pick (the chips on phones). */
+    public const TYPE_GROUPS = [
+        'rooms' => [Unit::TYPE_ROOM],
+        'apartments' => [Unit::TYPE_APARTMENT],
+        'business' => [Unit::TYPE_BUSINESS_FRAME, Unit::TYPE_SHOP, Unit::TYPE_OFFICE, Unit::TYPE_WAREHOUSE],
+    ];
 
     /**
      * Only the known /browse filters that are set, so a room page can link
@@ -71,7 +78,7 @@ final class ListingSearch
     }
 
     /**
-     * @param  array{q?: string, stay?: string, max?: int|null, bedrooms?: int|null, amenities?: list<string>, sort?: string, landlord?: string}  $filters
+     * @param  array{q?: string, stay?: string, max?: int|null, bedrooms?: int|null, amenities?: list<string>, sort?: string, landlord?: string, type?: string}  $filters
      * @return LengthAwarePaginator<int, Unit>
      */
     public function search(array $filters = [], int $perPage = self::PER_PAGE): LengthAwarePaginator
@@ -111,6 +118,62 @@ final class ListingSearch
             ->where('units.on_marketplace', true)
             ->whereIn('units.tenant_id', $clients)
             ->listedPublicly();
+    }
+
+    /**
+     * The phone home screen: one row per area, busiest areas first, each
+     * row featured first. Only the given filters (e.g. a type chip) apply.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return list<array{region: string, total: int, units: Collection<int, Unit>}>
+     */
+    public function rowsByRegion(array $filters = [], int $regions = 4, int $perRow = 8): array
+    {
+        $counted = $this->listed();
+        $this->applyFilters($counted, $filters);
+
+        $busiest = DB::table('locations')
+            ->join('properties', 'properties.location_id', '=', 'locations.id')
+            ->join('units', 'units.property_id', '=', 'properties.id')
+            ->whereIn('units.id', $counted->select('units.id'))
+            ->whereNull('properties.deleted_at')
+            ->whereNull('locations.deleted_at')
+            ->whereNotNull('locations.region')
+            ->groupBy('locations.region')
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->orderBy('locations.region')
+            ->limit($regions)
+            ->get(['locations.region', DB::raw('COUNT(*) AS total')]);
+
+        $rows = [];
+
+        foreach ($busiest as $row) {
+            $query = $this->listed()->with(['tenant', 'property.location', 'media', 'property.media']);
+            $this->applyFilters($query, $filters);
+            $query->whereHas('property', fn (Builder $p) => $p
+                ->withoutGlobalScope(TenantScope::class)
+                ->whereHas('location', fn (Builder $l) => $l
+                    ->withoutGlobalScope(TenantScope::class)
+                    ->where('region', $row->region)));
+            $this->applySort($query, self::SORT_FEATURED);
+
+            $rows[] = ['region' => (string) $row->region, 'total' => (int) $row->total, 'units' => $query->limit($perRow)->get()];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * How many places match.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function count(array $filters = []): int
+    {
+        $query = $this->listed();
+        $this->applyFilters($query, $filters);
+
+        return $query->count();
     }
 
     /** Whether this unit shows on the marketplace right now. */
@@ -162,6 +225,12 @@ final class ListingSearch
      */
     private function applyFilters(Builder $query, array $filters): void
     {
+        $type = (string) ($filters['type'] ?? '');
+
+        if (isset(self::TYPE_GROUPS[$type])) {
+            $query->whereIn('units.type', self::TYPE_GROUPS[$type]);
+        }
+
         $landlord = trim((string) ($filters['landlord'] ?? ''));
 
         if ($landlord !== '') {
