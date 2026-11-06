@@ -68,4 +68,8 @@ return [
     'room_whatsapp_text' => 'Hello, I found :room on PMS. Is it free?',
     'places_by' => 'Places by :name',
     'show_everyone' => 'Show places from every landlord',
+    'landlord_login' => 'Landlord login',
+    'my_dashboard' => 'My dashboard',
+    'landlord_login_short' => 'Log in',
+    'my_dashboard_short' => 'Dashboard',
 ];

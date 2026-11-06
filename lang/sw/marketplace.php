@@ -68,4 +68,8 @@ return [
     'room_whatsapp_text' => 'Habari, nimeona :room kwenye PMS. Iko wazi?',
     'places_by' => 'Nyumba za :name',
     'show_everyone' => 'Onyesha nyumba za wenye nyumba wote',
+    'landlord_login' => 'Ingia (mwenye nyumba)',
+    'my_dashboard' => 'Dashibodi yangu',
+    'landlord_login_short' => 'Ingia',
+    'my_dashboard_short' => 'Dashibodi',
 ];
