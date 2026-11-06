@@ -1,8 +1,11 @@
-@props(['title' => null])
+@props(['title' => null, 'description' => null, 'image' => null, 'url' => null])
 
 @php
     $whatsapp = 'https://wa.me/'.config('services.bjp.whatsapp').'?text='.rawurlencode(__('marketplace.cta_whatsapp_text'));
     $pageTitle = ($title ?? __('marketplace.title')).' · PMS';
+    $shareTitle = ($title ?? __('marketplace.headline')).' · PMS';
+    $shareDescription = $description ?: __('marketplace.meta_description');
+    $pageUrl = $url ?? route('marketplace.browse');
 @endphp
 
 <!DOCTYPE html>
@@ -12,14 +15,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $pageTitle }}</title>
-    <meta name="description" content="{{ __('marketplace.meta_description') }}">
-    <link rel="canonical" href="{{ route('marketplace.browse') }}">
+    <meta name="description" content="{{ $shareDescription }}">
+    <link rel="canonical" href="{{ $pageUrl }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="PMS">
-    <meta property="og:title" content="{{ __('marketplace.headline') }} · PMS">
-    <meta property="og:description" content="{{ __('marketplace.meta_description') }}">
-    <meta property="og:url" content="{{ route('marketplace.browse') }}">
-    <meta property="og:image" content="{{ asset('images/pwa/icon-512.png') }}">
+    <meta property="og:title" content="{{ $shareTitle }}">
+    <meta property="og:description" content="{{ $shareDescription }}">
+    <meta property="og:url" content="{{ $pageUrl }}">
+    <meta property="og:image" content="{{ $image ?: asset('images/pwa/icon-512.png') }}">
     <meta name="theme-color" content="#0f766e">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,6 +35,9 @@
         body.pms-market { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
         body.pms-market h1, body.pms-market h2 { letter-spacing: -0.02em; }
         .tnum { font-variant-numeric: tabular-nums; }
+        [x-cloak] { display: none !important; }
+        /* Colours the shared room parts and booking form read. */
+        :root { --brand: #0f766e; --ink: #0f172a; --muted: #475569; --line: #e2e8f0; }
     </style>
 </head>
 <body class="pms-market min-h-screen bg-white text-slate-900 antialiased">

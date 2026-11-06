@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Marketplace;
 
+use App\Models\Client;
 use App\Models\Rating;
 use App\Models\Unit;
 use App\Services\Marketplace\ListingSearch;
@@ -15,8 +16,8 @@ use Livewire\WithPagination;
 
 /**
  * PMS marketplace (/browse): vacant units from every client that listed
- * them. Cards link to the landlord's own room page, which has the booking
- * request, WhatsApp and reviews.
+ * them. Cards open the marketplace room page (Room), which keeps this
+ * search for its Back link.
  */
 class Browse extends Component
 {
@@ -42,6 +43,10 @@ class Browse extends Component
     #[Url(as: 'sort')]
     public string $sort = ListingSearch::SORT_FEATURED;
 
+    /** One landlord's places only ("See all their places" on a room page). */
+    #[Url(as: 'landlord')]
+    public string $landlord = '';
+
     public function updating(string $name): void
     {
         $this->resetPage();
@@ -57,28 +62,33 @@ class Browse extends Component
 
     public function clearFilters(): void
     {
-        $this->reset('search', 'stay', 'max', 'bedrooms', 'amenities', 'sort');
+        $this->reset('search', 'stay', 'max', 'bedrooms', 'amenities', 'sort', 'landlord');
         $this->resetPage();
     }
 
     #[Layout('components.layouts.marketplace')]
     public function render(ListingSearch $listings): View
     {
-        $units = $listings->search([
+        $filters = [
             'q' => $this->search,
             'stay' => $this->stay,
             'max' => $this->max,
             'bedrooms' => $this->bedrooms,
             'amenities' => $this->amenities,
             'sort' => $this->sort,
-        ]);
+            'landlord' => $this->landlord,
+        ];
+        $units = $listings->search($filters);
 
         return view('livewire.marketplace.browse', [
             'units' => $units,
             'ratings' => Rating::summaryForUnits(array_map(fn (Unit $unit): string => (string) $unit->getKey(), $units->items())),
             'regions' => $listings->regions(),
             'amenityOptions' => array_intersect_key(Unit::amenityOptions(), array_flip(['wifi', 'water_247', 'parking', 'security', 'furnished', 'air_conditioning', 'backup_power'])),
-            'filtered' => $this->search !== '' || $this->stay !== '' || $this->max || $this->bedrooms || $this->amenities !== [],
+            'filtered' => $this->search !== '' || $this->stay !== '' || $this->max || $this->bedrooms || $this->amenities !== [] || $this->landlord !== '',
+            // Room pages link back to this same search.
+            'searchQuery' => ListingSearch::browseQuery($filters),
+            'landlordName' => $this->landlord !== '' ? Client::query()->whereKey($this->landlord)->value('name') : null,
         ]);
     }
 }

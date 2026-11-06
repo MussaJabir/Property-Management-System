@@ -4,9 +4,12 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Operator\OperatorActivationController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\PwaController;
+use App\Http\Middleware\EnsureTenantActive;
 use App\Livewire\Marketplace\Browse;
+use App\Livewire\Marketplace\Room;
 use App\Models\Plan;
 use Illuminate\Support\Facades\Route;
+use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 
 Route::get('/', function () {
     return view('welcome', ['plans' => Plan::publicCatalogue()]);
@@ -22,6 +25,13 @@ Route::get('.well-known/assetlinks.json', [PwaController::class, 'assetLinks'])-
 
 // PMS marketplace: vacant units from every client that listed them.
 Route::get('browse', Browse::class)->name('marketplace.browse');
+
+// One listed room inside the marketplace. It runs inside that client's
+// workspace (like their own room page) so the booking form and WhatsApp
+// work unchanged; the Livewire calls it makes re-run this middleware.
+Route::get('browse/{tenant}/{unit}', Room::class)
+    ->middleware([InitializeTenancyByPath::class, EnsureTenantActive::class])
+    ->name('marketplace.room');
 
 // Privacy policy (public; also the link the Play Store listing points to).
 Route::view('privacy', 'privacy')->name('privacy');
