@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\Plan;
 use App\Models\Property;
 use App\Models\Unit;
+use App\Models\User;
 use App\Services\Marketplace\ListingSearch;
 use Database\Seeders\PlanSeeder;
 use Livewire\Livewire;
@@ -144,4 +145,27 @@ it('keeps the landlord own room page working', function () {
         ->assertSee('What this room has')
         ->assertSee('All rooms')
         ->assertSeeLivewire('public.request-booking');
+});
+
+it('offers landlords a way in from the marketplace', function () {
+    $this->get('/browse')
+        ->assertOk()
+        ->assertSee('Landlord login')
+        ->assertSee(route('filament.operator.auth.login'), false)
+        ->assertDontSee('My dashboard');
+});
+
+it('takes a signed-in landlord straight to their dashboard', function () {
+    $client = Client::create(['slug' => 'dash', 'name' => 'Dash Homes', 'status' => 'active', 'plan_id' => $this->pro->id]);
+    $owner = User::create([
+        'tenant_id' => $client->id, 'type' => User::TYPE_OPERATOR, 'name' => 'Neema',
+        'email' => 'neema@dash.test', 'password' => 'secret-password', 'status' => User::STATUS_ACTIVE,
+    ]);
+
+    $this->actingAs($owner, 'web')
+        ->get('/browse')
+        ->assertOk()
+        ->assertSee('My dashboard')
+        ->assertSee(route('filament.operator.pages.dashboard'), false)
+        ->assertDontSee('Landlord login');
 });
