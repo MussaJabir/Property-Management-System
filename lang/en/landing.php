@@ -14,6 +14,7 @@ return [
     'nav_features' => 'Features',
     'nav_how' => 'How it works',
     'nav_faq' => 'FAQ',
+    'nav_browse' => 'Find a place',
     'nav_pricing' => 'Pricing',
     'nav_contact' => 'Contact',
     'cta_sign_in' => 'Sign in',

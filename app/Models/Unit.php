@@ -393,6 +393,14 @@ class Unit extends Model implements HasMedia
                 ->whereDoesntHave('leases', fn (Builder $lease) => $lease->where('status', Lease::STATUS_ACTIVE))));
     }
 
+    /** The client (landlord workspace) this unit belongs to. */
+    public function ownerClient(): ?Client
+    {
+        $tenant = $this->getRelationValue('tenant');
+
+        return $tenant instanceof Client ? $tenant : null;
+    }
+
     /** Boosted: shown first on the PMS marketplace until featured_until. */
     public function isFeatured(): bool
     {
