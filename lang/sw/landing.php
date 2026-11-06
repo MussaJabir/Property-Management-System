@@ -13,6 +13,7 @@ return [
     'nav_features' => 'Vipengele',
     'nav_how' => 'Inavyofanya kazi',
     'nav_faq' => 'Maswali',
+    'nav_browse' => 'Tafuta nyumba',
     'nav_pricing' => 'Bei',
     'nav_contact' => 'Wasiliana',
     'cta_sign_in' => 'Ingia',

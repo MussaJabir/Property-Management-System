@@ -2,7 +2,7 @@
 
 @php
     /** @var \App\Models\Unit $unit */
-    $client = $unit->tenant;
+    $client = $unit->ownerClient();
     $isDemo = (bool) $client?->is_demo;
     $url = url('/'.$client?->slug.'/units/'.$unit->id);
     $img = $unit->coverImageUrl('card');
