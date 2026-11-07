@@ -169,3 +169,49 @@ it('takes a signed-in landlord straight to their dashboard', function () {
         ->assertSee(route('filament.operator.pages.dashboard'), false)
         ->assertDontSee('Landlord login');
 });
+
+it('groups the phone home screen into rows by area, busiest first, featured first', function () {
+    roomLandlord('njiro', ['plan_id' => $this->pro->id], [['code' => 'A1'], ['code' => 'A2', 'featured_until' => now()->addDays(3)], ['code' => 'A3']]);
+    roomLandlord('sinza', ['plan_id' => $this->pro->id], [['code' => 'D1']], ['name' => 'Sinza', 'district' => 'Ubungo', 'region' => 'Dar es Salaam']);
+
+    $rows = app(ListingSearch::class)->rowsByRegion();
+
+    expect(array_column($rows, 'region'))->toBe(['Arusha', 'Dar es Salaam'])
+        ->and(array_column($rows, 'total'))->toBe([3, 1])
+        ->and($rows[0]['units']->first()->code)->toBe('A2');
+});
+
+it('filters by kind of place, and short stays from the chip', function () {
+    roomLandlord('mix', ['plan_id' => $this->pro->id], [
+        ['code' => 'ROOM1'],
+        ['code' => 'APT1', 'type' => Unit::TYPE_APARTMENT],
+        ['code' => 'SHOP1', 'type' => Unit::TYPE_SHOP],
+        ['code' => 'NIGHT1', 'rental_mode' => Unit::RENTAL_SHORT_STAY, 'nightly_rate' => 50_000_00, 'rent_amount' => 0],
+    ]);
+    $codes = fn (array $filters) => app(ListingSearch::class)->search($filters)->getCollection()->pluck('code')->sort()->values()->all();
+
+    expect($codes(['type' => 'apartments']))->toBe(['APT1'])
+        ->and($codes(['type' => 'business']))->toBe(['SHOP1'])
+        ->and($codes(['type' => 'rooms']))->toBe(['NIGHT1', 'ROOM1'])
+        ->and($codes(['type' => 'nonsense']))->toHaveCount(4);
+
+    Livewire::test(Browse::class)
+        ->call('pickType', 'night')
+        ->assertSet('stay', 'night')
+        ->assertSet('type', '')
+        ->call('pickType', 'apartments')
+        ->assertSet('type', 'apartments')
+        ->assertSet('stay', '');
+});
+
+it('shows rows on the phone home screen and a grid once searching', function () {
+    roomLandlord('njiro', ['plan_id' => $this->pro->id], [['code' => 'A1']]);
+
+    Livewire::test(Browse::class)
+        ->assertSee('Where do you want to live?')
+        ->assertSee('Places in Arusha')
+        ->assertSee('Show 1 place')
+        ->set('search', 'Njiro')
+        ->assertDontSee('Places in Arusha')
+        ->assertSee('/browse/njiro/', false);
+});

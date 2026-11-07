@@ -1,5 +1,7 @@
-<div>
-    <section class="border-b border-slate-100 bg-slate-50">
+<div x-data="{ sheet: false }" class="max-sm:pb-20">
+    @include('livewire.marketplace.partials.phone-top')
+
+    <section class="border-b border-slate-100 bg-slate-50 max-sm:hidden">
         <div class="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-6 pt-7 sm:px-6 sm:pb-8 sm:pt-10">
             <div class="flex flex-col gap-2">
                 <h1 class="text-[27px] font-extrabold leading-tight sm:text-4xl">{{ __('marketplace.headline') }}</h1>
@@ -62,7 +64,7 @@
     </section>
 
     <main class="mx-auto flex max-w-7xl flex-col gap-5 px-4 pb-10 pt-6 sm:px-6">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+        <div @class(['flex flex-wrap items-center justify-between gap-3', 'max-sm:hidden' => ! $searching])>
             <p class="text-sm text-slate-600" wire:loading.class="opacity-50">
                 @if ($landlordName)
                     <span class="mr-1 inline-flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 font-semibold text-teal-800">
@@ -105,13 +107,27 @@
                 @endif
             </div>
         @else
-            <div class="grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" wire:loading.class="opacity-60">
+            {{-- Phones: rows by area until the visitor searches. --}}
+            @if (! $searching)
+                @include('livewire.marketplace.partials.phone-rows')
+            @endif
+
+            {{-- Phones, searching: two per row. --}}
+            @if ($searching)
+                <div class="grid grid-cols-2 gap-x-3 gap-y-5 sm:hidden" wire:loading.class="opacity-60">
+                    @foreach ($units as $unit)
+                        <x-marketplace.mini-card :unit="$unit" :rating="$ratings[$unit->id] ?? null" :query="$searchQuery" />
+                    @endforeach
+                </div>
+            @endif
+
+            <div class="grid grid-cols-1 gap-x-5 gap-y-8 max-sm:hidden sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" wire:loading.class="opacity-60">
                 @foreach ($units as $unit)
                     <x-marketplace.listing-card :unit="$unit" :rating="$ratings[$unit->id] ?? null" :query="$searchQuery" />
                 @endforeach
             </div>
 
-            <div>{{ $units->links() }}</div>
+            <div @class(['max-sm:hidden' => ! $searching])>{{ $units->links() }}</div>
         @endif
 
         <section class="mt-6 flex flex-col gap-4 rounded-3xl bg-slate-900 p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
@@ -123,4 +139,6 @@
                class="inline-flex h-12 shrink-0 items-center justify-center rounded-xl bg-white px-6 text-[15px] font-bold text-slate-900 hover:bg-slate-100">{{ __('marketplace.cta_button') }}</a>
         </section>
     </main>
+    @include('livewire.marketplace.partials.phone-sheet')
+    @include('livewire.marketplace.partials.phone-nav')
 </div>

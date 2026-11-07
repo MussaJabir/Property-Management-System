@@ -43,6 +43,10 @@ class Browse extends Component
     #[Url(as: 'sort')]
     public string $sort = ListingSearch::SORT_FEATURED;
 
+    /** Kind of place (phone chips): rooms, apartments or business. */
+    #[Url(as: 'type')]
+    public string $type = '';
+
     /** One landlord's places only ("See all their places" on a room page). */
     #[Url(as: 'landlord')]
     public string $landlord = '';
@@ -60,9 +64,23 @@ class Browse extends Component
         $this->resetPage();
     }
 
+    /** A type chip on phones; "Short stays" is the by-the-night filter. */
+    public function pickType(string $type): void
+    {
+        if ($type === 'night') {
+            $this->stay = $this->stay === 'night' ? '' : 'night';
+            $this->type = '';
+        } else {
+            $this->type = array_key_exists($type, ListingSearch::TYPE_GROUPS) ? $type : '';
+            $this->stay = '';
+        }
+
+        $this->resetPage();
+    }
+
     public function clearFilters(): void
     {
-        $this->reset('search', 'stay', 'max', 'bedrooms', 'amenities', 'sort', 'landlord');
+        $this->reset('search', 'stay', 'max', 'bedrooms', 'amenities', 'sort', 'landlord', 'type');
         $this->resetPage();
     }
 
@@ -77,15 +95,33 @@ class Browse extends Component
             'amenities' => $this->amenities,
             'sort' => $this->sort,
             'landlord' => $this->landlord,
+            'type' => $this->type,
         ];
         $units = $listings->search($filters);
 
+        // Phones: with no search yet, show rows by area (only a type chip
+        // applies); any search shows the two-per-row grid instead.
+        $searching = trim($this->search) !== '' || $this->max || $this->bedrooms || $this->amenities !== [] || $this->landlord !== '';
+        $rows = $searching ? [] : $listings->rowsByRegion(['type' => $this->type, 'stay' => $this->stay]);
+
         return view('livewire.marketplace.browse', [
             'units' => $units,
-            'ratings' => Rating::summaryForUnits(array_map(fn (Unit $unit): string => (string) $unit->getKey(), $units->items())),
+            'ratings' => Rating::summaryForUnits(array_values(array_unique([
+                ...array_map(fn (Unit $unit): string => (string) $unit->getKey(), $units->items()),
+                ...collect($rows)->flatMap(fn (array $row) => $row['units'])->map(fn (Unit $unit): string => (string) $unit->getKey())->all(),
+            ]))),
             'regions' => $listings->regions(),
             'amenityOptions' => array_intersect_key(Unit::amenityOptions(), array_flip(['wifi', 'water_247', 'parking', 'security', 'furnished', 'air_conditioning', 'backup_power'])),
-            'filtered' => $this->search !== '' || $this->stay !== '' || $this->max || $this->bedrooms || $this->amenities !== [] || $this->landlord !== '',
+            'rows' => $rows,
+            'searching' => $searching,
+            'typeChips' => [
+                '' => __('marketplace.type_all'),
+                'rooms' => __('marketplace.type_rooms'),
+                'apartments' => __('marketplace.type_apartments'),
+                'night' => __('marketplace.stay_night_short'),
+                'business' => __('marketplace.type_business'),
+            ],
+            'filtered' => $this->type !== '' || $this->search !== '' || $this->stay !== '' || $this->max || $this->bedrooms || $this->amenities !== [] || $this->landlord !== '',
             // Room pages link back to this same search.
             'searchQuery' => ListingSearch::browseQuery($filters),
             'landlordName' => $this->landlord !== '' ? Client::query()->whereKey($this->landlord)->value('name') : null,
