@@ -1,4 +1,4 @@
-@props(['summary', 'reviews'])
+@props(['summary', 'reviews', 'swipe' => false])
 
 {{-- Approved reviews of one room: the score, then up to four, then the rest. --}}
 @if ($summary)
@@ -11,9 +11,14 @@
             <span class="text-sm text-[var(--muted)]">{{ __('From people who stayed. Checked by the owner before they appear.') }}</span>
         </div>
         @if ($reviews->isNotEmpty())
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-10 gap-y-7">
+            {{-- With swipe: cards in a sideways row on phones (every review), the grid on wider screens. --}}
+            <div @class([
+                'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-10 gap-y-7',
+                'max-md:-mx-4 max-md:flex max-md:snap-x max-md:gap-3 max-md:overflow-x-auto max-md:px-4 max-md:pb-1 max-md:[scrollbar-width:none]' => $swipe,
+            ])>
                 @foreach ($reviews as $i => $review)
-                    <article @if ($i >= 4) x-show="all" x-cloak @endif class="flex flex-col gap-2">
+                    <article @if ($i >= 4) x-show="all || (@js($swipe) && window.innerWidth < 768)" x-cloak @endif
+                             @class(['flex flex-col gap-2', 'max-md:w-[80%] max-md:shrink-0 max-md:snap-start max-md:rounded-2xl max-md:border max-md:border-slate-200 max-md:p-4' => $swipe])>
                         <div class="flex items-center gap-3">
                             <span class="grid h-10 w-10 place-items-center rounded-full bg-[#f1efea] text-[15px] font-bold">{{ mb_substr($review->publicName(), 0, 1) }}</span>
                             <span class="flex flex-col">
@@ -28,7 +33,7 @@
             </div>
             @if ($reviews->count() > 4)
                 <button type="button" x-show="! all" @click="all = true"
-                        class="min-h-[44px] self-start rounded-xl border border-[var(--ink)] px-4 text-[15px] font-semibold">
+                        @class(['min-h-[44px] self-start rounded-xl border border-[var(--ink)] px-4 text-[15px] font-semibold', 'max-md:hidden' => $swipe])>
                     {{ __('Show all :count reviews', ['count' => $reviews->count()]) }}
                 </button>
             @endif

@@ -317,6 +317,45 @@ final class ListingSearch
     }
 
     /**
+     * Areas for the phone search panel: each region with how many places it
+     * has and the cheapest TZS price (per month, else per night). USD-only
+     * areas get no price, so currencies are never compared.
+     *
+     * @return list<array{region: string, total: int, from: int|null, per: string|null}>
+     */
+    public function regionSummaries(): array
+    {
+        $monthly = $this->monthlyRentSql();
+        $short = "'".Unit::RENTAL_SHORT_STAY."'";
+        $both = "'".Unit::RENTAL_BOTH."'";
+
+        return DB::table('units')
+            ->join('properties', 'properties.id', '=', 'units.property_id')
+            ->join('locations', 'locations.id', '=', 'properties.location_id')
+            ->whereIn('units.id', $this->listed()->select('units.id'))
+            ->whereNull('properties.deleted_at')
+            ->whereNull('locations.deleted_at')
+            ->whereNotNull('locations.region')
+            ->groupBy('locations.region')
+            ->orderByDesc(DB::raw('COUNT(*)'))
+            ->orderBy('locations.region')
+            ->get([
+                'locations.region',
+                DB::raw('COUNT(*) AS total'),
+                DB::raw("MIN(CASE WHEN units.rent_currency = 'TZS' AND units.rental_mode <> {$short} AND units.rent_amount > 0 THEN {$monthly} END) AS min_month"),
+                DB::raw("MIN(CASE WHEN units.rent_currency = 'TZS' AND units.rental_mode IN ({$short}, {$both}) AND units.nightly_rate > 0 THEN units.nightly_rate END) AS min_night"),
+            ])
+            ->map(fn (object $row): array => [
+                'region' => (string) $row->region,
+                'total' => (int) $row->total,
+                'from' => $row->min_month !== null ? (int) round((float) $row->min_month / 100) : ($row->min_night !== null ? (int) round((float) $row->min_night / 100) : null),
+                'per' => $row->min_month !== null ? 'month' : ($row->min_night !== null ? 'night' : null),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
      * Distinct regions with listings, for the area suggestions.
      *
      * @return list<string>

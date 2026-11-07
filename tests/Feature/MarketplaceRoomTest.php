@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Livewire\Marketplace\Browse;
+use App\Livewire\Public\RequestBooking;
+use App\Models\BookingRequest;
 use App\Models\Client;
 use App\Models\Location;
 use App\Models\Plan;
@@ -10,6 +12,7 @@ use App\Models\Property;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\Marketplace\ListingSearch;
+use App\Support\RoomHighlights;
 use Database\Seeders\PlanSeeder;
 use Livewire\Livewire;
 use Stancl\Tenancy\Facades\Tenancy;
@@ -214,4 +217,68 @@ it('shows rows on the phone home screen and a grid once searching', function () 
         ->set('search', 'Njiro')
         ->assertDontSee('Places in Arusha')
         ->assertSee('/browse/njiro/', false);
+});
+
+it('builds the phone highlights from the room data', function () {
+    [$monthly, $bare, $nightly] = roomLandlord('njiro', ['plan_id' => $this->pro->id], [
+        ['code' => 'M1', 'amenities' => ['parking', 'wifi', 'water_247', 'security']],
+        ['code' => 'B1', 'amenities' => []],
+        ['code' => 'N1', 'rental_mode' => Unit::RENTAL_SHORT_STAY, 'nightly_rate' => 50_000_00, 'rent_amount' => 0],
+    ]);
+    tenancy()->initialize(Client::find('njiro'));
+
+    $rows = RoomHighlights::for($monthly->fresh()->load('property.location'));
+    expect(array_column($rows, 'title'))->toBe(['In Njiro, Arusha City', '24/7 water · Security · Wi-Fi / Internet', 'Monthly rent, no broker fees'])
+        ->and($rows[1]['icon'])->toBe('amenity:water_247');
+
+    expect(RoomHighlights::for($bare->fresh()->load('property.location')))->toHaveCount(2)
+        ->and(RoomHighlights::for($nightly->fresh()->load('property.location'))[1]['title'])->toBe('By the night, no broker fees');
+});
+
+it('lists areas with how many places and the cheapest TZS price', function () {
+    roomLandlord('njiro', ['plan_id' => $this->pro->id], [
+        ['code' => 'A1', 'rent_amount' => 300_000_00],
+        ['code' => 'A2', 'rent_amount' => 1_200_000_00, 'billing_cycle' => 'semi_annual'],
+        ['code' => 'A3', 'rent_amount' => 500_00, 'rent_currency' => 'USD'],
+    ]);
+    roomLandlord('sinza', ['plan_id' => $this->pro->id], [
+        ['code' => 'D1', 'rent_amount' => 600_00, 'rent_currency' => 'USD'],
+    ], ['name' => 'Sinza', 'district' => 'Ubungo', 'region' => 'Dar es Salaam']);
+    roomLandlord('stays', ['plan_id' => $this->pro->id], [
+        ['code' => 'S1', 'rental_mode' => Unit::RENTAL_SHORT_STAY, 'nightly_rate' => 45_000_00, 'rent_amount' => 0],
+    ], ['name' => 'Kisasa', 'district' => 'Dodoma City', 'region' => 'Dodoma']);
+
+    expect(app(ListingSearch::class)->regionSummaries())->toBe([
+        ['region' => 'Arusha', 'total' => 3, 'from' => 200_000, 'per' => 'month'],
+        ['region' => 'Dar es Salaam', 'total' => 1, 'from' => null, 'per' => null],
+        ['region' => 'Dodoma', 'total' => 1, 'from' => 45_000, 'per' => 'night'],
+    ]);
+});
+
+it('fills the move-in date from the quick buttons and sends it to the landlord', function () {
+    $this->travelTo(now()->setDate(2026, 11, 7));
+    [$unit] = roomLandlord('njiro', ['plan_id' => $this->pro->id], [['code' => 'R101']]);
+    tenancy()->initialize(Client::find('njiro'));
+
+    Livewire::test(RequestBooking::class, ['unit' => $unit])
+        ->call('pickMoveIn', 'asap')->assertSet('move_in', '2026-11-07')
+        ->call('pickMoveIn', 'next_month')->assertSet('move_in', '2026-12-01')
+        ->call('pickMoveIn', 'date')->assertSet('moveInChoice', 'date')->assertSee('Move-in date')
+        ->set('full_name', 'Neema Juma')->set('phone', '0712345678')
+        ->call('submit')
+        ->assertSet('sent', true);
+
+    expect(BookingRequest::query()->latest('created_at')->first()->move_in_date->toDateString())->toBe('2026-12-01');
+});
+
+it('shows the phone layout parts on the room page', function () {
+    $many = ['air_conditioning', 'wifi', 'parking', 'water_247', 'backup_power', 'security', 'furnished', 'cctv'];
+    [$unit] = roomLandlord('njiro', ['plan_id' => $this->pro->id], [['code' => 'R101', 'amenities' => $many]]);
+
+    $this->get('/browse/njiro/'.$unit->id)
+        ->assertOk()
+        ->assertSee('In Njiro, Arusha City')
+        ->assertSee('Show all 8')
+        ->assertSee('Ask about this place')
+        ->assertSee('As soon as possible');
 });
