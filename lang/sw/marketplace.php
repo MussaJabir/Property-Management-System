@@ -94,4 +94,17 @@ return [
     'places_in' => 'Nyumba :area',
     'stays_in' => 'Kwa usiku :area',
     'see_all_count' => 'Ona zote :count',
+
+    // Ukurasa wa chumba kwenye simu.
+    'hl_where' => 'Iko :area',
+    'hl_has_text' => 'Kutoka kwenye orodha ya mwenye nyumba ya vilivyopo.',
+    'hl_monthly' => 'Kodi ya mwezi, hakuna ada ya dalali',
+    'hl_nightly' => 'Kwa usiku, hakuna ada ya dalali',
+    'hl_both' => 'Kwa usiku au kwa mwezi, hakuna ada ya dalali',
+    'hl_direct' => 'Unawasiliana na mwenye nyumba moja kwa moja.',
+    'read_more' => 'Soma zaidi',
+    'show_all_amenities' => 'Onyesha vyote :count',
+    'ask_about_room' => 'Uliza kuhusu nyumba hii',
+    'areas_with_places' => 'Maeneo yenye nyumba',
+    'from_price' => 'kuanzia :amount / :per',
 ];

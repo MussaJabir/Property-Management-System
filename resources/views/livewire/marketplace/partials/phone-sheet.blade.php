@@ -17,17 +17,33 @@
 
     <div class="flex flex-1 flex-col gap-3 overflow-y-auto px-4 pb-6">
         <div class="{{ $box }}">
-            <h2 class="text-lg font-extrabold">{{ __('marketplace.where_q') }}</h2>
+            <h2 class="text-2xl font-extrabold">{{ __('marketplace.where_q') }}</h2>
             <label class="relative block">
                 <span class="sr-only">{{ __('marketplace.where') }}</span>
                 <input type="search" wire:model.live.debounce.400ms="search" placeholder="{{ __('marketplace.where_placeholder') }}"
                        class="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 text-[15px] focus:border-slate-900 focus:ring-0">
                 <svg class="pointer-events-none absolute left-3.5 top-3.5 h-5 w-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
             </label>
-            @if ($regions !== [])
-                <div class="flex flex-wrap gap-2">
-                    @foreach ($regions as $region)
-                        <button type="button" wire:click="$set('search', @js($region))" class="{{ $pill }} {{ trim($search) === $region ? $on : $off }}">{{ $region }}</button>
+            @if ($areas !== [])
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">{{ __('marketplace.areas_with_places') }}</span>
+                <div class="flex flex-col">
+                    @foreach ($areas as $i => $area)
+                        @php($picked = trim($search) === $area['region'])
+                        <button type="button" wire:click="$set('search', @js($area['region']))" aria-pressed="{{ $picked ? 'true' : 'false' }}"
+                                class="flex min-h-16 cursor-pointer items-center gap-3.5 rounded-2xl px-1 text-left {{ $picked ? 'bg-teal-50' : '' }}">
+                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] {{ ['bg-sky-100 text-sky-700', 'bg-green-100 text-green-700', 'bg-amber-100 text-amber-700', 'bg-violet-100 text-violet-700'][$i % 4] }}">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                            </span>
+                            <span class="flex min-w-0 flex-col">
+                                <b class="text-[15px]">{{ $area['region'] }}</b>
+                                <span class="text-[13px] text-slate-500">
+                                    {{ trans_choice('marketplace.count', $area['total']) }}@if ($area['from']) · {{ __('marketplace.from_price', ['amount' => 'TZS '.number_format($area['from']), 'per' => $area['per'] === 'night' ? __('night') : __('month')]) }}@endif
+                                </span>
+                            </span>
+                            @if ($picked)
+                                <svg class="ml-auto h-5 w-5 shrink-0 text-teal-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg>
+                            @endif
+                        </button>
                     @endforeach
                 </div>
             @endif

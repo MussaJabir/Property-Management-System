@@ -94,4 +94,17 @@ return [
     'places_in' => 'Places in :area',
     'stays_in' => 'Short stays in :area',
     'see_all_count' => 'See all :count',
+
+    // Room page on phones.
+    'hl_where' => 'In :area',
+    'hl_has_text' => "From the landlord's list of what this place has.",
+    'hl_monthly' => 'Monthly rent, no broker fees',
+    'hl_nightly' => 'By the night, no broker fees',
+    'hl_both' => 'By the night or monthly, no broker fees',
+    'hl_direct' => 'You deal with the landlord directly.',
+    'read_more' => 'Read more',
+    'show_all_amenities' => 'Show all :count',
+    'ask_about_room' => 'Ask about this place',
+    'areas_with_places' => 'Areas with places',
+    'from_price' => 'from :amount / :per',
 ];
