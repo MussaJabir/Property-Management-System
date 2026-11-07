@@ -163,7 +163,9 @@
             <section class="flex flex-col gap-2.5 border-t border-slate-200 pt-7">
                 <h2 class="text-[22px] font-bold">{{ __('marketplace.where_it_is') }}</h2>
                 <p class="text-base text-slate-700">
-                    {{ collect([$unit->property?->name, $area])->filter()->implode(' · ') }}.
+                    {{-- Skip the property name when the area already says it ("Kariakoo Heights" in "Kariakoo Heights area"). --}}
+                    @php($propertyName = (string) $unit->property?->name)
+                    {{ collect([str_contains(mb_strtolower($area), mb_strtolower($propertyName)) ? '' : $propertyName, $area])->filter()->implode(' · ') }}.
                     {{ __('marketplace.exact_location') }}
                 </p>
                 @if ($unit->takesShortStays())
