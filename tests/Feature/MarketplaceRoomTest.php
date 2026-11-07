@@ -282,3 +282,18 @@ it('shows the phone layout parts on the room page', function () {
         ->assertSee('Ask about this place')
         ->assertSee('As soon as possible');
 });
+
+it('does not repeat the property name when the area already has it', function () {
+    [$unit] = roomLandlord('njiro', ['plan_id' => $this->pro->id], [['code' => 'R101']], ['name' => 'Njiro Court area', 'district' => 'Arusha City', 'region' => 'Arusha']);
+
+    $this->get('/browse/njiro/'.$unit->id)
+        ->assertOk()
+        ->assertDontSee('Njiro Court · Njiro Court area')
+        ->assertSee('Njiro Court area, Arusha City, Arusha.');
+});
+
+it('names the property and the area when they differ', function () {
+    [$unit] = roomLandlord('njiro', ['plan_id' => $this->pro->id], [['code' => 'R101']]);
+
+    $this->get('/browse/njiro/'.$unit->id)->assertSee('Njiro Court · Njiro, Arusha City, Arusha.');
+});
