@@ -50,10 +50,21 @@
                     @error('guests') <span class="{{ $error }}">{{ $message }}</span> @enderror
                 </label>
             @else
-                <label for="rb-movein" class="{{ $label }}">{{ __('When would you move in?') }}
-                    <input id="rb-movein" type="date" wire:model="move_in" min="{{ today()->toDateString() }}" class="{{ $field }}">
+                <div class="{{ $label }}">
+                    <span id="rb-movein-label">{{ __('When would you move in?') }}</span>
+                    <div class="flex flex-wrap gap-2" role="group" aria-labelledby="rb-movein-label">
+                        @foreach (['asap' => __('As soon as possible'), 'next_month' => __('Next month'), 'date' => __('Pick a date')] as $choice => $choiceLabel)
+                            <button type="button" wire:click="pickMoveIn('{{ $choice }}')" aria-pressed="{{ $moveInChoice === $choice ? 'true' : 'false' }}"
+                                    class="min-h-[44px] rounded-xl border px-3.5 text-sm font-semibold {{ $moveInChoice === $choice ? 'border-[var(--ink)] bg-[var(--ink)] text-white' : 'border-[#c9c6be] bg-white text-[var(--ink)]' }}">
+                                {{ $choiceLabel }}
+                            </button>
+                        @endforeach
+                    </div>
+                    @if ($moveInChoice === 'date')
+                        <input id="rb-movein" type="date" wire:model="move_in" min="{{ today()->toDateString() }}" aria-label="{{ __('Move-in date') }}" class="{{ $field }}">
+                    @endif
                     @error('move_in') <span class="{{ $error }}">{{ $message }}</span> @enderror
-                </label>
+                </div>
             @endif
 
             <label for="rb-name" class="{{ $label }}">{{ __('Your name') }}

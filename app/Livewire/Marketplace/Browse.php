@@ -113,6 +113,7 @@ class Browse extends Component
             'regions' => $listings->regions(),
             'amenityOptions' => array_intersect_key(Unit::amenityOptions(), array_flip(['wifi', 'water_247', 'parking', 'security', 'furnished', 'air_conditioning', 'backup_power'])),
             'rows' => $rows,
+            'areas' => $listings->regionSummaries(),
             'searching' => $searching,
             'typeChips' => [
                 '' => __('marketplace.type_all'),

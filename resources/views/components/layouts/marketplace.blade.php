@@ -1,4 +1,4 @@
-@props(['title' => null, 'description' => null, 'image' => null, 'url' => null])
+@props(['title' => null, 'description' => null, 'image' => null, 'url' => null, 'phoneHeader' => true])
 
 @php
     $whatsapp = 'https://wa.me/'.config('services.bjp.whatsapp').'?text='.rawurlencode(__('marketplace.cta_whatsapp_text'));
@@ -45,7 +45,8 @@
 </head>
 <body class="pms-market min-h-screen bg-white text-slate-900 antialiased">
 
-<header class="border-b border-slate-100">
+{{-- The room page hides this bar on phones so its photo starts at the top. --}}
+<header @class(['border-b border-slate-100', 'max-md:hidden' => ! $phoneHeader])>
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-6">
         <a href="{{ route('marketplace.browse') }}" class="flex shrink-0 items-center gap-2 text-slate-900 sm:gap-2.5">
             <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-teal-700 text-sm font-extrabold text-white">P</span>

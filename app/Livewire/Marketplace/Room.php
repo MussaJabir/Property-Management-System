@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Rating;
 use App\Models\Unit;
 use App\Services\Marketplace\ListingSearch;
+use App\Support\RoomHighlights;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -85,7 +86,9 @@ class Room extends Component
             'landlordCount' => tenancy()->central(fn () => $listings->countFor($client)),
             'landlordUrl' => route('marketplace.browse', ['landlord' => $client->getKey()]),
             'regionUrl' => $location?->region ? route('marketplace.browse', ['q' => $location->region]) : null,
+            'highlights' => RoomHighlights::for($this->unit),
         ])->layoutData([
+            'phoneHeader' => false,
             'title' => $this->unit->publicTitle(),
             'description' => collect([
                 $price ? $price['currency'].' '.$price['amount'].' / '.$price['per'] : null,

@@ -50,6 +50,9 @@ class RequestBooking extends Component
 
     public string $move_in = '';
 
+    /** Move-in quick pick: '' (not said), 'asap', 'next_month' or 'date'. */
+    public string $moveInChoice = '';
+
     public string $message = '';
 
     /** Honeypot: hidden from people, filled by bots. */
@@ -63,6 +66,18 @@ class RequestBooking extends Component
         $this->kind = $unit->takesShortStays() ? BookingRequest::KIND_STAY : BookingRequest::KIND_ENQUIRY;
         $this->check_in = today()->toDateString();
         $this->check_out = today()->addDay()->toDateString();
+    }
+
+    /** Quick move-in buttons: as soon as possible, next month, or a date of their own. */
+    public function pickMoveIn(string $choice): void
+    {
+        $this->moveInChoice = in_array($choice, ['asap', 'next_month', 'date'], true) ? $choice : '';
+        $this->move_in = match ($this->moveInChoice) {
+            'asap' => today()->toDateString(),
+            'next_month' => today()->addMonthNoOverflow()->startOfMonth()->toDateString(),
+            default => $this->move_in,
+        };
+        $this->resetErrorBag('move_in');
     }
 
     /** New dates or a new choice clear the old "dates taken" message. */
