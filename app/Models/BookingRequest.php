@@ -7,9 +7,11 @@ namespace App\Models;
 use App\Models\Concerns\TenantScopedModel;
 use App\Services\FrontDesk\ShortStayService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use RuntimeException;
@@ -39,6 +41,7 @@ use RuntimeException;
  * @property Carbon|null $created_at
  * @property-read Unit|null $unit
  * @property-read Booking|null $booking
+ * @property-read Collection<int, BookingRequestNote> $notes
  */
 class BookingRequest extends Model
 {
@@ -93,6 +96,40 @@ class BookingRequest extends Model
         return $this->belongsTo(Booking::class);
     }
 
+    /** @return HasMany<BookingRequestNote, $this> */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(BookingRequestNote::class)->latest('id');
+    }
+
+    /** Add a line to this request's history (also from jobs, where no workspace is open). */
+    public function log(string $type, ?string $body = null, ?int $userId = null): BookingRequestNote
+    {
+        $note = new BookingRequestNote(['type' => $type, 'body' => $body, 'user_id' => $userId]);
+        $note->forceFill(['tenant_id' => $this->tenant_id, 'booking_request_id' => $this->id])->save();
+
+        return $note;
+    }
+
+    /** First 8 characters of the id: the short link in the SMS alert (/r/{code}). */
+    public function shortCode(): string
+    {
+        return substr((string) $this->id, 0, 8);
+    }
+
+    /**
+     * Other requests sent from the same phone number in this workspace.
+     *
+     * @return Builder<BookingRequest>
+     */
+    public function fromSamePhone(): Builder
+    {
+        return self::query()
+            ->where('tenant_id', $this->tenant_id)
+            ->where('phone', $this->phone)
+            ->whereKeyNot($this->getKey());
+    }
+
     /** @param  Builder<BookingRequest>  $query */
     public function scopeOpen(Builder $query): Builder
     {
@@ -143,6 +180,8 @@ class BookingRequest extends Model
             'handled_at' => now(),
         ])->save();
 
+        $this->log(BookingRequestNote::TYPE_STATUS, __('Booked from :date', ['date' => $booking->check_in_date->format('d/m/Y')]), $userId);
+
         return $booking;
     }
 
@@ -168,5 +207,10 @@ class BookingRequest extends Model
             'handled_by_user_id' => $userId,
             'handled_at' => now(),
         ])->save();
+
+        $this->log(BookingRequestNote::TYPE_STATUS, match ($status) {
+            self::STATUS_DECLINED => filled($reason) ? __('Declined: :reason', ['reason' => $reason]) : __('Declined'),
+            default => __('Marked as called back'),
+        }, $userId);
     }
 }
