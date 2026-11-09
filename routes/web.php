@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\Operator\OpenRequestController;
 use App\Http\Controllers\Operator\OperatorActivationController;
 use App\Http\Controllers\Portal\LocaleController;
 use App\Http\Controllers\PwaController;
@@ -32,6 +33,12 @@ Route::get('browse', Browse::class)->name('marketplace.browse');
 Route::get('browse/{tenant}/{unit}', Room::class)
     ->middleware([InitializeTenancyByPath::class, EnsureTenantActive::class])
     ->name('marketplace.room');
+
+// Short link in the SMS alert for a new request: opens it in the dashboard.
+Route::get('r/{code}', OpenRequestController::class)
+    ->where('code', '[0-9a-f]{8}')
+    ->middleware('throttle:30,1')
+    ->name('requests.short');
 
 // Privacy policy (public; also the link the Play Store listing points to).
 Route::view('privacy', 'privacy')->name('privacy');

@@ -11,12 +11,14 @@ use App\Models\Subscription;
 use App\Services\Payments\Selcom\SelcomClient;
 use App\Services\Plans\PlanUsage;
 use App\Services\RentInvoiceGenerator;
+use App\Support\RequestAlerts;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
@@ -28,6 +30,7 @@ use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
@@ -106,6 +109,9 @@ class WorkspaceSettings extends Page implements HasForms
             'brand_primary_color' => $this->client->brand_primary_color,
             'default_locale' => $this->client->settings['default_locale'] ?? 'en',
             'auto_invoices' => RentInvoiceGenerator::enabledFor($this->client),
+            'request_email' => RequestAlerts::emailEnabled($this->client),
+            'request_sms' => (bool) ($this->client->settings['request_sms'] ?? false),
+            'request_sms_numbers' => array_map(RequestAlerts::display(...), RequestAlerts::smsNumbers($this->client)),
             'check_in_time' => ShortStays::checkInTime($this->client),
             'check_out_time' => ShortStays::checkOutTime($this->client),
             'selcom_enabled' => $this->selcom !== null && $this->selcom->enabled,
@@ -196,6 +202,32 @@ class WorkspaceSettings extends Page implements HasForms
                                 Toggle::make('auto_invoices')
                                     ->label(__('Create rent invoices automatically'))
                                     ->helperText(__('Each active lease gets its rent invoice when a new period starts, and its first invoice (with the deposit) when it is activated.')),
+                            ]),
+
+                        Tab::make(__('Alerts'))
+                            ->icon('heroicon-o-bell')
+                            ->schema([
+                                Placeholder::make('alerts_intro')
+                                    ->hiddenLabel()
+                                    ->content(__('How your team hears about a new request from your website. Everyone always sees it in the dashboard bell.')),
+                                Toggle::make('request_email')
+                                    ->label(__('Email every staff member')),
+                                Toggle::make('request_sms')
+                                    ->label(__('Send an SMS'))
+                                    ->helperText(__('One short SMS with the name, phone and a link that opens the request.'))
+                                    ->live(),
+                                TagsInput::make('request_sms_numbers')
+                                    ->label(__('SMS goes to'))
+                                    ->placeholder(__('Type a number, e.g. 0754 000 111, then press Enter'))
+                                    ->visible(fn (Get $get): bool => (bool) $get('request_sms'))
+                                    ->required(fn (Get $get): bool => (bool) $get('request_sms'))
+                                    ->nestedRecursiveRules([
+                                        fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail): void {
+                                            if (! is_string($value) || RequestAlerts::normalise($value) === null) {
+                                                $fail(__(':value is not a valid phone number.', ['value' => is_string($value) ? $value : '']));
+                                            }
+                                        },
+                                    ]),
                             ]),
 
                         Tab::make(__('Payments'))
@@ -484,6 +516,14 @@ class WorkspaceSettings extends Page implements HasForms
         $settings = $this->client->settings ?? [];
         $settings['default_locale'] = $data['default_locale'] ?? 'en';
         $settings['auto_invoices'] = (bool) ($data['auto_invoices'] ?? true);
+        $settings['request_email'] = (bool) ($data['request_email'] ?? true);
+        $settings['request_sms'] = (bool) ($data['request_sms'] ?? false);
+        if (array_key_exists('request_sms_numbers', $data)) {
+            $settings['request_sms_numbers'] = array_values(array_unique(array_filter(array_map(
+                fn (mixed $number): ?string => is_string($number) ? RequestAlerts::normalise($number) : null,
+                (array) $data['request_sms_numbers'],
+            ))));
+        }
         if (ShortStays::enabled()) {
             $settings['check_in_time'] = $data['check_in_time'] ?? ShortStays::DEFAULT_CHECK_IN;
             $settings['check_out_time'] = $data['check_out_time'] ?? ShortStays::DEFAULT_CHECK_OUT;
