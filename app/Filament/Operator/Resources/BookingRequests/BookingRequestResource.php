@@ -7,6 +7,7 @@ namespace App\Filament\Operator\Resources\BookingRequests;
 use App\Exceptions\RoomNotAvailable;
 use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\BookingRequests\Pages\ListBookingRequests;
+use App\Filament\Operator\Resources\BookingRequests\Pages\ViewBookingRequest;
 use App\Filament\Operator\Support\ShortStays;
 use App\Models\BookingRequest;
 use App\Models\Client;
@@ -118,39 +119,9 @@ class BookingRequestResource extends Resource
             ])
             ->recordActions([
                 self::confirmAction(),
-                Action::make('handled')
-                    ->label(__('Called back'))
-                    ->icon(Heroicon::OutlinedCheck)
-                    ->visible(fn (BookingRequest $r): bool => $r->isOpen() && ! $r->isStay())
-                    ->action(function (BookingRequest $r): void {
-                        $r->markHandled(auth()->id());
-                        Notification::make()->success()->title(__('Marked as called back'))->send();
-                    })
-                    ->after(self::refreshMenuBadge()),
-                Action::make('decline')
-                    ->label(__('Decline'))
-                    ->icon(Heroicon::OutlinedXMark)
-                    ->color('gray')
-                    ->visible(fn (BookingRequest $r): bool => $r->isOpen())
-                    ->modalHeading(__('Decline this request?'))
-                    ->schema([
-                        TextInput::make('reason')->label(__('Reason (for your records)'))->placeholder(__('e.g. Room not free those dates'))->maxLength(200),
-                    ])
-                    ->action(function (BookingRequest $r, array $data): void {
-                        $r->decline($data['reason'] ?? null, auth()->id());
-                        Notification::make()->success()->title(__('Request declined'))->send();
-                    })
-                    ->after(self::refreshMenuBadge()),
-                Action::make('whatsapp')
-                    ->label(__('WhatsApp'))
-                    ->icon(Heroicon::OutlinedChatBubbleLeftRight)
-                    ->color('gray')
-                    ->url(fn (BookingRequest $r): string => 'https://wa.me/'.ltrim($r->phone, '+').'?text='.rawurlencode(__('Hello :name, this is :business about your request for :room.', [
-                        'name' => $r->full_name,
-                        'business' => Client::find($r->tenant_id)->name ?? '',
-                        'room' => $r->unit !== null ? $r->unit->code : '',
-                    ])))
-                    ->openUrlInNewTab(),
+                self::handledAction(),
+                self::declineAction(),
+                self::whatsAppAction(),
             ]);
     }
 
@@ -158,6 +129,7 @@ class BookingRequestResource extends Resource
     {
         return [
             'index' => ListBookingRequests::route('/'),
+            'view' => ViewBookingRequest::route('/{record}'),
         ];
     }
 
@@ -172,22 +144,85 @@ class BookingRequestResource extends Resource
         ];
     }
 
-    /** Reload the list so the menu's "new requests" count goes down too. */
+    /** Reload the page so the menu's "new requests" count goes down too. */
     private static function refreshMenuBadge(): \Closure
     {
-        return fn (Component $livewire) => $livewire->redirect(self::getUrl('index'), navigate: true);
+        return fn (Component $livewire, BookingRequest $record) => $livewire->redirect(
+            $livewire instanceof ViewBookingRequest ? self::getUrl('view', ['record' => $record]) : self::getUrl('index'),
+            navigate: true,
+        );
     }
 
-    private static function confirmAction(): Action
+    public static function handledAction(): Action
+    {
+        return Action::make('handled')
+            ->label(__('Called back'))
+            ->icon(Heroicon::OutlinedCheck)
+            ->visible(fn (BookingRequest $record): bool => $record->isOpen() && ! $record->isStay())
+            ->action(function (BookingRequest $record): void {
+                $record->markHandled(auth()->id());
+                Notification::make()->success()->title(__('Marked as called back'))->send();
+            })
+            ->after(self::refreshMenuBadge());
+    }
+
+    public static function declineAction(): Action
+    {
+        return Action::make('decline')
+            ->label(__('Decline'))
+            ->icon(Heroicon::OutlinedXMark)
+            ->color('gray')
+            ->visible(fn (BookingRequest $record): bool => $record->isOpen())
+            ->modalHeading(__('Decline this request?'))
+            ->schema([
+                TextInput::make('reason')->label(__('Reason (for your records)'))->placeholder(__('e.g. Room not free those dates'))->maxLength(200),
+            ])
+            ->action(function (BookingRequest $record, array $data): void {
+                $record->decline($data['reason'] ?? null, auth()->id());
+                Notification::make()->success()->title(__('Request declined'))->send();
+            })
+            ->after(self::refreshMenuBadge());
+    }
+
+    /**
+     * Opens WhatsApp with a greeting. On the request page ($log) the tap is
+     * also noted in its history.
+     */
+    public static function whatsAppAction(bool $log = false): Action
+    {
+        return Action::make('whatsapp')
+            ->label(__('WhatsApp'))
+            ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+            ->color('gray')
+            ->url(fn (BookingRequest $record): string => 'https://wa.me/'.ltrim($record->phone, '+').'?text='.rawurlencode(__('Hello :name, this is :business about your request for :room.', [
+                'name' => $record->full_name,
+                'business' => Client::find($record->tenant_id)->name ?? '',
+                'room' => $record->unit !== null ? $record->unit->code : '',
+            ])))
+            ->openUrlInNewTab()
+            ->extraAttributes($log ? ['wire:click' => "logContact('whatsapp')"] : []);
+    }
+
+    /** Dials the number (phones) and notes the call in the request's history. */
+    public static function callAction(): Action
+    {
+        return Action::make('phoneCall')
+            ->label(__('Call'))
+            ->icon(Heroicon::OutlinedPhone)
+            ->url(fn (BookingRequest $record): string => 'tel:'.$record->phone)
+            ->extraAttributes(['wire:click' => "logContact('call')"]);
+    }
+
+    public static function confirmAction(): Action
     {
         return Action::make('confirm')
             ->label(__('Confirm & book'))
             ->icon(Heroicon::OutlinedCalendarDays)
             ->color('primary')
-            ->visible(fn (BookingRequest $r): bool => $r->isOpen() && $r->isStay() && ShortStays::enabled())
+            ->visible(fn (BookingRequest $record): bool => $record->isOpen() && $record->isStay() && ShortStays::enabled())
             ->requiresConfirmation()
-            ->modalHeading(fn (BookingRequest $r): string => __('Book :room for :name?', ['room' => $r->unit !== null ? $r->unit->code : '', 'name' => $r->full_name]))
-            ->modalDescription(fn (BookingRequest $r): string => self::wants($r).'. '.__('The bill is issued, due on arrival. Call the guest to tell them.'))
+            ->modalHeading(fn (BookingRequest $record): string => __('Book :room for :name?', ['room' => $record->unit !== null ? $record->unit->code : '', 'name' => $record->full_name]))
+            ->modalDescription(fn (BookingRequest $record): string => self::wants($record).'. '.__('The bill is issued, due on arrival. Call the guest to tell them.'))
             ->modalSubmitActionLabel(__('Book the room'))
             ->action(function (BookingRequest $r): void {
                 try {
@@ -210,7 +245,7 @@ class BookingRequestResource extends Resource
             ->after(self::refreshMenuBadge());
     }
 
-    private static function wants(BookingRequest $r): string
+    public static function wants(BookingRequest $r): string
     {
         return $r->isStay()
             ? __(':nights from :from · :guests', [

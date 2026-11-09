@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Models\BookingRequest;
+use App\Models\Client;
+use App\Support\RequestAlerts;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -12,7 +14,8 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Tells the workspace's staff that someone asked for a room on the public
- * website: in the dashboard bell and by email.
+ * website: in the dashboard bell, and by email unless the workspace
+ * switched that off (Settings → Alerts). Both open the request itself.
  */
 class BookingRequestReceivedNotification extends Notification
 {
@@ -21,7 +24,9 @@ class BookingRequestReceivedNotification extends Notification
     /** @return array<int, string> */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        $client = Client::find($this->request->tenant_id);
+
+        return $client !== null && ! RequestAlerts::emailEnabled($client) ? ['database'] : ['database', 'mail'];
     }
 
     /** @return array<string, mixed> */
@@ -32,7 +37,7 @@ class BookingRequestReceivedNotification extends Notification
             ->body($this->summary())
             ->icon('heroicon-o-calendar-days')
             ->actions([
-                Action::make('open')->label(__('Open requests'))->url(url('/manage/booking-requests'))->markAsRead(),
+                Action::make('open')->label(__('Open request'))->url($this->url())->markAsRead(),
             ])
             ->getDatabaseMessage();
     }
@@ -44,7 +49,12 @@ class BookingRequestReceivedNotification extends Notification
             ->greeting(__('Hello :name,', ['name' => $notifiable->name ?? '']))
             ->line($this->summary())
             ->line(__('Phone: :phone', ['phone' => $this->request->phone]))
-            ->action(__('Open requests'), url('/manage/booking-requests'));
+            ->action(__('Open request'), $this->url());
+    }
+
+    private function url(): string
+    {
+        return route('filament.operator.resources.booking-requests.view', ['record' => $this->request->getKey()]);
     }
 
     private function title(): string

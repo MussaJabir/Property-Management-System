@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Livewire\Public;
 
+use App\Jobs\SendRequestSmsAlert;
 use App\Models\BookingRequest;
+use App\Models\BookingRequestNote;
+use App\Models\Client;
 use App\Models\Lease;
 use App\Models\Unit;
 use App\Models\User;
 use App\Notifications\BookingRequestReceivedNotification;
 use App\Services\FrontDesk\ShortStayService;
+use App\Support\RequestAlerts;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -222,17 +226,34 @@ class RequestBooking extends Component
         }
     }
 
+    /** Bell (and email) to every active staff member, SMS to the alert numbers; each noted in the request's history. */
     private function notifyStaff(BookingRequest $request): void
     {
         try {
-            User::query()
+            $staff = User::query()
                 ->where('tenant_id', $request->tenant_id)
                 ->where('type', User::TYPE_OPERATOR)
                 ->where('status', User::STATUS_ACTIVE)
-                ->get()
-                ->each(fn (User $user) => $user->notify(new BookingRequestReceivedNotification($request)));
+                ->get();
+
+            $staff->each(fn (User $user) => $user->notify(new BookingRequestReceivedNotification($request)));
+
+            if ($staff->isNotEmpty()) {
+                $client = Client::find($request->tenant_id);
+                $names = $staff->pluck('name')->implode(', ');
+
+                $request->log(BookingRequestNote::TYPE_ALERT, $client !== null && ! RequestAlerts::emailEnabled($client)
+                    ? __('Dashboard bell to :names', ['names' => $names])
+                    : __('Dashboard bell and email to :names', ['names' => $names]));
+            }
         } catch (Throwable $e) {
             Log::warning('Booking request notification failed', ['request_id' => $request->id, 'error' => $e->getMessage()]);
+        }
+
+        try {
+            SendRequestSmsAlert::dispatch((string) $request->getKey());
+        } catch (Throwable $e) {
+            Log::warning('Booking request SMS alert failed', ['request_id' => $request->id, 'error' => $e->getMessage()]);
         }
     }
 }

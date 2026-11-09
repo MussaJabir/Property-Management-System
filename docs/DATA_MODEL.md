@@ -411,6 +411,21 @@ Inbound from public contact form.
 | handled_at | timestamp, nullable | |
 | handled_by_user_id | FK users.id, nullable | |
 
+### `booking_request_notes`
+History of a request from the website (`booking_requests`): staff notes, Call / WhatsApp taps, alerts sent, status changes. A log: no soft deletes.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| tenant_id | string FK | indexed with booking_request_id, created_at |
+| booking_request_id | UUID FK | cascade on delete |
+| user_id | FK users.id, nullable | null for automatic entries (alerts) |
+| type | string(20) | `note` · `call` · `whatsapp` · `alert` · `status` |
+| body | text, nullable | |
+| created_at / updated_at | timestamps | |
+
+Alert settings live in `tenants.settings`: `request_email` (bool, default true), `request_sms` (bool, default false), `request_sms_numbers` (E.164 list).
+
 ### `notifications` (Laravel default + tenant_id)
 | Column | Type | Notes |
 |---|---|---|
