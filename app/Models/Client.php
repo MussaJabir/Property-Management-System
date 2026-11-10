@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Propaganistas\LaravelPhone\PhoneNumber;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
@@ -67,6 +68,7 @@ class Client extends BaseTenant implements TenantWithDatabase
             'contact_email',
             'contact_phone',
             'logo_path',
+            'icon_path',
             'brand_primary_color',
             'status',
             'plan_id',
@@ -128,6 +130,46 @@ class Client extends BaseTenant implements TenantWithDatabase
     public function logoUrl(): ?string
     {
         return Files::publicUrl($this->logo_path);
+    }
+
+    /** The square icon for the browser tab and phone home screen, or null when none is uploaded. */
+    public function iconUrl(): ?string
+    {
+        return Files::publicUrl($this->icon_path);
+    }
+
+    /**
+     * Whether the logo is a wide one (e.g. a name written out) rather than a
+     * square mark. Wide logos are shown in full and replace the name beside
+     * them. Measured once per logo file and remembered in settings.
+     */
+    public function logoIsWide(): bool
+    {
+        $path = $this->logo_path;
+
+        if (! is_string($path) || $path === '') {
+            return false;
+        }
+
+        $settings = $this->settings ?? [];
+        if (($settings['logo_shape_of'] ?? null) === $path) {
+            return (bool) ($settings['logo_wide'] ?? false);
+        }
+
+        try {
+            $size = getimagesizefromstring((string) Storage::disk(self::logoDisk())->get($path));
+        } catch (Throwable) {
+            $size = false;
+        }
+
+        if ($size === false) {
+            return false;
+        }
+
+        $wide = $size[0] >= 1.6 * max(1, $size[1]);
+        $this->forceFill(['settings' => [...$settings, 'logo_shape_of' => $path, 'logo_wide' => $wide]])->saveQuietly();
+
+        return $wide;
     }
 
     /**

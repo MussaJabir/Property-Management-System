@@ -22,7 +22,8 @@ The landlord / property-management company using PMS. UI/code refer to this as *
 | name | string | Display name |
 | contact_email | string, nullable | Primary contact |
 | contact_phone | string, nullable | E.164 |
-| logo_path | string, nullable | B2 path |
+| logo_path | string, nullable | B2 path (public bucket). Wide vs square remembered in `settings.logo_wide` / `logo_shape_of`. |
+| icon_path | string, nullable | Square tab / home-screen icon, 512 px (public bucket). PMS favicon when null. |
 | brand_primary_color | string, nullable | hex |
 | status | enum | `trial` \| `active` \| `suspended` \| `cancelled` |
 | plan_id | FK plans.id, nullable | Current plan |
@@ -402,10 +403,11 @@ News appears in the website menu only once a post is published.
 | id | bigint PK | |
 | tenant_id | UUID FK | |
 | slug | string | unique within tenant |
-| title | jsonb | bilingual |
-| body | jsonb | bilingual rich text |
-| published_at | timestamp, nullable | null = draft |
-| author_user_id | FK users.id | |
+| title | string | |
+| excerpt | string, nullable | first line of the body, set on save |
+| body | text | HTML from the rich editor (bold, italic, list, link), sanitised on display; older posts are plain text |
+| image_path | string, nullable | photo at the top (public bucket) |
+| published_at | timestamp, nullable | null = hidden; future = shows from that date |
 
 ### `contact_messages`
 Inbound from public contact form.

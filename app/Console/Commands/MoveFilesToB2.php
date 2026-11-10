@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\Client;
+use App\Models\CmsAnnouncement;
 use App\Models\CmsPage;
 use App\Models\FeedbackReport;
 use App\Models\Receipt;
@@ -73,7 +74,7 @@ class MoveFilesToB2 extends Command
     private function moveMedia(): void
     {
         Media::query()->whereIn('disk', ['public', 'local'])->lazyById()->each(function (Media $media): void {
-            $label = $media->disk === 'public' ? 'Website photos' : 'Private photos and PDFs';
+            $label = $media->disk === 'public' ? 'Room and property photos' : 'Private photos and PDFs';
             $target = $media->disk === 'public' ? 'b2_public' : 'b2';
             $folder = $media->getKey().'/';
 
@@ -100,25 +101,41 @@ class MoveFilesToB2 extends Command
 
     private function moveLogos(): void
     {
-        Client::query()->whereNotNull('logo_path')->each(function (Client $client): void {
-            $this->count('Logos', $this->copy(
-                (string) $client->logo_path,
-                [...$this->sourcesFor('public', null), ...$this->sourcesFor('local', $client->getKey())],
-                Storage::disk('b2_public'),
-            ));
+        Client::query()->each(function (Client $client): void {
+            foreach (['logo_path' => 'Logos', 'icon_path' => 'Tab icons'] as $column => $label) {
+                $path = $client->getAttribute($column);
+
+                if (is_string($path) && $path !== '') {
+                    $this->count($label, $this->copy(
+                        $path,
+                        [...$this->sourcesFor('public', null), ...$this->sourcesFor('local', $client->getKey())],
+                        Storage::disk('b2_public'),
+                    ));
+                }
+            }
         });
     }
 
     private function moveBanners(): void
     {
+        // Banner and gallery photos on the website pages, and news photos.
         CmsPage::withoutGlobalScopes()->each(function (CmsPage $page): void {
             foreach ($page->blocks ?? [] as $block) {
-                $path = $block['data']['background_image'] ?? null;
+                $paths = [
+                    $block['data']['background_image'] ?? null,
+                    ...collect($block['data']['images'] ?? [])->pluck('path')->all(),
+                ];
 
-                if (is_string($path) && $path !== '') {
-                    $this->count('Banner photos', $this->copy($path, $this->sourcesFor('public', null), Storage::disk('b2_public')));
+                foreach ($paths as $path) {
+                    if (is_string($path) && $path !== '') {
+                        $this->count('Website photos', $this->copy($path, $this->sourcesFor('public', null), Storage::disk('b2_public')));
+                    }
                 }
             }
+        });
+
+        CmsAnnouncement::withoutGlobalScopes()->whereNotNull('image_path')->each(function (CmsAnnouncement $post): void {
+            $this->count('Website photos', $this->copy((string) $post->image_path, $this->sourcesFor('public', null), Storage::disk('b2_public')));
         });
     }
 

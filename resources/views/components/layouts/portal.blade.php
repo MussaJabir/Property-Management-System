@@ -78,6 +78,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title.' · ' : '' }}{{ $client?->name ?? 'Portal' }}</title>
+    <x-cms.site-icon :client="$client" :touch="false" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -97,7 +98,9 @@
         <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <a href="{{ url('/'.$clientSlug.'/portal') }}" class="flex items-center gap-2 text-sm font-semibold">
                 <x-cms.brand-mark :client="$client" size="h-7 w-7" />
-                <span>{{ $client?->name }}</span>
+                @unless ($client?->logoUrl() && $client->logoIsWide())
+                    <span>{{ $client?->name }}</span>
+                @endunless
             </a>
             <nav class="hidden gap-1 md:flex">
                 @foreach ([

@@ -22,12 +22,17 @@
             </div>
             <div class="grid gap-4 sm:grid-cols-3">
                 @foreach ($items as $item)
-                    <article class="rounded-xl border border-[var(--line)] p-5">
+                    <article class="overflow-hidden rounded-xl border border-[var(--line)]">
+                        @if ($item->imageUrl())
+                            <img src="{{ $item->imageUrl() }}" alt="" loading="lazy" class="aspect-[16/9] w-full object-cover">
+                        @endif
+                        <div class="p-5">
                         <p class="text-xs uppercase tracking-wider text-zinc-500">{{ $item->published_at?->format('d/m/Y') }}</p>
                         <h3 class="mt-1 font-semibold break-words">{{ $item->title }}</h3>
                         @if ($item->excerpt)
                             <p class="mt-2 text-sm text-zinc-600 break-words">{{ $item->excerpt }}</p>
                         @endif
+                        </div>
                     </article>
                 @endforeach
             </div>
@@ -36,14 +41,17 @@
 @else
 <section class="space-y-3">
     @forelse ($items as $item)
-        <article class="overflow-hidden rounded-xl bg-white p-6 shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
-            <p class="text-xs uppercase tracking-wider text-zinc-500">{{ $item->published_at?->format('d M Y') }}</p>
-            <h3 class="mt-1 text-lg font-semibold break-words">{{ $item->title }}</h3>
-            @if ($item->excerpt)
-                <p class="mt-2 text-sm text-zinc-600 break-words dark:text-zinc-300">{{ $item->excerpt }}</p>
+        <article class="overflow-hidden rounded-xl bg-white shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
+            @if ($item->imageUrl())
+                <img src="{{ $item->imageUrl() }}" alt="" loading="lazy" class="max-h-96 w-full object-cover">
             @endif
-            <div class="prose prose-zinc mt-3 max-w-none whitespace-pre-line break-words text-sm dark:prose-invert" style="overflow-wrap: anywhere;">
-                {{ $item->body }}
+            <div class="p-6">
+                <p class="text-xs uppercase tracking-wider text-zinc-500">{{ $item->published_at?->format('d M Y') }}</p>
+                <h3 class="mt-1 text-lg font-semibold break-words">{{ $item->title }}</h3>
+                {{-- Formatted text, sanitised; older posts are plain text with line breaks. --}}
+                <div class="prose prose-zinc mt-3 max-w-none break-words text-sm dark:prose-invert" style="overflow-wrap: anywhere;">
+                    {{ $item->bodyHtml() }}
+                </div>
             </div>
         </article>
     @empty

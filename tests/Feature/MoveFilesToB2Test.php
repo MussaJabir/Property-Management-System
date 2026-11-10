@@ -78,7 +78,7 @@ it('is safe to run again', function () {
     $this->artisan('pms:move-files-to-b2')
         ->expectsTable(['Files', 'Copied', 'Already on B2', 'Not found'], [
             ['Logos', 0, 1, 0],
-            ['Banner photos', 0, 1, 0],
+            ['Website photos', 0, 1, 0],
             ['Feedback screenshots', 0, 1, 0],
         ])
         ->assertSuccessful();
