@@ -32,7 +32,8 @@ class Page extends Component
     {
         $page = CmsPage::query()->where('slug', $this->slug)->first();
 
-        if (! $page) {
+        // A page switched off in the Website editor is not on the website. The home page always is.
+        if (! $page || ($this->slug !== CmsPage::SLUG_HOME && ! $page->isPublished())) {
             throw new NotFoundHttpException;
         }
 

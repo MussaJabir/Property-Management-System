@@ -6,9 +6,9 @@
     $client = tenant();
     $heading = $data['heading'] ?? ($client?->name ?? '');
     $subheading = $data['subheading'] ?? '';
-    $ctaLabel = $data['cta_label'] ?? null;
-    $ctaLink = $data['cta_link'] ?? null;
-    $href = $ctaLink ? url('/'.$client->slug.'/'.ltrim($ctaLink, '/')) : null;
+    // The button always leads to the rooms; nothing for the landlord to set up.
+    $ctaLabel = __('See rooms');
+    $href = url('/'.$client->slug.'/units');
 
     // Background image: a path on the public disk (B2 public bucket in production).
     $bgUrl = Files::publicUrl($data['background_image'] ?? null);

@@ -11,13 +11,20 @@
     $current = request()->segment(2) ?: 'home';
     $clientSlug = $client?->slug;
 
-    $nav = [
+    // Pages switched off in the Website editor leave the menu; News also waits for a first post.
+    $shownPages = CmsPage::query()->whereNotNull('published_at')->where('published_at', '<=', now())->pluck('slug')->all();
+    $hasNews = \App\Models\CmsAnnouncement::query()->published()->exists();
+    $nav = collect([
         CmsPage::SLUG_HOME => __('Home'),
         CmsPage::SLUG_UNITS => __('Rooms'),
         CmsPage::SLUG_ABOUT => __('About'),
         CmsPage::SLUG_NEWS => __('News'),
         CmsPage::SLUG_CONTACT => __('Contact'),
-    ];
+    ])->filter(fn (string $label, string $slug): bool => match ($slug) {
+        CmsPage::SLUG_HOME, CmsPage::SLUG_UNITS => true,
+        CmsPage::SLUG_NEWS => $hasNews && in_array($slug, $shownPages, true),
+        default => in_array($slug, $shownPages, true),
+    })->all();
 @endphp
 
 <!DOCTYPE html>
