@@ -29,8 +29,9 @@
         @if ($request->getMedia('photos')->isNotEmpty())
             <div class="mt-4 grid grid-cols-3 gap-2">
                 @foreach ($request->getMedia('photos') as $photo)
-                    <a href="{{ $photo->getFullUrl() }}" target="_blank" class="block overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
-                        <img src="{{ $photo->getFullUrl() }}" alt="" class="h-32 w-full object-cover">
+                    @php($photoUrl = \App\Support\Files::privateMediaUrl($photo))
+                    <a href="{{ $photoUrl }}" target="_blank" class="block overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+                        <img src="{{ $photoUrl }}" alt="" class="h-32 w-full object-cover">
                     </a>
                 @endforeach
             </div>

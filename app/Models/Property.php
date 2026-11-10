@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\TenantScopedModel;
 use App\Services\Plans\PlanUsage;
+use App\Support\Files;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -63,15 +64,9 @@ class Property extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        // Photos are shown on the public CMS site, so they must live on a
-        // web-accessible disk. The B2 disk is also public (signed URLs),
-        // so we honour FILESYSTEM_DISK when it is set to b2, otherwise
-        // fall back to the `public` disk (storage/app/public — served via
-        // the public/storage symlink). Never `local` (private storage).
-        $disk = config('filesystems.default') === 'b2' ? 'b2' : 'public';
-
+        // The website shows these, so they go on the public disk.
         $this->addMediaCollection('photos')
-            ->useDisk($disk);
+            ->useDisk(Files::publicDisk());
     }
 
     public function registerMediaConversions(?Media $media = null): void

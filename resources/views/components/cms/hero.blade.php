@@ -1,7 +1,7 @@
 @props(['data' => []])
 
 @php
-    use Illuminate\Support\Facades\Storage;
+    use App\Support\Files;
 
     $client = tenant();
     $heading = $data['heading'] ?? ($client?->name ?? '');
@@ -10,10 +10,8 @@
     $ctaLink = $data['cta_link'] ?? null;
     $href = $ctaLink ? url('/'.$client->slug.'/'.ltrim($ctaLink, '/')) : null;
 
-    // Background image is stored in the block JSON as a relative path on the
-    // `public` disk (uploaded via the Filament block builder's FileUpload).
-    $bgPath = $data['background_image'] ?? null;
-    $bgUrl = $bgPath ? Storage::disk('public')->url($bgPath) : null;
+    // Background image: a path on the public disk (B2 public bucket in production).
+    $bgUrl = Files::publicUrl($data['background_image'] ?? null);
 @endphp
 
 @if ($bgUrl)

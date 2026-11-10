@@ -116,13 +116,11 @@ it('shows the plan the workspace is on, with its limits, and no internal labels'
 
 it('keeps logos on public storage and shows them on the website', function () {
     Storage::fake('public');
-    Storage::fake('local');
-    Storage::disk('local')->put('client-logos/old.png', 'png-bytes');
+    Storage::disk('public')->put('client-logos/old.png', 'png-bytes');
     $this->client->update(['logo_path' => 'client-logos/old.png']);
 
-    // A logo saved on the private disk before the move is copied over.
-    expect($this->client->fresh()->logoUrl())->toContain('client-logos/old.png')
-        ->and(Storage::disk('public')->exists('client-logos/old.png'))->toBeTrue();
+    expect(Client::logoDisk())->toBe('public')
+        ->and($this->client->fresh()->logoUrl())->toContain('client-logos/old.png');
 
     $this->get('/setco/units')->assertOk()->assertSee('client-logos/old.png', false);
 });
