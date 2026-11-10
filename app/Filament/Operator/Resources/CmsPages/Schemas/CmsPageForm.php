@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Operator\Resources\CmsPages\Schemas;
 
+use App\Support\Files;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Builder\Block;
 use Filament\Forms\Components\DateTimePicker;
@@ -50,7 +51,7 @@ class CmsPageForm
                                         ->helperText('Landscape, at least 1600×900 px works best. Leave empty to use the brand-color hero.')
                                         ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                         ->imageEditor()
-                                        ->disk('public')
+                                        ->disk(Files::publicDisk())
                                         ->directory('cms/hero')
                                         ->maxSize(8192)
                                         ->visibility('public'),

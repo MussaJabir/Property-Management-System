@@ -4,6 +4,7 @@ namespace App\Filament\Operator\Resources\Expenses\Schemas;
 
 use App\Models\ExpenseCategory;
 use App\Models\Property;
+use App\Support\Files;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -84,6 +85,8 @@ class ExpenseForm
                         SpatieMediaLibraryFileUpload::make('receipt')
                             ->hiddenLabel()
                             ->collection('receipt')
+                            // Private bucket on B2: previews need short-lived signed links.
+                            ->visibility(Files::usesB2() ? 'private' : null)
                             ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                             ->imageEditor()
                             ->maxSize(5120)

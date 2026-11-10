@@ -69,6 +69,24 @@ return [
             'url' => env('B2_URL'),
             'endpoint' => env('B2_ENDPOINT'),
             'use_path_style_endpoint' => true,
+            // B2 rejects an upload whose visibility differs from its bucket's.
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
+        // Public bucket for what the website shows (logos, banners, photos).
+        // Same keys as `b2`; see App\Support\Files.
+        'b2_public' => [
+            'driver' => 's3',
+            'key' => env('B2_KEY'),
+            'secret' => env('B2_SECRET'),
+            'region' => env('B2_REGION', 'us-west-002'),
+            'bucket' => env('B2_PUBLIC_BUCKET'),
+            'url' => env('B2_PUBLIC_URL'),
+            'endpoint' => env('B2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'public',
             'throw' => true,
             'report' => false,
         ],

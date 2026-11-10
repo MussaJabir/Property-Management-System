@@ -104,6 +104,35 @@ very first deploy, scp it from your machine:
 scp docker/docker-compose.production.yml <user>@<host>:/opt/pms/
 ```
 
+## File storage (Backblaze B2)
+
+Uploads never stay on the server. PMS uses two B2 buckets with one
+application key that can read and write both:
+
+| Bucket | B2 setting | Holds |
+|---|---|---|
+| `B2_BUCKET` (e.g. `pms-prod`) | **Private** | receipts, maintenance photos, expense receipts, lease PDFs, feedback screenshots |
+| `B2_PUBLIC_BUCKET` (e.g. `pms-prod-public`) | **Public** | logos, website banners, room and property photos |
+
+B2 makes a whole bucket public or private and rejects uploads that ask for the
+other, so the two must not be the same bucket. Private files are opened through
+PMS or short-lived signed links.
+
+### Moving a server that already has files
+
+1. Create both buckets and one application key with access to both.
+2. Add the `B2_*` lines from `docker/.env.production.example` to `/opt/pms/.env`,
+   but **keep `FILESYSTEM_DISK` as it is for now**. Recreate the containers so
+   they see the new settings (`docker compose --env-file .env up -d`).
+3. Check, then copy (originals are never deleted; it is safe to run again):
+   ```bash
+   docker compose --env-file .env exec app php artisan pms:move-files-to-b2 --dry-run
+   docker compose --env-file .env exec app php artisan pms:move-files-to-b2
+   ```
+4. Set `FILESYSTEM_DISK=b2`, recreate the containers, then run the command once
+   more to catch anything uploaded in between.
+5. Open a client website and a room page and check the logo and photos load.
+
 ## First deploy
 
 1. Trigger the workflow: GitHub → Actions → "Deploy to production" → Run workflow
