@@ -5,6 +5,7 @@ namespace App\Filament\Operator\Resources\MaintenanceRequests\Schemas;
 use App\Models\MaintenanceRequest;
 use App\Models\Unit;
 use App\Models\User;
+use App\Support\Files;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -90,6 +91,8 @@ class MaintenanceRequestForm
                         SpatieMediaLibraryFileUpload::make('photos')
                             ->hiddenLabel()
                             ->collection('photos')
+                            // Private bucket on B2: previews need short-lived signed links.
+                            ->visibility(Files::usesB2() ? 'private' : null)
                             ->multiple()
                             ->reorderable()
                             ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])

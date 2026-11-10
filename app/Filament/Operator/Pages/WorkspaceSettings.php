@@ -106,6 +106,7 @@ class WorkspaceSettings extends Page implements HasForms
             'contact_email' => $this->client->contact_email,
             'contact_phone' => $this->client->contact_phone,
             'logo_path' => $this->client->logo_path,
+            'icon_path' => $this->client->icon_path,
             'brand_primary_color' => $this->client->brand_primary_color,
             'default_locale' => $this->client->settings['default_locale'] ?? 'en',
             'auto_invoices' => RentInvoiceGenerator::enabledFor($this->client),
@@ -159,7 +160,21 @@ class WorkspaceSettings extends Page implements HasForms
                                     ->disk(Client::logoDisk())
                                     ->visibility('public')
                                     ->directory('client-logos')
-                                    ->helperText(__('Shown on your website and renter portal. A square image works best.'))
+                                    ->helperText(__('Shown on your website and renter portal. A square mark or your full name logo both work.'))
+                                    ->imageEditor()
+                                    ->maxSize(2048),
+
+                                FileUpload::make('icon_path')
+                                    ->label(__('Tab icon'))
+                                    ->helperText(__('The small picture in the browser tab and on phone home screens. Use a square version of your logo, e.g. just the symbol.'))
+                                    ->image()->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
+                                    ->disk(Client::logoDisk())
+                                    ->visibility('public')
+                                    ->directory('client-icons')
+                                    // Cropped square and kept small: it is shown at 16 to 180 px.
+                                    ->imageCropAspectRatio('1:1')
+                                    ->imageResizeTargetWidth('512')
+                                    ->imageResizeTargetHeight('512')
                                     ->imageEditor()
                                     ->maxSize(2048),
 
@@ -534,6 +549,7 @@ class WorkspaceSettings extends Page implements HasForms
             'contact_email' => $data['contact_email'],
             'contact_phone' => $data['contact_phone'],
             'logo_path' => $data['logo_path'],
+            'icon_path' => $data['icon_path'] ?? null,
             'brand_primary_color' => $data['brand_primary_color'],
             'settings' => $settings,
         ]);

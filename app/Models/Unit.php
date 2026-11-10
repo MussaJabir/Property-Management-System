@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\TenantScopedModel;
 use App\Services\Plans\PlanUsage;
+use App\Support\Files;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -211,13 +212,9 @@ class Unit extends Model implements HasMedia
 
     public function registerMediaCollections(): void
     {
-        // Mirror Property: public-facing gallery, web-accessible disk.
-        // B2 when configured, otherwise the global `public` disk (served via
-        // the storage:link symlink). Never the private `local` disk.
-        $disk = config('filesystems.default') === 'b2' ? 'b2' : 'public';
-
+        // The website shows these, so they go on the public disk.
         $this->addMediaCollection('photos')
-            ->useDisk($disk);
+            ->useDisk(Files::publicDisk());
     }
 
     public function registerMediaConversions(?Media $media = null): void

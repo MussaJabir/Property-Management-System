@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Files;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -67,6 +68,7 @@ class Client extends BaseTenant implements TenantWithDatabase
             'contact_email',
             'contact_phone',
             'logo_path',
+            'icon_path',
             'brand_primary_color',
             'status',
             'plan_id',
@@ -115,39 +117,59 @@ class Client extends BaseTenant implements TenantWithDatabase
         return $this->status === 'suspended';
     }
 
-    /**
-     * Where workspace logos live: B2 when configured, else the public
-     * disk. Never the server's private disk: the website shows the logo.
-     */
+    /** Where workspace logos live: the website shows them, so the public disk. */
     public static function logoDisk(): string
     {
-        return config('filesystems.default') === 'b2' ? 'b2' : 'public';
+        return Files::publicDisk();
     }
 
     /**
-     * The logo's public address, or null when none is uploaded. Logos saved
-     * before this moved off the private disk are copied over the first time
-     * they are shown.
+     * The logo's public address, or null when none is uploaded. No existence
+     * check: on B2 that would be a network call on every page.
      */
     public function logoUrl(): ?string
+    {
+        return Files::publicUrl($this->logo_path);
+    }
+
+    /** The square icon for the browser tab and phone home screen, or null when none is uploaded. */
+    public function iconUrl(): ?string
+    {
+        return Files::publicUrl($this->icon_path);
+    }
+
+    /**
+     * Whether the logo is a wide one (e.g. a name written out) rather than a
+     * square mark. Wide logos are shown in full and replace the name beside
+     * them. Measured once per logo file and remembered in settings.
+     */
+    public function logoIsWide(): bool
     {
         $path = $this->logo_path;
 
         if (! is_string($path) || $path === '') {
-            return null;
+            return false;
+        }
+
+        $settings = $this->settings ?? [];
+        if (($settings['logo_shape_of'] ?? null) === $path) {
+            return (bool) ($settings['logo_wide'] ?? false);
         }
 
         try {
-            $disk = Storage::disk(self::logoDisk());
-
-            if (! $disk->exists($path) && Storage::disk('local')->exists($path)) {
-                $disk->put($path, (string) Storage::disk('local')->get($path), 'public');
-            }
-
-            return $disk->exists($path) ? $disk->url($path) : null;
+            $size = getimagesizefromstring((string) Storage::disk(self::logoDisk())->get($path));
         } catch (Throwable) {
-            return null;
+            $size = false;
         }
+
+        if ($size === false) {
+            return false;
+        }
+
+        $wide = $size[0] >= 1.6 * max(1, $size[1]);
+        $this->forceFill(['settings' => [...$settings, 'logo_shape_of' => $path, 'logo_wide' => $wide]])->saveQuietly();
+
+        return $wide;
     }
 
     /**

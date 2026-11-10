@@ -17,9 +17,9 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 /**
- * CMS Pages — the five fixed public pages (home/about/units/news/contact).
- * Operator edits block content via the Filament Builder field on the Edit
- * page; create/delete are intentionally disabled.
+ * The five fixed website pages (home/about/units/news/contact). They are
+ * listed on the Website overview and edited in plain-word sections (see
+ * CmsPageForm); create/delete are intentionally disabled.
  */
 class CmsPageResource extends Resource
 {
@@ -36,6 +36,9 @@ class CmsPageResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = NavGroup::Website;
 
     protected static ?int $navigationSort = 10;
+
+    /** Reached from the Website overview, not the menu. */
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Schema $schema): Schema
     {

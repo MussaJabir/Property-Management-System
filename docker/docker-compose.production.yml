@@ -52,13 +52,19 @@ x-app-env: &app-env
   SESSION_DRIVER: redis
   SESSION_LIFETIME: 240
 
+  # Uploads: two B2 buckets, one private (receipts, maintenance photos) and
+  # one public (logos, banners, room photos). See App\Support\Files and
+  # docs/DEPLOYMENT.md. Run `php artisan pms:move-files-to-b2` once before
+  # switching FILESYSTEM_DISK to b2 on a server that already has files.
   FILESYSTEM_DISK: ${FILESYSTEM_DISK:-b2}
-  AWS_ACCESS_KEY_ID: ${B2_ACCESS_KEY_ID}
-  AWS_SECRET_ACCESS_KEY: ${B2_SECRET_ACCESS_KEY}
-  AWS_DEFAULT_REGION: ${B2_REGION:-us-west-002}
-  AWS_BUCKET: ${B2_BUCKET}
-  AWS_ENDPOINT: ${B2_ENDPOINT}
-  AWS_USE_PATH_STYLE_ENDPOINT: "true"
+  B2_KEY: ${B2_ACCESS_KEY_ID:-}
+  B2_SECRET: ${B2_SECRET_ACCESS_KEY:-}
+  B2_REGION: ${B2_REGION:-us-west-002}
+  B2_ENDPOINT: ${B2_ENDPOINT:-}
+  B2_BUCKET: ${B2_BUCKET:-}
+  B2_URL: ${B2_URL:-}
+  B2_PUBLIC_BUCKET: ${B2_PUBLIC_BUCKET:-}
+  B2_PUBLIC_URL: ${B2_PUBLIC_URL:-}
 
   MAIL_MAILER: ${MAIL_MAILER:-smtp}
   MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
