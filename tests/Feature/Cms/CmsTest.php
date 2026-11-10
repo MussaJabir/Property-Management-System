@@ -56,9 +56,12 @@ it('resolves the home page at /{tenant}', function () {
 });
 
 it('resolves the about/news/contact pages', function () {
-    foreach (['about', 'news', 'contact'] as $slug) {
+    foreach (['news', 'contact'] as $slug) {
         $this->get('/'.$this->client->slug.'/'.$slug)->assertOk();
     }
+
+    // About starts hidden until the landlord writes it.
+    $this->get('/'.$this->client->slug.'/about')->assertNotFound();
 });
 
 it('lists vacant units on the units page with filter support', function () {

@@ -5,6 +5,8 @@
         $type = $block['type'] ?? null;
         $data = $block['data'] ?? [];
     @endphp
+    {{-- Sections switched off in the Website editor stay saved but are not shown. --}}
+    @continue(! empty($data['hidden']))
 
     @switch($type)
         @case('hero')

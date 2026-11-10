@@ -76,7 +76,7 @@ class ClientObserver
                     'title' => $page['title'],
                     'subtitle' => $page['subtitle'],
                     'blocks' => $page['blocks'],
-                    'published_at' => now(),
+                    'published_at' => $page['published'] ? now() : null,
                 ])->save();
             }
         }

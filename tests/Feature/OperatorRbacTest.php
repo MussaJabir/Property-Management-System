@@ -43,7 +43,8 @@ it('gives the owner full access across the panel', function () {
     test()->get('/manage/properties')->assertOk();
     test()->get('/manage/properties/create')->assertOk();
     test()->get('/manage/invoices/create')->assertOk();
-    test()->get('/manage/cms-pages')->assertOk();
+    test()->get('/manage/website')->assertOk();
+    test()->get('/manage/cms-pages')->assertRedirect('/manage/website');
     test()->get('/manage/monthly-rent-collection-page')->assertOk();
 });
 
@@ -52,7 +53,8 @@ it('lets a manager manage operations', function () {
 
     test()->get('/manage/properties/create')->assertOk();
     test()->get('/manage/invoices/create')->assertOk();
-    test()->get('/manage/cms-pages')->assertOk();
+    test()->get('/manage/website')->assertOk();
+    test()->get('/manage/cms-pages')->assertRedirect('/manage/website');
     test()->get('/manage/monthly-rent-collection-page')->assertOk();
 });
 
@@ -73,6 +75,7 @@ it('limits an accountant to billing/expenses + read-only inventory & tenancy', f
     test()->get('/manage/maintenance-requests')->assertOk();
     test()->get('/manage/maintenance-requests/create')->assertForbidden();
     test()->get('/manage/cms-announcements')->assertForbidden();
+    test()->get('/manage/website')->assertForbidden();
 });
 
 it('limits maintenance-staff to maintenance + read-only inventory', function () {

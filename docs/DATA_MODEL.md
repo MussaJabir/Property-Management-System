@@ -368,22 +368,33 @@ Seeded per tenant by `ClientObserver::created`: `Repair`, `Cleaning`, `Security`
 Receipt attachment via Spatie Media (single-file collection).
 
 ### `cms_pages`
-Per-tenant editable public pages.
+Per-tenant website pages: a fixed set of five, seeded when a client is created
+(`App\Services\Cms\DefaultPageContent`) and edited from **Website** in the
+operator panel in plain-word sections (`App\Services\Cms\PageEditor`).
 
 | Column | Type | Notes |
 |---|---|---|
 | id | bigint PK | |
-| tenant_id | UUID FK | |
-| slug | string | `landing` \| `about` \| `news` \| `contact` |
-| title | jsonb | `{ "en": "...", "sw": "..." }` |
-| meta_description | jsonb, nullable | |
-| content | jsonb | array of block objects: `[{type, data}, …]` |
-| status | enum | `draft` \| `published` |
-| updated_by_user_id | FK users.id | |
+| tenant_id | string FK | |
+| slug | string | `home` \| `about` \| `units` \| `news` \| `contact` |
+| title | string | |
+| subtitle | string, nullable | |
+| blocks | json | `[{type, data}, …]`, rendered in order |
+| published_at | timestamp, nullable | null = page hidden (404, out of the menu). Home is always shown. |
+| deleted_at | timestamp, nullable | soft delete |
 
-Unique: `(tenant_id, slug)`.
+Unique: `(tenant_id, slug)`. The `units` page is filled from the rooms, not from `blocks`.
 
-Block types (v1): `hero`, `rich_text`, `image_gallery`, `featured_units`, `announcement_list`, `contact_form`.
+Block types and their `data`:
+- `hero`: `heading`, `subheading`, `background_image` (path on the public disk). Button is always "See rooms".
+- `featured_units`: `heading`, `limit`.
+- `rich_text`: `heading`, `body` (plain text). Not shown without a body.
+- `image_gallery`: `heading`, `images: [{path}]` (uploaded, public disk) or legacy `[{url, caption}]`. Not shown when empty.
+- `announcements`: `limit`, `compact` (home: newest 3, hidden when there are none), `heading`.
+- `contact_form`: `heading`, `note`. Also shows the client's phone, WhatsApp and email.
+
+Any block with `data.hidden = true` is switched off in the editor: kept, not shown.
+News appears in the website menu only once a post is published.
 
 ### `cms_announcements`
 | Column | Type | Notes |
@@ -480,7 +491,7 @@ tenants ─┬─< users (operators, renters)
 - **Phone columns** validated and normalized to E.164 via `propaganistas/laravel-phone`. Default country: `TZ`.
 - **UUIDs** use Laravel's built-in `HasUuids` trait with UUIDv7 for time-sortable primary keys (better B-tree locality than v4).
 - **JSONB for translations** instead of separate translation tables. Read with: `$page->title['en']` or via `__()`/`trans()` helpers wired to current locale.
-- **CMS content blocks** validated against a schema per block type. Filament Builder field handles the editor UI.
+- **CMS content blocks** are written only through the Website editor's fixed sections (`PageEditor`), never free-form.
 - **Tenant scoping** enforced via a global scope in `TenantScopedModel`. Always-on; bypass only via super-admin context with `Tenant::withoutScope()` explicitly.
 - **Sequence tables** (`invoice_sequences`, `receipt_sequences`) use Postgres advisory locks during increment to prevent race conditions when invoices / receipts are issued in parallel.
 - **Soft deletes** preserve historical data (a deleted renter still appears on old invoices). Reports always filter on `deleted_at` as appropriate.

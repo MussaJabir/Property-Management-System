@@ -1,23 +1,30 @@
 @props(['data' => []])
 
 @php
+    use App\Support\Files;
+
     $heading = $data['heading'] ?? null;
-    $images = $data['images'] ?? [];
+    // Uploaded photos carry a `path`; older ones a web address in `url`.
+    $images = collect($data['images'] ?? [])
+        ->map(fn ($image): array => [
+            'url' => ! empty($image['path']) ? Files::publicUrl($image['path']) : ($image['url'] ?? null),
+            'caption' => $image['caption'] ?? '',
+        ])
+        ->filter(fn (array $image): bool => filled($image['url']))
+        ->values();
 @endphp
 
-<section class="rounded-2xl bg-white p-8 shadow-sm dark:bg-zinc-900 dark:ring-1 dark:ring-white/10">
-    @if ($heading)
-        <h2 class="text-2xl font-semibold">{{ $heading }}</h2>
-    @endif
-    @if (count($images))
-        <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+@if ($images->isNotEmpty())
+    <section class="flex flex-col gap-5">
+        @if ($heading)
+            <h2 class="text-2xl font-extrabold tracking-tight sm:text-[32px]">{{ $heading }}</h2>
+        @endif
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
             @foreach ($images as $img)
-                <a href="{{ $img['url'] ?? '#' }}" target="_blank" class="block overflow-hidden rounded-lg">
-                    <img src="{{ $img['url'] ?? '' }}" alt="{{ $img['caption'] ?? '' }}" class="h-48 w-full object-cover transition hover:scale-105">
+                <a href="{{ $img['url'] }}" target="_blank" rel="noopener" class="block overflow-hidden rounded-xl">
+                    <img src="{{ $img['url'] }}" alt="{{ $img['caption'] ?: tenant()?->name }}" loading="lazy" class="aspect-[4/3] w-full object-cover transition hover:scale-105">
                 </a>
             @endforeach
         </div>
-    @else
-        <p class="mt-3 text-sm text-zinc-500">{{ __('No images yet.') }}</p>
-    @endif
-</section>
+    </section>
+@endif
