@@ -120,6 +120,7 @@ class Website extends Page
             'newMessages' => ContactSubmission::query()->where('status', ContactSubmission::STATUS_NEW)->count(),
             'messagesUrl' => ContactSubmissionResource::canViewAny() ? ContactSubmissionResource::getUrl() : null,
             'logo' => $client?->logoUrl(),
+            'icon' => $client?->iconUrl(),
             'color' => preg_match('/^#[0-9a-f]{3,8}$/i', (string) $client?->brand_primary_color) ? $client->brand_primary_color : null,
             'settingsUrl' => WorkspaceSettings::canAccess() ? WorkspaceSettings::getUrl() : null,
         ];

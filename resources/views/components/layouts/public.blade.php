@@ -34,6 +34,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title.' · ' : '' }}{{ $client?->name ?? 'Site' }}</title>
+    <x-cms.site-icon :client="$client" />
     {{-- Link previews (WhatsApp, Facebook) when a page is shared. --}}
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ $client?->name ?? 'PMS' }}">
@@ -80,7 +81,10 @@
     <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 sm:gap-8 sm:px-6">
         <a href="{{ url('/'.$clientSlug) }}" class="flex min-w-0 items-center gap-2.5 text-[var(--ink)]">
             <x-cms.brand-mark :client="$client" class="text-base" />
-            <span class="truncate text-[17px] font-bold">{{ $client?->name }}</span>
+            {{-- A wide logo already spells the name. --}}
+            @unless ($client?->logoUrl() && $client->logoIsWide())
+                <span class="truncate text-[17px] font-bold">{{ $client?->name }}</span>
+            @endunless
         </a>
 
         <nav class="hidden flex-1 items-center gap-6 md:flex">

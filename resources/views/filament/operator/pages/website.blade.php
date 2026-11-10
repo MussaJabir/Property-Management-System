@@ -77,7 +77,7 @@
                 </x-filament::section>
 
                 {{-- Look --}}
-                <x-filament::section :heading="__('Look')" :description="__('Your logo and brand color.')">
+                <x-filament::section :heading="__('Look')" :description="__('Logo, color and the small icon in the browser tab.')">
                     <dl class="flex flex-col gap-3 text-sm">
                         <div class="flex items-center justify-between gap-3">
                             <dt class="text-gray-500 dark:text-gray-400">{{ __('Logo') }}</dt>
@@ -96,6 +96,16 @@
                                     <span class="h-4 w-4 rounded" style="background: {{ $color }}"></span>{{ $color }}
                                 @else
                                     {{ __('Default') }}
+                                @endif
+                            </dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <dt class="text-gray-500 dark:text-gray-400">{{ __('Tab icon') }}</dt>
+                            <dd>
+                                @if ($icon)
+                                    <img src="{{ $icon }}" alt="" class="h-7 w-7 rounded object-cover">
+                                @else
+                                    <span class="font-semibold text-warning-700 dark:text-warning-400">{{ __('Not set: add one') }}</span>
                                 @endif
                             </dd>
                         </div>
