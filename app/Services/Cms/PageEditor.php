@@ -87,6 +87,7 @@ final class PageEditor
                     'heading' => $data['heading'] ?? null,
                     'subheading' => $data['subheading'] ?? null,
                     'background_image' => $data['background_image'] ?? null,
+                    'focus' => $data['focus'] ?? 'center',
                 ],
                 'rooms' => ['show' => $show, 'heading' => $data['heading'] ?? null, 'limit' => (int) ($data['limit'] ?? 6)],
                 'about' => [
@@ -130,6 +131,7 @@ final class PageEditor
                     'heading' => self::text($values['heading'] ?? null),
                     'subheading' => self::text($values['subheading'] ?? null),
                     'background_image' => self::firstPath($values['background_image'] ?? null),
+                    'focus' => in_array($values['focus'] ?? null, ['top', 'bottom'], true) ? $values['focus'] : null,
                 ],
                 'rooms' => ['heading' => self::text($values['heading'] ?? null), 'limit' => max(1, min(24, (int) ($values['limit'] ?? 6)))],
                 'about' => ['heading' => self::text($values['heading'] ?? null), 'body' => self::text($values['body'] ?? null)],

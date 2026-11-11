@@ -7,17 +7,29 @@
     $heading = $data['heading'] ?? ($client?->name ?? '');
     $subheading = $data['subheading'] ?? '';
     // The button always leads to the rooms; nothing for the landlord to set up.
-    $ctaLabel = __('See rooms');
     $href = url('/'.$client->slug.'/units');
 
     // Background image: a path on the public disk (B2 public bucket in production).
-    $bgUrl = Files::publicUrl($data['background_image'] ?? null);
+    $bgPath = $data['background_image'] ?? null;
+    $bgUrl = Files::publicUrl($bgPath);
+    // Which part of the photo stays in view when it is cropped.
+    $position = match ($data['focus'] ?? null) {
+        'top' => 'center top',
+        'bottom' => 'center bottom',
+        default => 'center',
+    };
+    // A tall photo can't fill a wide banner without losing most of it, so on
+    // computers it shows whole beside the title instead.
+    $tall = $bgUrl !== null && Files::isTallImage($bgPath);
 @endphp
 
 @if ($bgUrl)
     {{-- ─────── With uploaded background image: full-bleed photo + editorial overlay ─────── --}}
-    <section class="relative overflow-hidden rounded-[28px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)] ring-1 ring-black/5"
-             style="background-image: url('{{ $bgUrl }}'); background-size: cover; background-position: center; min-height: clamp(360px, 60vh, 620px);">
+    <section @class([
+                 'relative overflow-hidden rounded-[28px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)] ring-1 ring-black/5',
+                 'lg:hidden' => $tall,
+             ])
+             style="background-image: url('{{ $bgUrl }}'); background-size: cover; background-position: {{ $position }}; min-height: clamp(360px, 60vh, 620px);">
 
         {{-- Multi-stop overlay: brand wash at top + black at bottom for legible text. --}}
         <div aria-hidden="true" class="absolute inset-0"
@@ -45,20 +57,42 @@
                     {{ $subheading }}
                 </p>
             @endif
-            @if ($ctaLabel && $href)
-                <div class="mt-7">
-                    <a href="{{ $href }}"
-                       class="group inline-flex min-h-[48px] cursor-pointer items-center gap-3 rounded-full bg-white px-6 text-sm font-bold tracking-tight text-zinc-900 shadow-lg ring-1 ring-black/5 transition-transform hover:-translate-y-0.5">
-                        {{ $ctaLabel }}
-                        <span class="inline-flex h-7 w-7 items-center justify-center rounded-full transition-transform group-hover:translate-x-0.5" style="background-color: var(--brand);">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5 text-white">
-                                <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" /></svg>
-                        </span>
-                    </a>
-                </div>
-            @endif
+            <div class="mt-7">
+                <x-cms.hero-button :href="$href" />
+            </div>
         </div>
     </section>
+
+    @if ($tall)
+        {{-- ─────── Tall photo on computers: title on the brand colour, the whole photo beside it ─────── --}}
+        <section class="hidden overflow-hidden rounded-[28px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.35)] ring-1 ring-black/5 lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]"
+                 style="min-height: clamp(440px, 64vh, 620px);">
+            <div class="relative flex flex-col justify-center p-14"
+                 style="background:
+                     radial-gradient(at 0% 100%, color-mix(in srgb, var(--brand) 55%, black) 0%, transparent 60%),
+                     linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 78%, black) 100%);">
+                <span class="font-mono-ui text-[10px] font-semibold uppercase tracking-[0.2em] text-white/85">
+                    <span class="inline-block h-1.5 w-1.5 align-middle rounded-full bg-white"></span>
+                    &nbsp;{{ __('Welcome') }} &nbsp;·&nbsp; {{ __('Available now') }}
+                </span>
+                {{-- Only one of the two banners is displayed at a time, so only one h1 is read out. --}}
+                <h1 class="mt-4 font-display font-extrabold leading-[0.95] tracking-tight text-white" style="font-size: clamp(2.5rem, 4.6vw, 4.25rem);">
+                    {{ $heading }}
+                </h1>
+                @if ($subheading)
+                    <p class="mt-5 max-w-md text-lg leading-relaxed text-white/90">{{ $subheading }}</p>
+                @endif
+                <div class="mt-8">
+                    <x-cms.hero-button :href="$href" />
+                </div>
+            </div>
+            <div class="relative overflow-hidden bg-zinc-100">
+                {{-- A soft, blurred copy behind fills the space around the photo in its own colours. --}}
+                <div aria-hidden="true" class="absolute inset-0 scale-125 bg-cover bg-center opacity-70 blur-3xl" style="background-image: url('{{ $bgUrl }}');"></div>
+                <img src="{{ $bgUrl }}" alt="{{ $client?->name }}" class="absolute inset-0 h-full w-full object-contain p-6">
+            </div>
+        </section>
+    @endif
 @else
     {{-- ─────── Without image: massive editorial brand-color block ─────── --}}
     <section class="relative overflow-hidden rounded-[28px] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.25)] ring-1 ring-black/5"
@@ -96,18 +130,9 @@
                 </p>
             @endif
 
-            @if ($ctaLabel && $href)
-                <div class="mt-9">
-                    <a href="{{ $href }}"
-                       class="group inline-flex min-h-[48px] cursor-pointer items-center gap-3 rounded-full bg-white px-7 text-sm font-bold tracking-tight text-zinc-900 shadow-lg ring-1 ring-black/5 transition-transform hover:-translate-y-0.5">
-                        {{ $ctaLabel }}
-                        <span class="inline-flex h-7 w-7 items-center justify-center rounded-full transition-transform group-hover:translate-x-0.5" style="background-color: var(--brand);">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5 text-white">
-                                <path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd" /></svg>
-                        </span>
-                    </a>
-                </div>
-            @endif
+            <div class="mt-9">
+                <x-cms.hero-button :href="$href" />
+            </div>
         </div>
     </section>
 @endif

@@ -387,7 +387,7 @@ operator panel in plain-word sections (`App\Services\Cms\PageEditor`).
 Unique: `(tenant_id, slug)`. The `units` page is filled from the rooms, not from `blocks`.
 
 Block types and their `data`:
-- `hero`: `heading`, `subheading`, `background_image` (path on the public disk). Button is always "See rooms".
+- `hero`: `heading`, `subheading`, `background_image` (path on the public disk), `focus` (`top` | `bottom`; default middle). Button is always "See rooms". A tall photo (under 1.2:1) shows whole beside the title on computers.
 - `featured_units`: `heading`, `limit`.
 - `rich_text`: `heading`, `body` (plain text). Not shown without a body.
 - `image_gallery`: `heading`, `images: [{path}]` (uploaded, public disk) or legacy `[{url, caption}]`. Not shown when empty.

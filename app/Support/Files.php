@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Throwable;
@@ -49,6 +50,39 @@ final class Files
         } catch (Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Whether a photo on the public disk is tall (portrait or near square)
+     * rather than wide. Measured once per file, then remembered.
+     */
+    public static function isTallImage(?string $path): bool
+    {
+        if (! is_string($path) || $path === '') {
+            return false;
+        }
+
+        $key = 'image-shape:'.self::publicDisk().':'.$path;
+        $known = Cache::get($key);
+        if (is_string($known)) {
+            return $known === 'tall';
+        }
+
+        try {
+            $size = getimagesizefromstring((string) Storage::disk(self::publicDisk())->get($path));
+        } catch (Throwable) {
+            return false;
+        }
+
+        if ($size === false) {
+            return false;
+        }
+
+        // Wide banners are about 2:1; anything under 1.2:1 loses too much when cropped to that.
+        $shape = $size[0] < 1.2 * $size[1] ? 'tall' : 'wide';
+        Cache::forever($key, $shape);
+
+        return $shape === 'tall';
     }
 
     /**
