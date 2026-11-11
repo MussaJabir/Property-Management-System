@@ -15,6 +15,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -86,7 +87,7 @@ class CmsPageForm
                             ->live(onBlur: true),
                         FileUpload::make('banner.background_image')
                             ->label(__('Banner photo'))
-                            ->helperText(__('A wide photo works best. No photo? We use your brand color.'))
+                            ->helperText(__('A wide photo works best. A tall one shows whole beside the title on computers. No photo? We use your brand color.'))
                             ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                             ->imageEditor()
                             ->disk(Files::publicDisk())
@@ -94,6 +95,15 @@ class CmsPageForm
                             ->directory('cms/hero')
                             ->maxSize(8192)
                             ->live(),
+                        ToggleButtons::make('banner.focus')
+                            ->label(__('Photo focus'))
+                            ->helperText(__('Which part of the photo stays in view when it is cropped, e.g. Top to keep a sign on the roof.'))
+                            ->options(['top' => __('Top'), 'center' => __('Middle'), 'bottom' => __('Bottom')])
+                            ->default('center')
+                            ->inline()
+                            ->grouped()
+                            ->live()
+                            ->visible(fn (Get $get): bool => filled($get('banner.background_image'))),
                         View::make('filament.operator.website.note')
                             ->viewData(['text' => __('The banner button always says “See rooms” and opens your rooms page. Nothing to set up.')]),
                     ]),
@@ -102,6 +112,11 @@ class CmsPageForm
                             'heading' => filled($get('banner.heading')) ? $get('banner.heading') : __('Welcome to :name', ['name' => tenant()->name ?? '']),
                             'subheading' => $get('banner.subheading'),
                             'photo' => self::previewUrl($get('banner.background_image')),
+                            'position' => match ($get('banner.focus')) {
+                                'top' => 'center top',
+                                'bottom' => 'center bottom',
+                                default => 'center',
+                            },
                         ]),
                 ]),
             ]);
