@@ -185,3 +185,35 @@ it('never opens another workspace\'s page', function () {
 
     $this->get(EditCmsPage::getUrl(['record' => $theirHome]))->assertNotFound();
 });
+
+/** Puts a photo of the given size on the home page banner. */
+function bannerPhoto(int $width, int $height, ?string $focus = null): void
+{
+    $file = UploadedFile::fake()->image('banner.png', $width, $height);
+    $path = 'cms/hero/'.$width.'x'.$height.'.png';
+    Storage::disk('public')->put($path, (string) file_get_contents($file->getRealPath()));
+
+    webPage('home')->update(['blocks' => [['type' => 'hero', 'data' => array_filter(['heading' => 'Hi', 'background_image' => $path, 'focus' => $focus])]]]);
+}
+
+it('keeps the chosen part of the banner photo in view', function () {
+    bannerPhoto(1600, 800);
+
+    Livewire::test(EditCmsPage::class, ['record' => webPage('home')->getKey()])
+        ->assertSchemaStateSet(['banner.focus' => 'center'])
+        ->fillForm(['banner.focus' => 'top'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(collect(webPage('home')->blocks)->firstWhere('type', 'hero')['data']['focus'])->toBe('top');
+    visitSite()->assertSee('background-position: center top', false);
+});
+
+it('shows a tall banner photo whole beside the title on computers', function () {
+    bannerPhoto(689, 834);
+    visitSite()->assertSee('lg:hidden', false)->assertSee('object-contain p-6', false);
+
+    tenancy()->initialize($this->client);
+    bannerPhoto(1600, 800);
+    visitSite()->assertDontSee('object-contain p-6', false);
+});
