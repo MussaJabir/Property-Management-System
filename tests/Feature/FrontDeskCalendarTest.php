@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Filament\Operator\Pages\FrontDesk;
 use App\Filament\Operator\Pages\FrontDeskCalendar;
 use App\Filament\Operator\Pages\WorkspaceSettings;
+use App\Filament\Operator\Support\ShortStays;
 use App\Filament\Operator\Widgets\FrontDeskTodayWidget;
 use App\Models\Booking;
 use App\Models\Client;
@@ -85,10 +86,24 @@ it('saves check-in and check-out times and flags guests still in after check-out
 
     app(ShortStayService::class)->book($this->room, ['full_name' => 'Late Leaver', 'phone' => '0712000999'], today()->subDay(), today(), checkInNow: true);
 
-    Livewire::test(FrontDesk::class)->assertSee('check-out by 11:00')->assertDontSee('past 11:00');
+    // Shown the way people read time.
+    Livewire::test(FrontDesk::class)->assertSee('check-out by 11:00 AM')->assertDontSee('past 11:00 AM');
 
     $this->travelTo(Carbon::parse('2026-10-17 11:30'));
-    Livewire::test(FrontDesk::class)->assertSee('past 11:00');
+    Livewire::test(FrontDesk::class)->assertSee('past 11:00 AM');
+});
+
+it('offers check-in and check-out times with AM and PM', function () {
+    Livewire::test(WorkspaceSettings::class)
+        ->assertSee('2:00 PM')
+        ->assertSee('10:00 AM');
+
+    expect(ShortStays::label('14:00'))->toBe('2:00 PM')
+        ->and(ShortStays::label('00:30'))->toBe('12:30 AM')
+        ->and(ShortStays::label('12:00'))->toBe('12:00 PM')
+        ->and(ShortStays::timeOptions())->toHaveCount(48)->toHaveKey('14:00')
+        // A time saved off the half hour stays pickable.
+        ->and(ShortStays::timeOptions('14:15'))->toHaveKey('14:15', '2:15 PM');
 });
 
 it('puts arrivals and departures on Today for workspaces with short stays only', function () {
