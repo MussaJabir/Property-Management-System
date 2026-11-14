@@ -20,7 +20,6 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -199,18 +198,19 @@ class WorkspaceSettings extends Page implements HasForms
                                 Grid::make(2)
                                     ->visible(fn (): bool => ShortStays::enabled())
                                     ->schema([
-                                        TimePicker::make('check_in_time')
+                                        // Shown with AM/PM; saved as 24-hour "14:00".
+                                        Select::make('check_in_time')
                                             ->label(__('Guests check in from'))
-                                            ->seconds(false)
-                                            ->native(false)
-                                            ->format('H:i')
-                                            ->displayFormat('H:i'),
-                                        TimePicker::make('check_out_time')
+                                            ->options(fn (?string $state): array => ShortStays::timeOptions($state))
+                                            ->selectablePlaceholder(false)
+                                            ->searchable()
+                                            ->native(false),
+                                        Select::make('check_out_time')
                                             ->label(__('Guests check out by'))
-                                            ->seconds(false)
+                                            ->options(fn (?string $state): array => ShortStays::timeOptions($state))
+                                            ->selectablePlaceholder(false)
+                                            ->searchable()
                                             ->native(false)
-                                            ->format('H:i')
-                                            ->displayFormat('H:i')
                                             ->helperText(__('Guests still in after this on their last day show as late at the front desk.')),
                                     ]),
 

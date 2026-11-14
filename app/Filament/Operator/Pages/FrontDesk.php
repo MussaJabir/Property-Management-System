@@ -50,8 +50,8 @@ class FrontDesk extends Page
     public function getSubheading(): string
     {
         return now()->translatedFormat('l, j F Y').' · '.__('Check-in from :in · check-out by :out', [
-            'in' => ShortStays::checkInTime(),
-            'out' => ShortStays::checkOutTime(),
+            'in' => ShortStays::checkInLabel(),
+            'out' => ShortStays::checkOutLabel(),
         ]);
     }
 
@@ -146,7 +146,7 @@ class FrontDesk extends Page
             ],
             'canWork' => BookingResource::canCreate(),
             'pastCheckOut' => ShortStays::pastCheckOut(),
-            'checkOutTime' => ShortStays::checkOutTime(),
+            'checkOutTime' => ShortStays::checkOutLabel(),
             'unitsUrl' => UnitResource::canViewAny() ? UnitResource::getUrl('index') : null,
         ];
     }
