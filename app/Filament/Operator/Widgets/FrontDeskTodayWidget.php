@@ -58,7 +58,7 @@ class FrontDeskTodayWidget extends Widget
                     'count' => (clone $departures)->count(),
                     'rows' => (clone $departures)->with(['guest', 'unit'])->orderBy('check_out_date')->limit(self::LIMIT)->get(),
                     'empty' => __('Nobody is due to leave.'),
-                    'when' => fn (Booking $b): string => __('by :time', ['time' => ShortStays::checkOutTime()]),
+                    'when' => fn (Booking $b): string => __('by :time', ['time' => ShortStays::checkOutLabel()]),
                 ],
             ],
             'inHouse' => Booking::query()->where('status', Booking::STATUS_CHECKED_IN)->count(),

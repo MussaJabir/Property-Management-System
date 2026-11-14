@@ -61,7 +61,7 @@
                 </p>
                 @if ($unit->takesShortStays())
                     <p class="text-[15px] text-[var(--muted)]">
-                        {{ __('Check in from :in · check out by :out', ['in' => ShortStays::checkInTime($client), 'out' => ShortStays::checkOutTime($client)]) }}
+                        {{ __('Check in from :in · check out by :out', ['in' => ShortStays::checkInLabel($client), 'out' => ShortStays::checkOutLabel($client)]) }}
                     </p>
                 @endif
             </section>

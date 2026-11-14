@@ -69,7 +69,9 @@ it('shows the request form in the room page\'s booking box', function () {
 
     $this->get('/lodgeco/units/'.$this->room->id)->assertOk()
         ->assertSeeText('Request booking')
-        ->assertSeeText('Book on WhatsApp');
+        ->assertSeeText('Book on WhatsApp')
+        // Guests read times with AM and PM.
+        ->assertSeeText('Check in from 2:00 PM · check out by 10:00 AM');
 });
 
 it('takes a stay request without sign-in and tells the staff', function () {
