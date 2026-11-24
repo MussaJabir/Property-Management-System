@@ -165,7 +165,7 @@ class LeaseForm
                     ]),
 
                 Section::make(__('More details'))
-                    ->description(__('End date, billing cycle, due day, currency and notes.'))
+                    ->description(__('End date, billing, grace period, late fee, rent increase and notes.'))
                     ->collapsed()
                     ->columns(2)
                     ->components([
@@ -174,6 +174,12 @@ class LeaseForm
                         $terms['billing_cycle'],
                         $terms['currency'],
                         $terms['billing_cycle_months'],
+                        $terms['grace_days'],
+                        $terms['notice_days'],
+                        $terms['late_fee_type'],
+                        $terms['late_fee_value'],
+                        $terms['increase_percent'],
+                        $terms['increase_every_months'],
                         $terms['terms_notes'],
                     ]),
             ]);
@@ -281,6 +287,70 @@ class LeaseForm
                 ->live(onBlur: true)
                 ->afterStateUpdated(fn (Get $get, Set $set) => RentFields::sync($get, $set))
                 ->columnSpanFull(),
+
+            TextInput::make('grace_days')
+                ->label(__('Grace period (days)'))
+                ->numeric()
+                ->integer()
+                ->minValue(0)
+                ->maxValue(60)
+                ->default(0)
+                ->helperText(__('Days after the due date before an invoice counts as overdue.')),
+
+            TextInput::make('notice_days')
+                ->label(__('Notice to leave (days)'))
+                ->numeric()
+                ->integer()
+                ->minValue(0)
+                ->maxValue(365)
+                ->placeholder(__('e.g. 30')),
+
+            Select::make('late_fee_type')
+                ->label(__('Late fee'))
+                ->options([
+                    Lease::LATE_FEE_FIXED => __('A fixed amount'),
+                    Lease::LATE_FEE_PERCENT => __('A % of the invoice'),
+                ])
+                ->placeholder(__('None'))
+                ->live()
+                ->native(false)
+                ->helperText(__('Added once, when an invoice turns overdue. Only if the lease allows it.')),
+
+            TextInput::make('late_fee_value')
+                ->label(fn (Get $get): string => $get('late_fee_type') === Lease::LATE_FEE_PERCENT ? __('Late fee (%)') : __('Late fee amount'))
+                ->prefix(fn (Get $get): ?string => $get('late_fee_type') === Lease::LATE_FEE_FIXED ? ($get('currency') ?? 'TZS') : null)
+                ->suffix(fn (Get $get): ?string => $get('late_fee_type') === Lease::LATE_FEE_PERCENT ? '%' : null)
+                ->numeric()
+                ->minValue(0)
+                ->maxValue(fn (Get $get): ?int => $get('late_fee_type') === Lease::LATE_FEE_PERCENT ? 100 : null)
+                ->visible(fn (Get $get): bool => filled($get('late_fee_type')))
+                ->required(fn (Get $get): bool => filled($get('late_fee_type')))
+                // Fixed: whole money to minor units. Percent: 5% to 500 basis points. Both ×100.
+                ->dehydrateStateUsing(fn ($state, Get $get) => filled($get('late_fee_type')) && is_numeric($state) ? (int) round(((float) $state) * 100) : null)
+                ->afterStateHydrated(function (TextInput $component, $state): void {
+                    if ($state !== null) {
+                        $component->state(((int) $state) / 100);
+                    }
+                }),
+
+            TextInput::make('increase_percent')
+                ->label(__('Rent increase (%)'))
+                ->numeric()
+                ->minValue(0)
+                ->maxValue(100)
+                ->suffix('%')
+                ->placeholder(__('None'))
+                ->live(onBlur: true)
+                ->helperText(__('Applied automatically to the invoices from each increase date.')),
+
+            TextInput::make('increase_every_months')
+                ->label(__('Increase every (months)'))
+                ->numeric()
+                ->integer()
+                ->minValue(1)
+                ->maxValue(60)
+                ->default(12)
+                ->visible(fn (Get $get): bool => is_numeric($get('increase_percent')) && (float) $get('increase_percent') > 0),
 
             Textarea::make('terms_notes')
                 ->label('Notes')

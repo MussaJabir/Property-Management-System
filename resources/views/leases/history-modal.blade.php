@@ -8,6 +8,7 @@
         'activated' => ['label' => 'Lease activated', 'color' => 'success', 'icon' => 'heroicon-m-play-circle'],
         'renewed' => ['label' => 'Lease renewed', 'color' => 'info', 'icon' => 'heroicon-m-arrow-path'],
         'rent_changed' => ['label' => 'Rent changed', 'color' => 'warning', 'icon' => 'heroicon-m-banknotes'],
+        'rent_increased' => ['label' => 'Rent increased', 'color' => 'warning', 'icon' => 'heroicon-m-arrow-trending-up'],
         'ended' => ['label' => 'Lease ended', 'color' => 'gray', 'icon' => 'heroicon-m-check-circle'],
         'terminated' => ['label' => 'Lease terminated', 'color' => 'danger', 'icon' => 'heroicon-m-x-circle'],
     ];

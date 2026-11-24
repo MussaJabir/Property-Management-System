@@ -91,6 +91,7 @@ class InvoiceForm
                                         InvoiceItem::TYPE_RENT => __('Rent'),
                                         InvoiceItem::TYPE_UTILITY => __('Utility'),
                                         InvoiceItem::TYPE_FEE => __('Fee'),
+                                        InvoiceItem::TYPE_LATE_FEE => __('Late fee'),
                                         InvoiceItem::TYPE_DEPOSIT => __('Deposit'),
                                         InvoiceItem::TYPE_OTHER => __('Other'),
                                     ])

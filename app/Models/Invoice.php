@@ -270,6 +270,8 @@ class Invoice extends Model
         $this->status = self::STATUS_OVERDUE;
         $this->save();
 
+        $this->addLateFee();
+
         try {
             $renterUser = $this->lease?->renter?->user;
             if ($renterUser) {
@@ -284,11 +286,41 @@ class Invoice extends Model
         return true;
     }
 
+    /** Past the due date plus the lease's grace period (none for stays and hand-made invoices). */
     public function isPastDue(): bool
     {
-        return $this->due_date instanceof Carbon
-            && $this->due_date->isPast()
-            && ! $this->due_date->isToday();
+        if (! $this->due_date instanceof Carbon) {
+            return false;
+        }
+
+        $grace = $this->lease_id !== null ? (int) ($this->lease->grace_days ?? 0) : 0;
+
+        return $this->due_date->copy()->startOfDay()->addDays($grace)->lt(today());
+    }
+
+    /**
+     * Add the lease's late fee to this invoice, once. Called when it turns
+     * overdue; does nothing when the lease has no late fee.
+     */
+    public function addLateFee(): void
+    {
+        $lease = $this->lease;
+        if ($lease === null || $this->items()->where('type', InvoiceItem::TYPE_LATE_FEE)->exists()) {
+            return;
+        }
+
+        $fee = $lease->lateFeeFor($this->total_amount);
+        if ($fee <= 0) {
+            return;
+        }
+
+        $this->items()->create([
+            'description' => __('Late fee'),
+            'type' => InvoiceItem::TYPE_LATE_FEE,
+            'quantity' => 1,
+            'unit_price' => $fee,
+        ]);
+        $this->refresh()->recomputeStatus();
     }
 
     public function balanceDue(): int
