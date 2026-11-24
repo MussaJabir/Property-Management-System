@@ -33,6 +33,9 @@ class InvoiceItem extends Model
 
     public const TYPE_OTHER = 'other';
 
+    /** Added once when an invoice turns overdue, if the lease has a late fee. */
+    public const TYPE_LATE_FEE = 'late_fee';
+
     protected $fillable = [
         'invoice_id',
         'description',

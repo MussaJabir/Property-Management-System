@@ -35,7 +35,8 @@ class ComingUpWidget extends Widget
     /** @return array<string, mixed> */
     protected function getViewData(): array
     {
-        $endingQuery = Lease::query()->active()->expiringWithin(30);
+        // A lease already renewed needs no action.
+        $endingQuery = Lease::query()->active()->expiringWithin(30)->whereDoesntHave('renewal');
         $ending = (clone $endingQuery)
             ->with(['renter', 'unit.property'])
             ->orderBy('end_date')
@@ -45,7 +46,7 @@ class ComingUpWidget extends Widget
                 'title' => $lease->renter !== null ? $lease->renter->display_name : __('Unknown renter'),
                 'sub' => collect([$lease->unit?->code, $lease->unit?->property?->name])->filter()->implode(' · '),
                 'when' => $lease->end_date?->format('d/m/Y'),
-                'url' => LeaseResource::canEdit($lease) ? LeaseResource::getUrl('edit', ['record' => $lease]) : null,
+                'url' => LeaseResource::canView($lease) ? LeaseResource::getUrl('view', ['record' => $lease]) : null,
             ]);
 
         // Units to let on a lease; short-stay rooms live on the front desk.

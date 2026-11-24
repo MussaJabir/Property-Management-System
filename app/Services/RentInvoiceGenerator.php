@@ -22,7 +22,9 @@ use Illuminate\Support\Facades\DB;
  *
  * A period is skipped when the lease already has a non-cancelled invoice
  * overlapping it, including hand-made calendar-month ones and drafts. The
- * first period also carries the deposit, when the lease has one.
+ * first period also carries the deposit, when the lease has one (less any
+ * deposit carried over from the lease it renews). Rent increases due by the
+ * start of the period are applied first.
  *
  * Callers must run inside the lease's tenancy.
  */
@@ -96,6 +98,9 @@ class RentInvoiceGenerator
             // both create the same period's invoice.
             Lease::query()->whereKey($lease->getKey())->lockForUpdate()->first();
 
+            // A yearly (or other) increase due by the start of this period applies to it.
+            $lease->refresh()->applyDueIncreases($period['start']);
+
             $alreadyBilled = Invoice::query()
                 ->where('lease_id', $lease->id)
                 ->where('status', '!=', Invoice::STATUS_CANCELLED)
@@ -127,12 +132,14 @@ class RentInvoiceGenerator
                 'unit_price' => $lease->rent_amount,
             ]);
 
-            if ($period['index'] === 0 && $lease->deposit_amount > 0) {
+            // A renewal carries the old deposit over; only a top-up is billed.
+            $deposit = $lease->deposit_amount - $lease->deposit_carried_over;
+            if ($period['index'] === 0 && $deposit > 0) {
                 $invoice->items()->create([
-                    'description' => __('Deposit'),
+                    'description' => $lease->deposit_carried_over > 0 ? __('Deposit top-up') : __('Deposit'),
                     'type' => InvoiceItem::TYPE_DEPOSIT,
                     'quantity' => 1,
-                    'unit_price' => $lease->deposit_amount,
+                    'unit_price' => $deposit,
                 ]);
             }
 

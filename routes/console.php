@@ -18,6 +18,13 @@ Schedule::command('billing:generate-rent-invoices')
 // Daily overdue detection at 06:00 Africa/Dar_es_Salaam (config/app.php
 // already sets the default timezone). withoutOverlapping protects against
 // long runs being kicked off twice if the previous one hasn't finished.
+// Leases ending in 90/60/30 days: remind owners, managers and (at 60) the
+// renter. Also ends old leases once their renewal has started.
+Schedule::command('leases:remind-ending')
+    ->dailyAt('07:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
 Schedule::command('billing:detect-overdue')
     ->dailyAt('06:00')
     ->withoutOverlapping()

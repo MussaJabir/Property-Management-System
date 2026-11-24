@@ -6,6 +6,7 @@ use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Leases\Pages\CreateLease;
 use App\Filament\Operator\Resources\Leases\Pages\EditLease;
 use App\Filament\Operator\Resources\Leases\Pages\ListLeases;
+use App\Filament\Operator\Resources\Leases\Pages\ViewLease;
 use App\Filament\Operator\Resources\Leases\RelationManagers\HistoryRelationManager;
 use App\Filament\Operator\Resources\Leases\Schemas\LeaseForm;
 use App\Filament\Operator\Resources\Leases\Tables\LeasesTable;
@@ -49,6 +50,7 @@ class LeaseResource extends Resource
         return [
             'index' => ListLeases::route('/'),
             'create' => CreateLease::route('/create'),
+            'view' => ViewLease::route('/{record}'),
             'edit' => EditLease::route('/{record}/edit'),
         ];
     }

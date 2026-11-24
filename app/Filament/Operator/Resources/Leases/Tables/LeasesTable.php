@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Leases\Tables;
 
+use App\Filament\Operator\Resources\Leases\LeaseActions;
 use App\Http\Controllers\Rating\LeaseRatingController;
 use App\Models\Lease;
 use App\Services\LeasePdfGenerator;
@@ -11,7 +12,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -111,62 +111,10 @@ class LeasesTable
                         'history' => $record->history()->with('user')->get(),
                     ])),
 
-                Action::make('activate')
-                    ->label('Activate')
-                    ->icon(Heroicon::OutlinedPlayCircle)
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('Activate this lease?')
-                    ->modalDescription('The linked unit will be marked occupied.')
-                    ->visible(fn (Lease $record): bool => $record->isPending())
-                    ->action(function (Lease $record) {
-                        try {
-                            $record->activate(auth()->id());
-                            Notification::make()->title('Lease activated')->success()->send();
-                        } catch (Throwable $e) {
-                            Notification::make()->title('Could not activate')->body($e->getMessage())->danger()->send();
-                        }
-                    }),
-
-                Action::make('end')
-                    ->label('End (natural)')
-                    ->icon(Heroicon::OutlinedCheckCircle)
-                    ->color('gray')
-                    ->requiresConfirmation()
-                    ->modalHeading('Mark this lease as ended?')
-                    ->modalDescription('Use this when the lease reaches its agreed end date. The unit becomes vacant.')
-                    ->visible(fn (Lease $record): bool => $record->isActive())
-                    ->action(function (Lease $record) {
-                        try {
-                            $record->end(auth()->id());
-                            Notification::make()->title('Lease ended')->success()->send();
-                        } catch (Throwable $e) {
-                            Notification::make()->title('Could not end lease')->body($e->getMessage())->danger()->send();
-                        }
-                    }),
-
-                Action::make('terminate')
-                    ->label('Terminate')
-                    ->icon(Heroicon::OutlinedXCircle)
-                    ->color('danger')
-                    ->visible(fn (Lease $record): bool => $record->isActive())
-                    ->schema([
-                        Textarea::make('reason')
-                            ->label('Reason')
-                            ->required()
-                            ->rows(3)
-                            ->placeholder('Why is this lease being terminated early?'),
-                    ])
-                    ->modalHeading('Terminate this lease early?')
-                    ->modalDescription('Recorded in lease history. The unit becomes vacant.')
-                    ->action(function (array $data, Lease $record) {
-                        try {
-                            $record->terminate($data['reason'] ?? null, auth()->id());
-                            Notification::make()->title('Lease terminated')->success()->send();
-                        } catch (Throwable $e) {
-                            Notification::make()->title('Could not terminate')->body($e->getMessage())->danger()->send();
-                        }
-                    }),
+                LeaseActions::activate(),
+                LeaseActions::renew(),
+                LeaseActions::end(),
+                LeaseActions::terminate(),
 
                 Action::make('askForReview')
                     ->label(__('Ask for a review'))

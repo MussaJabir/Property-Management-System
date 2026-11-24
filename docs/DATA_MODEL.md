@@ -214,12 +214,27 @@ Indexes: `(tenant_id, property_id)`, `(tenant_id, status)`.
 | billing_cycle | enum | `monthly` \| `quarterly` \| `semi_annual` \| `annual` \| `custom` (mirrors unit) |
 | billing_cycle_months | smallint, nullable | required when billing_cycle = `custom` |
 | payment_due_day | tinyint (1-28) | day of each billing period invoices fall due |
+| grace_days | smallint, default 0 | days after the due date before an invoice is overdue |
+| notice_days | smallint, nullable | notice to leave |
+| late_fee_type | string, nullable | `fixed` \| `percent`; added once when an invoice turns overdue |
+| late_fee_value | bigint, nullable | fixed: minor units; percent: basis points (500 = 5%) |
+| increase_percent | decimal(5,2), nullable | rent increase, applied by the invoice generator from each increase date |
+| increase_every_months | smallint, nullable | default 12 |
+| last_increase_on | date, nullable | date of the last increase applied |
+| renewed_from_id | UUID FK leases, nullable | set on a renewal |
+| deposit_carried_over | bigint, default 0 | deposit moved over from the renewed lease; only a top-up is billed |
 | status | enum | `pending` \| `active` \| `ended` \| `terminated` |
 | terms_notes | text, nullable | |
 | activated_at | timestamp, nullable | set by Lease::activate() |
 | ended_at | timestamp, nullable | set by Lease::end() / terminate() |
 
 Indexes: `(tenant_id, status)`, `(tenant_id, unit_id, status)`.
+
+Rules: a lease cannot be activated while another active lease on the same unit
+overlaps its dates (a renewal starts after the old one ends). Ending a lease frees
+the unit only when no other lease on it is active. `leases:remind-ending` (daily)
+reminds owners/managers 90/60/30 days before the end date and the renter at 60,
+and ends a lease once its active renewal has started.
 
 Lease PDF stored via Spatie Media.
 
