@@ -20,6 +20,7 @@ namespace App\Authorization;
  *   maintenance-staff maintenance (manage); inventory, tenancy, expenses (view)
  *   receptionist     front desk + billing (manage); inventory, tenancy,
  *                    maintenance (view)
+ *   auditor          view only, everywhere, plus reports and the activity log
  */
 final class OperatorPermissions
 {
@@ -78,6 +79,11 @@ final class OperatorPermissions
                 'inventory.view',
                 'tenancy.view',
                 'maintenance.view',
+            ],
+            // Read-only everywhere, plus reports and the activity log (by role).
+            'auditor' => [
+                ...array_map(fn (string $domain): string => "{$domain}.view", self::DOMAINS),
+                'reports.view',
             ],
             default => [],
         };

@@ -36,6 +36,7 @@ class ClientObserver
         'accountant',
         'maintenance-staff',
         'receptionist',
+        'auditor',
     ];
 
     public function created(Client $client): void

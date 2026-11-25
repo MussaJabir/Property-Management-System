@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Audited;
 use App\Models\Concerns\TenantScopedModel;
 use App\Notifications\InvoiceIssuedNotification;
 use App\Notifications\InvoiceOverdueNotification;
@@ -54,7 +55,7 @@ use RuntimeException;
  */
 class Invoice extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, TenantScopedModel;
+    use Audited, HasFactory, HasUuids, SoftDeletes, TenantScopedModel;
 
     public const STATUS_DRAFT = 'draft';
 

@@ -524,7 +524,23 @@ Alert settings live in `tenants.settings`: `request_email` (bool, default true),
 | enabled | bool | |
 
 ### `activity_log` (Spatie, tenant-scoped)
-Standard Spatie schema with added `tenant_id`.
+Standard Spatie schema with added `tenant_id` (indexed with `created_at`) and
+`subject_id` widened to `varchar(36)` so it can point at UUID records. Model:
+`App\Models\Activity` (TenantScopedModel). Models using `App\Models\Concerns\Audited`
+log every create / change / delete of their fillable fields (old → new, who):
+leases, invoices, payments, deposit_transactions, expenses, maintenance_requests,
+renters, properties, units. `log_name` = the table. Entries written outside a
+workspace request take the subject's `tenant_id`. Shown read-only on Settings &
+Team → Activity log (owners, managers, auditors).
+
+### `users`: 2-step login
+`app_authentication_secret` (encrypted) and `app_authentication_recovery_codes`
+(encrypted array): Filament's authenticator-app sign-in, set up on the profile
+page. `tenants.settings.require_two_step_login` makes it required for owners and
+managers (`App\Support\TwoStepLogin`, `EnsureTwoStepLoginWhenRequired`).
+
+Roles per workspace now include **auditor**: every `*.view` plus `reports.view`
+and the activity log; no `*.manage`.
 
 ---
 

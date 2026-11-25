@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Audited;
 use App\Models\Concerns\TenantScopedModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -44,7 +45,7 @@ use Illuminate\Support\Carbon;
  */
 class Payment extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, TenantScopedModel;
+    use Audited, HasFactory, HasUuids, SoftDeletes, TenantScopedModel;
 
     public const METHOD_CASH = 'cash';
 
@@ -96,6 +97,10 @@ class Payment extends Model
         'received_by_user_id',
         'status',
         'notes',
+        // Set only by PaymentAllocator::reverse(); listed so the audit log records them.
+        'reversed_at',
+        'reversed_by_user_id',
+        'reversal_reason',
     ];
 
     protected function casts(): array
