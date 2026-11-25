@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Audited;
 use App\Models\Concerns\TenantScopedModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -43,7 +44,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  */
 class MaintenanceRequest extends Model implements HasMedia
 {
-    use HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
+    use Audited, HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
 
     public const PRIORITY_LOW = 'low';
 

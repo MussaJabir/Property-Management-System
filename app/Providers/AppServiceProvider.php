@@ -9,9 +9,12 @@ use App\Observers\ClientObserver;
 use App\Observers\MaintenanceRequestObserver;
 use App\Observers\PaymentObserver;
 use Filament\Forms\Components\Select;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Telescope\TelescopeServiceProvider;
+use Spatie\Activitylog\Contracts\Activity as ActivityContract;
+use Spatie\Activitylog\Support\PendingActivityLog;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,6 +37,18 @@ class AppServiceProvider extends ServiceProvider
 
         Client::observe(ClientObserver::class);
         Payment::observe(PaymentObserver::class);
+
+        // Audit-log entries written outside a workspace request (daily jobs)
+        // still belong to the record's workspace.
+        PendingActivityLog::beforeLogging(function (ActivityContract $activity): void {
+            if (! $activity instanceof Model) {
+                return;
+            }
+            $subject = $activity->getRelationValue('subject');
+            if (blank($activity->getAttribute('tenant_id')) && $subject instanceof Model && filled($subject->getAttribute('tenant_id'))) {
+                $activity->setAttribute('tenant_id', $subject->getAttribute('tenant_id'));
+            }
+        });
         MaintenanceRequest::observe(MaintenanceRequestObserver::class);
 
         // A required dropdown has no ✕ to empty it: it must keep a value.

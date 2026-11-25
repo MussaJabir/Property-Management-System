@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Audited;
 use App\Models\Concerns\TenantScopedModel;
 use App\Services\Deposits\DepositLedger;
 use App\Services\Portal\RenterPortalAccountProvisioner;
@@ -39,7 +40,7 @@ use Throwable;
  */
 class Lease extends Model implements HasMedia
 {
-    use HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
+    use Audited, HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
 
     public const STATUS_PENDING = 'pending';
 

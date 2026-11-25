@@ -12,6 +12,7 @@ use App\Services\Payments\Selcom\SelcomClient;
 use App\Services\Plans\PlanUsage;
 use App\Services\RentInvoiceGenerator;
 use App\Support\RequestAlerts;
+use App\Support\TwoStepLogin;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
@@ -106,6 +107,7 @@ class WorkspaceSettings extends Page implements HasForms
             'contact_phone' => $this->client->contact_phone,
             'logo_path' => $this->client->logo_path,
             'icon_path' => $this->client->icon_path,
+            TwoStepLogin::SETTING => TwoStepLogin::requiredByWorkspace($this->client),
             'brand_primary_color' => $this->client->brand_primary_color,
             'default_locale' => $this->client->settings['default_locale'] ?? 'en',
             'auto_invoices' => RentInvoiceGenerator::enabledFor($this->client),
@@ -257,6 +259,10 @@ class WorkspaceSettings extends Page implements HasForms
                         Tab::make('Security')
                             ->icon('heroicon-o-lock-closed')
                             ->schema([
+                                Toggle::make(TwoStepLogin::SETTING)
+                                    ->label(__('Require 2-step login for owners and managers'))
+                                    ->helperText(__('They sign in with their password and a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator…). Each person sets it up once, on their profile page. Recommended.')),
+
                                 Placeholder::make('security_note')
                                     ->label(__('Your password'))
                                     ->content('Change the password for your own account. Leave blank to keep your current password.'),
@@ -539,6 +545,8 @@ class WorkspaceSettings extends Page implements HasForms
                 (array) $data['request_sms_numbers'],
             ))));
         }
+        $settings[TwoStepLogin::SETTING] = (bool) ($data[TwoStepLogin::SETTING] ?? false);
+
         if (ShortStays::enabled()) {
             $settings['check_in_time'] = $data['check_in_time'] ?? ShortStays::DEFAULT_CHECK_IN;
             $settings['check_out_time'] = $data['check_out_time'] ?? ShortStays::DEFAULT_CHECK_OUT;

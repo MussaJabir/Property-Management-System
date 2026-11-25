@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Audited;
 use App\Models\Concerns\TenantScopedModel;
 use App\Services\Plans\PlanUsage;
 use App\Support\Files;
@@ -22,7 +23,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class Property extends Model implements HasMedia
 {
-    use HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
+    use Audited, HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
 
     protected static function booted(): void
     {

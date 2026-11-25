@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Services\Plans\PlanUsage;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
@@ -25,8 +27,10 @@ use Spatie\Permission\Traits\HasRoles;
  *
  * @property string|null $activation_token
  * @property Carbon|null $activation_token_expires_at
+ * @property string|null $app_authentication_secret
+ * @property array<string>|null $app_authentication_recovery_codes
  */
-class User extends Authenticatable implements FilamentUser, HasTenants
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasTenants
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
@@ -77,6 +81,8 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         'password',
         'remember_token',
         'activation_token',
+        'app_authentication_secret',
+        'app_authentication_recovery_codes',
     ];
 
     protected function casts(): array
@@ -86,6 +92,9 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'activation_token_expires_at' => 'datetime',
+            // 2-step login (authenticator app): stored encrypted.
+            'app_authentication_secret' => 'encrypted',
+            'app_authentication_recovery_codes' => 'encrypted:array',
             'onboarding_completed_at' => 'datetime',
             'password' => 'hashed',
             'must_change_password' => 'boolean',
@@ -151,5 +160,42 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function canAccessTenant(Model $tenant): bool
     {
         return $tenant->getKey() === $this->tenant_id;
+    }
+
+    /* ----- 2-step login (Filament app authentication) ----- */
+
+    public function getAppAuthenticationSecret(): ?string
+    {
+        return $this->app_authentication_secret;
+    }
+
+    public function saveAppAuthenticationSecret(#[\SensitiveParameter] ?string $secret): void
+    {
+        $this->app_authentication_secret = $secret;
+        $this->save();
+    }
+
+    public function getAppAuthenticationHolderName(): string
+    {
+        return $this->email;
+    }
+
+    /** @return array<string>|null */
+    public function getAppAuthenticationRecoveryCodes(): ?array
+    {
+        return $this->app_authentication_recovery_codes;
+    }
+
+    /** @param array<string>|null $codes */
+    public function saveAppAuthenticationRecoveryCodes(#[\SensitiveParameter] ?array $codes): void
+    {
+        $this->app_authentication_recovery_codes = $codes;
+        $this->save();
+    }
+
+    /** Has this person turned on 2-step login? */
+    public function hasTwoStepLogin(): bool
+    {
+        return filled($this->app_authentication_secret);
     }
 }

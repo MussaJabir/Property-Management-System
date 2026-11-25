@@ -17,8 +17,11 @@ use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
 use App\Http\Controllers\Operator\ReceiptPdfController;
 use App\Http\Controllers\Operator\RenterStatementPdfController;
 use App\Http\Middleware\EnsureTenantActive;
+use App\Http\Middleware\EnsureTwoStepLoginWhenRequired;
 use App\Http\Middleware\ForceOperatorPasswordChange;
 use App\Http\Middleware\InitializeTenancyByUser;
+use App\Support\TwoStepLogin;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\FontProviders\GoogleFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -68,6 +71,15 @@ class OperatorPanelProvider extends PanelProvider
             ->path('manage')
             ->login(Login::class)
             ->profile(EditOperatorProfile::class)
+            // 2-step login with an authenticator app, set up on the profile page.
+            // A workspace can require it for owners and managers (Settings → Security).
+            ->multiFactorAuthentication(
+                [AppAuthentication::make()->recoverable()],
+                // Filament registers the "set it up" route only when this is true while
+                // routes load (nobody signed in yet); the real check is per person.
+                isRequired: fn (): bool => auth()->guest() || TwoStepLogin::requiredFor(auth()->user()),
+            )
+            ->multiFactorAuthenticationRequiredMiddlewareName(EnsureTwoStepLoginWhenRequired::class)
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->brandName(fn (): string => auth()->user()?->client?->name ?? 'PMS')

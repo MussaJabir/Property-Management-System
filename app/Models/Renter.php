@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Audited;
 use App\Models\Concerns\TenantScopedModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -23,7 +24,7 @@ use Propaganistas\LaravelPhone\Casts\E164PhoneNumberCast;
  */
 class Renter extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, TenantScopedModel;
+    use Audited, HasFactory, HasUuids, SoftDeletes, TenantScopedModel;
 
     public const TYPE_INDIVIDUAL = 'individual';
 

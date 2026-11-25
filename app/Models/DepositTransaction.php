@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\Audited;
 use App\Models\Concerns\TenantScopedModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +21,7 @@ use Illuminate\Support\Carbon;
  */
 class DepositTransaction extends Model
 {
-    use TenantScopedModel;
+    use Audited, TenantScopedModel;
 
     public const TYPE_RECEIVED = 'received';
 
