@@ -32,6 +32,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * rental_mode says how it is let: long_term (leases), short_stay (bookings
  * by the night at nightly_rate) or both.
  *
+ * @property int|null $building_id
+ * @property string|null $floor
+ * @property-read Building|null $building
  * @property string $rental_mode
  * @property int|null $nightly_rate
  * @property bool $on_marketplace
@@ -111,6 +114,8 @@ class Unit extends Model implements HasMedia
 
     protected $fillable = [
         'property_id',
+        'building_id',
+        'floor',
         'code',
         'type',
         'rent_amount',
@@ -183,6 +188,23 @@ class Unit extends Model implements HasMedia
         return $this->belongsTo(Property::class);
     }
 
+    /** @return BelongsTo<Building, $this> */
+    public function building(): BelongsTo
+    {
+        return $this->belongsTo(Building::class);
+    }
+
+    /** "Block A, floor 2" or null when neither is set. */
+    public function locationLabel(): ?string
+    {
+        $parts = array_filter([
+            $this->building?->name,
+            $this->floor !== null && $this->floor !== '' ? __('floor :floor', ['floor' => $this->floor]) : null,
+        ]);
+
+        return $parts === [] ? null : implode(', ', $parts);
+    }
+
     /** @return HasMany<Lease, $this> */
     public function leases(): HasMany
     {
@@ -217,6 +239,10 @@ class Unit extends Model implements HasMedia
         // The website shows these, so they go on the public disk.
         $this->addMediaCollection('photos')
             ->useDisk(Files::publicDisk());
+
+        // Title deeds, permits, inspection reports: staff only.
+        $this->addMediaCollection('documents')
+            ->useDisk(Files::privateDisk());
     }
 
     public function registerMediaConversions(?Media $media = null): void

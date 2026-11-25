@@ -68,6 +68,10 @@ class Property extends Model implements HasMedia
         // The website shows these, so they go on the public disk.
         $this->addMediaCollection('photos')
             ->useDisk(Files::publicDisk());
+
+        // Title deeds, permits, inspection reports: staff only.
+        $this->addMediaCollection('documents')
+            ->useDisk(Files::privateDisk());
     }
 
     public function registerMediaConversions(?Media $media = null): void

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Units\Tables;
 
+use App\Models\Building;
 use App\Models\Unit;
 use App\Services\Plans\PlanUsage;
 use Filament\Actions\BulkAction;
@@ -25,6 +26,7 @@ class UnitsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with('building'))
             ->columns([
                 SpatieMediaLibraryImageColumn::make('cover')
                     ->label('')
@@ -41,7 +43,8 @@ class UnitsTable
                 TextColumn::make('code')
                     ->searchable()
                     ->sortable()
-                    ->weight('semibold'),
+                    ->weight('semibold')
+                    ->description(fn (Unit $record): ?string => $record->locationLabel()),
 
                 TextColumn::make('property.name')
                     ->label('Property')
@@ -102,6 +105,10 @@ class UnitsTable
                     }),
             ])
             ->filters([
+                SelectFilter::make('building_id')
+                    ->label(__('Building'))
+                    ->options(fn (): array => Building::query()->with('property')->orderBy('name')->get()
+                        ->mapWithKeys(fn (Building $b): array => [$b->id => $b->name.' — '.$b->property->name])->all()),
                 SelectFilter::make('status')
                     ->options([
                         'vacant' => 'Vacant',

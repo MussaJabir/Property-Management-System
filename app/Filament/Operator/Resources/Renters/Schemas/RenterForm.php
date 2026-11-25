@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Renters\Schemas;
 
+use App\Filament\Operator\Support\DocumentsSection;
 use App\Models\Renter;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -109,6 +110,8 @@ class RenterForm
                             ->placeholder('Internal notes — not visible to the renter.')
                             ->columnSpanFull(),
                     ]),
+
+                DocumentsSection::make(__('ID copy, payslips, references and signed papers. Only staff can open them.')),
             ]);
     }
 }
