@@ -23,6 +23,14 @@ use Throwable;
  */
 class MaintenanceRequestObserver
 {
+    /** The actual cost defaults to labour plus materials when not entered. */
+    public function saving(MaintenanceRequest $request): void
+    {
+        if ($request->cost === null && ($request->labour_cost !== null || $request->materials_cost !== null)) {
+            $request->cost = (int) $request->labour_cost + (int) $request->materials_cost;
+        }
+    }
+
     public function created(MaintenanceRequest $request): void
     {
         try {
