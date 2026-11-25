@@ -117,14 +117,15 @@ it('records a cash payment from the Today overdue list with the balance prefille
 it('lets the Today header pick any open invoice, but only from this workspace', function () {
     $mine = payInvoice($this->client);
     $theirs = payInvoice($this->other, 'Someone Else');
+    $theirRenterId = $theirs->lease?->renter_id;
     payAs($this->owner, $this->client);
 
     Livewire::test(Dashboard::class)
-        ->callAction('recordPayment', ['invoice_id' => $theirs->id, 'amount' => 1000, 'channel' => Payment::METHOD_CASH, 'payment_date' => today()->toDateString()])
-        ->assertHasActionErrors(['invoice_id']);
+        ->callAction('recordPayment', ['payer' => 'renter:'.$theirRenterId, 'amount' => 1000, 'channel' => Payment::METHOD_CASH, 'payment_date' => today()->toDateString()])
+        ->assertHasActionErrors(['payer']);
 
     Livewire::test(Dashboard::class)
-        ->callAction('recordPayment', ['invoice_id' => $mine->id, 'amount' => 1000, 'channel' => Payment::PROVIDER_TIGOPESA, 'payment_date' => today()->toDateString()])
+        ->callAction('recordPayment', ['payer' => 'renter:'.$mine->lease?->renter_id, 'amount' => 1000, 'channel' => Payment::PROVIDER_TIGOPESA, 'payment_date' => today()->toDateString()])
         ->assertHasNoActionErrors();
 
     Tenancy::end();
@@ -165,12 +166,16 @@ it('offers Record payment on a renter page only for that renter\'s invoices', fu
 
     Livewire::test(EditRenter::class, ['record' => $renter?->getKey()])
         ->assertActionVisible('recordPayment')
-        // Their only open invoice is chosen, with its balance.
+        // What they owe is filled in, shared over their own invoices only.
         ->mountAction('recordPayment')
-        ->assertSchemaStateSet(['invoice_id' => $invoice->id, 'amount' => 500_000], 'mountedActionSchema0')
+        ->assertSchemaStateSet(['payer' => 'renter:'.$renter?->getKey(), 'amount' => 500_000], 'mountedActionSchema0')
         ->unmountAction()
-        ->callAction('recordPayment', ['invoice_id' => $other->id, 'amount' => 1000, 'channel' => Payment::METHOD_CASH, 'payment_date' => today()->toDateString()])
-        ->assertHasActionErrors(['invoice_id']);
+        ->callAction('recordPayment', ['payer' => 'renter:'.$other->lease?->renter_id, 'amount' => 1000, 'channel' => Payment::METHOD_CASH, 'payment_date' => today()->toDateString()])
+        ->assertHasNoActionErrors();
+
+    // The page's renter paid, whatever was sent: never the other renter's invoice.
+    expect(Payment::query()->where('invoice_id', $other->id)->exists())->toBeFalse()
+        ->and(Payment::query()->where('invoice_id', $invoice->id)->sole()->renter_id)->toBe($renter?->getKey());
 });
 
 it('hides Record payment from roles without billing rights', function () {

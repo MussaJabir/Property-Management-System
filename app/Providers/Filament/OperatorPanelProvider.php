@@ -15,6 +15,7 @@ use App\Filament\Operator\Widgets\NeedsAttentionWidget;
 use App\Filament\Operator\Widgets\RecentPaymentsWidget;
 use App\Filament\Operator\Widgets\WorkspaceOverviewWidget;
 use App\Http\Controllers\Operator\ReceiptPdfController;
+use App\Http\Controllers\Operator\RenterStatementPdfController;
 use App\Http\Middleware\EnsureTenantActive;
 use App\Http\Middleware\ForceOperatorPasswordChange;
 use App\Http\Middleware\InitializeTenancyByUser;
@@ -155,6 +156,7 @@ class OperatorPanelProvider extends PanelProvider
             ])
             ->authenticatedRoutes(function (): void {
                 Route::get('receipts/{receipt}/pdf', ReceiptPdfController::class)->name('receipts.pdf');
+                Route::get('renters/{renter}/statement.pdf', RenterStatementPdfController::class)->name('renters.statement.pdf');
             })
             ->middleware([
                 EncryptCookies::class,
