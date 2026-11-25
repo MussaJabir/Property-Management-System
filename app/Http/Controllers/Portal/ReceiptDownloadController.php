@@ -25,7 +25,7 @@ class ReceiptDownloadController
         $user = Auth::guard('renter')->user();
         $renter = $user?->renter;
 
-        if (! $renter || $invoice->lease?->renter_id !== $renter->id || $receipt->payment?->invoice_id !== $invoice->id) {
+        if (! $renter || $invoice->lease?->renter_id !== $renter->id || ! $this->paidOn($receipt, $invoice)) {
             throw new NotFoundHttpException;
         }
 
@@ -39,5 +39,14 @@ class ReceiptDownloadController
         }
 
         return $disk->download((string) $receipt->pdf_path, 'receipt-'.$receipt->receipt_number.'.pdf');
+    }
+
+    /** The receipt's payment paid (part of) this invoice. */
+    private function paidOn(Receipt $receipt, Invoice $invoice): bool
+    {
+        $payment = $receipt->payment;
+
+        return $payment !== null && ($payment->invoice_id === $invoice->id
+            || $payment->allocations()->where('invoice_id', $invoice->id)->exists());
     }
 }

@@ -44,7 +44,7 @@ class Index extends Component
 
         $query = Invoice::query()
             ->whereIn('lease_id', $leaseIds)
-            ->with(['payments.receipt', 'lease.unit.property'])
+            ->with(['allocations.payment.receipt', 'lease.unit.property'])
             ->orderByDesc('billing_period_start');
 
         if ($this->status === 'open') {

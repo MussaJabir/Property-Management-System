@@ -48,20 +48,28 @@
 
     <div class="number">{{ $receipt->receipt_number }}</div>
 
+    @if ($payment?->isReversed())
+        <div style="margin:10px 0;padding:8px 12px;border:2px solid #b45309;color:#92400e;font-weight:700;text-align:center;">
+            {{ __('REVERSED on :date', ['date' => $payment->reversed_at?->format('d/m/Y')]) }}@if ($payment->reversal_reason) · {{ $payment->reversal_reason }}@endif
+        </div>
+    @endif
+
     <div class="amount-banner">
         <div class="label">{{ __('Amount received') }}</div>
         <div class="value">{{ $fmt($payment?->amount ?? 0) }}</div>
     </div>
 
     @php
-        $party = $invoice?->lease?->renter ?? $invoice?->booking?->guest;
+        $party = $payment?->renter ?? $invoice?->lease?->renter ?? $invoice?->booking?->guest;
         $unit = $invoice?->lease?->unit ?? $invoice?->booking?->unit;
+        // A payment shared over several invoices lists each one.
+        $shares = $payment?->allocations()->with('invoice')->get() ?? collect();
     @endphp
     <div class="grid">
         <div class="col">
             <div class="box">
                 <div class="label">{{ __('Received from') }}</div>
-                <div class="value">{{ $invoice?->bill_to_name ?? '—' }}</div>
+                <div class="value">{{ $payment?->renter?->display_name ?? $invoice?->bill_to_name ?? '—' }}</div>
                 <div style="font-size:9pt;color:#6b7280;margin-top:4px;">
                     {{ $party?->phone ?? '' }}
                 </div>
@@ -74,7 +82,16 @@
                     {{ $unit?->property?->name ?? '—' }} / {{ $unit?->code ?? '—' }}
                 </div>
                 <div style="font-size:9pt;color:#6b7280;margin-top:4px;">
-                    {{ __('Invoice') }} {{ $invoice?->invoice_number ?? '—' }}
+                    @if ($shares->count() > 1)
+                        @foreach ($shares as $share)
+                            {{ __('Invoice') }} {{ $share->invoice?->invoice_number ?? '—' }}: {{ $fmt($share->amount) }}<br>
+                        @endforeach
+                    @else
+                        {{ __('Invoice') }} {{ $invoice?->invoice_number ?? '—' }}
+                    @endif
+                    @if ($payment !== null && ($credit = $payment->amount - $shares->sum('amount')) > 0)
+                        <br>{{ __('Kept as credit') }}: {{ $fmt($credit) }}
+                    @endif
                 </div>
             </div>
         </div>

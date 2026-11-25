@@ -302,7 +302,8 @@ Indexes: `(tenant_id, status, due_date)`, `(tenant_id, lease_id)`.
 |---|---|---|
 | id | UUID PK | |
 | tenant_id | UUID FK | |
-| invoice_id | UUID FK | |
+| invoice_id | UUID FK, nullable | main (first) invoice paid; null for money paid in advance |
+| renter_id | UUID FK, nullable | whose money: credit and statements follow the renter |
 | amount | bigint | TZS cents |
 | currency | string(3) | |
 | payment_date | date | |
@@ -311,10 +312,34 @@ Indexes: `(tenant_id, status, due_date)`, `(tenant_id, lease_id)`.
 | mobile_money_provider | enum, nullable | `mpesa` \| `tigopesa` \| `airtelmoney` \| `halopesa` |
 | transaction_id | string, nullable | external txn id |
 | received_by_user_id | FK users.id | who recorded it |
-| status | enum | `pending` \| `completed` \| `failed` \| `refunded` |
+| status | enum | `pending` \| `completed` \| `failed` \| `refunded` \| `reversed` |
+| reversed_at | timestamp, nullable | |
+| reversed_by_user_id | FK users.id, nullable | |
+| reversal_reason | string, nullable | required to reverse |
 | notes | text, nullable | |
 
-Indexes: `(tenant_id, invoice_id)`, `(tenant_id, payment_date)`.
+Indexes: `(tenant_id, invoice_id)`, `(tenant_id, payment_date)`, `(tenant_id, renter_id)`.
+
+A completed payment is never edited or deleted: it is reversed with a reason
+(PaymentPolicy). Its receipt stays, marked reversed.
+
+### `payment_allocations`
+How much of each payment went to which invoice (`App\Services\Payments\PaymentAllocator`).
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| tenant_id | string FK | |
+| payment_id | UUID FK | |
+| invoice_id | UUID FK | |
+| amount | bigint | minor units |
+
+A payment pays its own invoice first, then the renter's other unpaid invoices
+oldest first (or as staff split it); what is left is the renter's credit, used
+on their next invoice when it is issued. A renter's payment only ever pays that
+renter's invoices. `invoices.amount_paid` = sum of its allocations from completed
+payments. Existing payments were carried over as one allocation of their full
+amount, so no balance changed.
 
 ### `receipts`
 | Column | Type | Notes |

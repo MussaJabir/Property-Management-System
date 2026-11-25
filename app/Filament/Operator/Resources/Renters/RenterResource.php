@@ -6,6 +6,7 @@ use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\Renters\Pages\CreateRenter;
 use App\Filament\Operator\Resources\Renters\Pages\EditRenter;
 use App\Filament\Operator\Resources\Renters\Pages\ListRenters;
+use App\Filament\Operator\Resources\Renters\Pages\RenterStatement;
 use App\Filament\Operator\Resources\Renters\Schemas\RenterForm;
 use App\Filament\Operator\Resources\Renters\Tables\RentersTable;
 use App\Models\Renter;
@@ -65,6 +66,7 @@ class RenterResource extends Resource
             'index' => ListRenters::route('/'),
             'create' => CreateRenter::route('/create'),
             'edit' => EditRenter::route('/{record}/edit'),
+            'statement' => RenterStatement::route('/{record}/statement'),
         ];
     }
 

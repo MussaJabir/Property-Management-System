@@ -6,6 +6,7 @@ use App\Models\Concerns\TenantScopedModel;
 use App\Notifications\InvoiceIssuedNotification;
 use App\Notifications\InvoiceOverdueNotification;
 use App\Services\InvoiceNumberGenerator;
+use App\Services\Payments\PaymentAllocator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -121,6 +122,20 @@ class Invoice extends Model
     }
 
     /** Mobile money prompts sent through Selcom for this invoice. */
+    /** @return HasMany<PaymentAllocation, $this> */
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(PaymentAllocation::class);
+    }
+
+    /** Minor units paid on this invoice by completed payments. */
+    public function paidFromAllocations(): int
+    {
+        return (int) $this->allocations()
+            ->whereHas('payment', fn (Builder $q) => $q->where('status', Payment::STATUS_COMPLETED))
+            ->sum('amount');
+    }
+
     public function paymentRequests(): HasMany
     {
         return $this->hasMany(PaymentRequest::class);
@@ -171,6 +186,13 @@ class Invoice extends Model
             $this->save();
         });
 
+        // Money the renter paid ahead (credit) pays this invoice first.
+        try {
+            app(PaymentAllocator::class)->applyCredit($this);
+        } catch (\Throwable $e) {
+            Log::warning('Applying credit to a new invoice failed', ['invoice_id' => $this->id, 'error' => $e->getMessage()]);
+        }
+
         try {
             $renterUser = $this->lease?->renter?->user;
             if ($renterUser) {
@@ -193,9 +215,7 @@ class Invoice extends Model
             return;
         }
 
-        $hasCompletedPayment = $this->payments()
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->exists();
+        $hasCompletedPayment = $this->paidFromAllocations() > 0;
 
         if ($hasCompletedPayment) {
             throw new RuntimeException('Cannot cancel an invoice that already has completed payments.');
@@ -206,9 +226,9 @@ class Invoice extends Model
     }
 
     /**
-     * Recompute amount_paid from the live payments table and promote the
-     * status accordingly. Called by the Payment observer on every payment
-     * save/delete. Idempotent and side-effect-only on the invoice row.
+     * Recompute amount_paid from this invoice's shares of completed payments
+     * and promote the status accordingly. Called whenever a payment touching
+     * it changes. Idempotent and side-effect-only on the invoice row.
      */
     public function recomputeStatus(): void
     {
@@ -217,9 +237,8 @@ class Invoice extends Model
             return;
         }
 
-        $paid = (int) $this->payments()
-            ->where('status', Payment::STATUS_COMPLETED)
-            ->sum('amount');
+        // A payment can be shared across invoices: count only this invoice's share.
+        $paid = $this->paidFromAllocations();
 
         $this->amount_paid = $paid;
 

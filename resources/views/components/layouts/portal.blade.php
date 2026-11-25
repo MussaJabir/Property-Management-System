@@ -106,6 +106,7 @@
                 @foreach ([
                     ['portal', __('Dashboard'), null],
                     ['portal/invoices', __('Invoices'), 'renter-invoices'],
+                    ['portal/statement', __('Statement'), null],
                     ['portal/maintenance', __('Maintenance'), 'renter-maintenance'],
                     ['portal/profile', __('Profile'), 'renter-profile'],
                 ] as [$path, $label, $tourKey])
@@ -147,6 +148,7 @@
             @foreach ([
                 ['portal', __('Dashboard')],
                 ['portal/invoices', __('Invoices')],
+                ['portal/statement', __('Statement')],
                 ['portal/maintenance', __('Maintenance')],
                 ['portal/profile', __('Profile')],
             ] as [$path, $label])

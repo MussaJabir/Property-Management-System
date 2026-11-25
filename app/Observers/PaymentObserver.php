@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\Receipt;
 use App\Notifications\PaymentReceivedNotification;
 use App\Notifications\ReceiptIssuedNotification;
+use App\Services\Payments\PaymentAllocator;
 use App\Services\ReceiptNumberGenerator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -14,8 +15,9 @@ use Throwable;
 use function Illuminate\Support\defer;
 
 /**
- * Keeps the invoice's amount_paid / status in sync with the live payments
- * table, and issues a Receipt the first time a payment reaches `completed`.
+ * Shares a new payment across invoices (PaymentAllocator), keeps those
+ * invoices' amount_paid / status in sync, and issues a Receipt the first
+ * time a payment reaches `completed`.
  *
  * Idempotent on every event:
  *   - status recompute is a pure function of completed payments → safe to
@@ -26,7 +28,8 @@ class PaymentObserver
 {
     public function created(Payment $payment): void
     {
-        $this->syncInvoice($payment);
+        // Share it across the payer's invoices (or as planned); refreshes them.
+        app(PaymentAllocator::class)->allocate($payment, $payment->allocationPlan);
         $this->maybeIssueReceipt($payment);
     }
 
@@ -49,7 +52,7 @@ class PaymentObserver
 
     protected function syncInvoice(Payment $payment): void
     {
-        $payment->invoice?->recomputeStatus();
+        app(PaymentAllocator::class)->refreshInvoices($payment);
     }
 
     protected function maybeIssueReceipt(Payment $payment): void
@@ -83,7 +86,7 @@ class PaymentObserver
     protected function maybeBellNotify(Payment $payment): void
     {
         try {
-            $renterUser = $payment->invoice?->lease?->renter?->user;
+            $renterUser = ($payment->renter ?? $payment->invoice?->lease?->renter)?->user;
             if ($renterUser) {
                 $renterUser->notify(new PaymentReceivedNotification($payment));
             }
@@ -106,7 +109,7 @@ class PaymentObserver
      */
     protected function maybeEmail(Payment $payment, Receipt $receipt): void
     {
-        $email = $payment->invoice?->lease?->renter?->email;
+        $email = ($payment->renter ?? $payment->invoice?->lease?->renter)?->email;
         if (! $email) {
             return;
         }
