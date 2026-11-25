@@ -31,6 +31,13 @@ Schedule::command('maintenance:run-schedules')
     ->withoutOverlapping()
     ->runInBackground();
 
+// "Rent due soon" emails, a few days before each unpaid invoice is due
+// (Settings → Billing; once per invoice).
+Schedule::command('billing:remind-due')
+    ->dailyAt('08:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
 Schedule::command('billing:detect-overdue')
     ->dailyAt('06:00')
     ->withoutOverlapping()
