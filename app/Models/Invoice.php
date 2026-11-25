@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\TenantScopedModel;
 use App\Notifications\InvoiceIssuedNotification;
 use App\Notifications\InvoiceOverdueNotification;
+use App\Services\Deposits\DepositLedger;
 use App\Services\InvoiceNumberGenerator;
 use App\Services\Payments\PaymentAllocator;
 use Illuminate\Database\Eloquent\Builder;
@@ -256,6 +257,9 @@ class Invoice extends Model
         }
 
         $this->save();
+
+        // A deposit counts as held once its invoice is fully paid.
+        app(DepositLedger::class)->syncInvoice($this);
     }
 
     /**

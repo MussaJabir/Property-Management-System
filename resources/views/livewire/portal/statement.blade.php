@@ -14,11 +14,12 @@
         <p class="text-sm text-zinc-500">{{ __('No statement yet.') }}</p>
     @else
         @php($closing = $statement['closing'])
-        <div class="grid gap-3 sm:grid-cols-3">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900"><p class="text-xs text-zinc-500">{{ __('Charged') }}</p><p class="text-lg font-semibold">{{ $statement['currency'] }} {{ $fmt($statement['charged']) }}</p></div>
             <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900"><p class="text-xs text-zinc-500">{{ __('Paid') }}</p><p class="text-lg font-semibold">{{ $statement['currency'] }} {{ $fmt($statement['paid']) }}</p></div>
             <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900"><p class="text-xs text-zinc-500">{{ __('Balance') }}</p>
                 <p class="text-lg font-semibold">{{ $closing < 0 ? __('Credit :amount', ['amount' => $statement['currency'].' '.$fmt(abs($closing))]) : $statement['currency'].' '.$fmt($closing) }}</p></div>
+            <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-zinc-900"><p class="text-xs text-zinc-500">{{ __('Your deposit held') }}</p><p class="text-lg font-semibold">{{ $statement['currency'] }} {{ $fmt($statement['deposit_held']) }}</p></div>
         </div>
 
         <div class="overflow-x-auto rounded-xl bg-white shadow-sm dark:bg-zinc-900">

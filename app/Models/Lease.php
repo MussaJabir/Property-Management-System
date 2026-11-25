@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantScopedModel;
+use App\Services\Deposits\DepositLedger;
 use App\Services\Portal\RenterPortalAccountProvisioner;
 use App\Services\RentInvoiceGenerator;
 use Illuminate\Database\Eloquent\Builder;
@@ -133,6 +134,12 @@ class Lease extends Model implements HasMedia
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    /** @return HasMany<DepositTransaction, $this> */
+    public function depositTransactions(): HasMany
+    {
+        return $this->hasMany(DepositTransaction::class)->orderBy('occurred_on')->orderBy('id');
     }
 
     /** @return BelongsTo<Lease, $this> */
@@ -442,6 +449,10 @@ class Lease extends Model implements HasMedia
                 'status' => self::STATUS_PENDING,
             ]);
             $renewal->forceFill(['tenant_id' => $this->tenant_id])->save();
+
+            if ($renewal->deposit_carried_over > 0) {
+                app(DepositLedger::class)->carryOver($this, $renewal, $renewal->deposit_carried_over, $userId);
+            }
 
             $this->history()->create([
                 'tenant_id' => $this->tenant_id,

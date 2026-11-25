@@ -7,6 +7,8 @@ namespace App\Filament\Operator\Resources\Leases\Pages;
 use App\Filament\Operator\Resources\Leases\LeaseActions;
 use App\Filament\Operator\Resources\Leases\LeaseResource;
 use App\Models\Lease;
+use App\Services\Deposits\DepositLedger;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -52,6 +54,21 @@ class ViewLease extends ViewRecord
         ];
     }
 
+    public function receiveDepositAction(): Action
+    {
+        return LeaseActions::receiveDeposit()->record($this->getRecord());
+    }
+
+    public function deductDepositAction(): Action
+    {
+        return LeaseActions::deductDeposit()->record($this->getRecord());
+    }
+
+    public function refundDepositAction(): Action
+    {
+        return LeaseActions::refundDeposit()->record($this->getRecord());
+    }
+
     /** @return array<string, mixed> */
     protected function getViewData(): array
     {
@@ -87,11 +104,14 @@ class ViewLease extends ViewRecord
                     ? __(':pct% every :months months', ['pct' => rtrim(rtrim((string) $lease->increase_percent, '0'), '.'), 'months' => $lease->increase_every_months ?: 12])
                     : __('None'),
                 __('Next increase') => $next !== null ? __(':date → :rent', ['date' => $next->format('d/m/Y'), 'rent' => $money($lease->rentAfterIncrease())]) : null,
-                __('Deposit') => $money($lease->deposit_amount).($lease->deposit_carried_over > 0 ? ' · '.__(':amount carried over', ['amount' => $money($lease->deposit_carried_over)]) : ''),
+                __('Deposit agreed') => $money($lease->deposit_amount).($lease->deposit_carried_over > 0 ? ' · '.__(':amount carried over', ['amount' => $money($lease->deposit_carried_over)]) : ''),
             ], fn (?string $value): bool => $value !== null),
             'renewalUrl' => $lease->renewal !== null ? LeaseResource::getUrl('view', ['record' => $lease->renewal]) : null,
             'renewedFromUrl' => $lease->renewedFrom !== null ? LeaseResource::getUrl('view', ['record' => $lease->renewedFrom]) : null,
             'history' => $lease->history()->with('user')->get(),
+            'depositHeld' => $money(app(DepositLedger::class)->held($lease)),
+            'depositEntries' => $lease->depositTransactions()->with('recordedBy')->get(),
+            'money' => $money,
         ];
     }
 

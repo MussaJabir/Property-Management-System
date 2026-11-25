@@ -12,7 +12,7 @@
         h1 { font-size: 18pt; margin: 0 0 2px; color: #111827; }
         .sub { color: #4b5563; margin: 0 0 14px; }
         .totals { display: table; width: 100%; margin: 0 0 14px; }
-        .totals div { display: table-cell; width: 33%; padding: 8px 10px; background: #f9fafb; border: 1px solid #e5e7eb; }
+        .totals div { display: table-cell; width: 25%; padding: 8px 10px; background: #f9fafb; border: 1px solid #e5e7eb; }
         .totals .label { font-size: 8.5pt; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
         .totals .value { font-size: 12pt; font-weight: 700; }
         table { width: 100%; border-collapse: collapse; }
@@ -43,6 +43,7 @@
         <div><div class="label">{{ __('Charged') }}</div><div class="value">{{ $cur }} {{ $fmt($statement['charged']) }}</div></div>
         <div><div class="label">{{ __('Paid') }}</div><div class="value">{{ $cur }} {{ $fmt($statement['paid']) }}</div></div>
         <div><div class="label">{{ __('Balance') }}</div><div class="value">{{ $closing < 0 ? __('Credit :amount', ['amount' => $cur.' '.$fmt(abs($closing))]) : $cur.' '.$fmt($closing) }}</div></div>
+        <div><div class="label">{{ __('Deposit held') }}</div><div class="value">{{ $cur }} {{ $fmt($statement['deposit_held']) }}</div></div>
     </div>
 
     <table>

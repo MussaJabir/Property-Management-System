@@ -6,6 +6,7 @@ namespace App\Filament\Operator\Resources\Leases;
 
 use App\Filament\Operator\Support\RentFields;
 use App\Models\Lease;
+use App\Services\Deposits\DepositLedger;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
@@ -167,6 +168,90 @@ final class LeaseActions
                     ]))
                     ->send();
             });
+    }
+
+    /** A deposit paid outside an invoice (e.g. before using PMS), prefilled with what is missing. */
+    public static function receiveDeposit(): Action
+    {
+        return Action::make('receiveDeposit')
+            ->label(__('Record deposit received'))
+            ->color('gray')
+            ->size('sm')
+            ->visible(fn (Lease $record): bool => LeaseResource::canEdit($record) && $record->deposit_amount > app(DepositLedger::class)->held($record) && ! $record->isFinished())
+            ->modalHeading(__('Deposit received'))
+            ->modalDescription(__('For a deposit paid outside an invoice, for example before you used PMS.'))
+            ->fillForm(fn (Lease $record): array => [
+                'amount' => max(0, $record->deposit_amount - app(DepositLedger::class)->held($record)) / 100,
+                'date' => ($record->start_date ?? today())->toDateString(),
+            ])
+            ->schema(fn (Lease $record): array => [
+                TextInput::make('amount')->label(__('Amount'))->prefix($record->currency)->numeric()->minValue(1)->required(),
+                DatePicker::make('date')->label(__('Date received'))->native(false)->displayFormat('d/m/Y')->required()->maxDate(fn (): Carbon => today()->endOfDay()),
+                Textarea::make('reason')->label(__('Note (optional)'))->maxLength(500)->rows(2),
+            ])
+            ->action(function (array $data, Lease $record): void {
+                try {
+                    app(DepositLedger::class)->receive($record, (int) round(((float) $data['amount']) * 100), Carbon::parse($data['date'])->toDateString(), $data['reason'] ?? null, auth()->id());
+                    Notification::make()->success()->title(__('Deposit recorded'))->send();
+                } catch (Throwable $e) {
+                    Notification::make()->danger()->title(__('Could not record'))->body($e->getMessage())->send();
+                }
+            });
+    }
+
+    /** Keep part of the deposit, with a reason (damage, unpaid bills). */
+    public static function deductDeposit(): Action
+    {
+        return Action::make('deductDeposit')
+            ->label(__('Deduct for damage'))
+            ->color('gray')
+            ->size('sm')
+            ->visible(fn (Lease $record): bool => LeaseResource::canEdit($record) && app(DepositLedger::class)->held($record) > 0)
+            ->modalHeading(__('Keep part of the deposit'))
+            ->modalDescription(fn (Lease $record): string => __('Held now: :amount. The reason shows on the tenant\'s statement.', ['amount' => self::money($record, app(DepositLedger::class)->held($record))]))
+            ->schema(fn (Lease $record): array => [
+                TextInput::make('amount')->label(__('Amount'))->prefix($record->currency)->numeric()->minValue(1)->required(),
+                Textarea::make('reason')->label(__('Why?'))->placeholder(__('e.g. Broken window, repaired'))->required()->maxLength(500)->rows(2),
+            ])
+            ->action(function (array $data, Lease $record): void {
+                try {
+                    app(DepositLedger::class)->deduct($record, (int) round(((float) $data['amount']) * 100), (string) $data['reason'], auth()->id());
+                    Notification::make()->success()->title(__('Deduction recorded'))->send();
+                } catch (Throwable $e) {
+                    Notification::make()->danger()->title(__('Could not deduct'))->body($e->getMessage())->send();
+                }
+            });
+    }
+
+    /** Pay the deposit back. Only an owner or manager confirms a refund. */
+    public static function refundDeposit(): Action
+    {
+        return Action::make('refundDeposit')
+            ->label(__('Refund'))
+            ->color('gray')
+            ->size('sm')
+            ->visible(fn (Lease $record): bool => app(DepositLedger::class)->held($record) > 0 && (auth()->user()?->hasAnyRole(['owner', 'manager']) ?? false))
+            ->modalHeading(__('Refund the deposit'))
+            ->modalDescription(fn (Lease $record): string => __('Held now: :amount. Record it once the money has been paid back.', ['amount' => self::money($record, app(DepositLedger::class)->held($record))]))
+            ->fillForm(fn (Lease $record): array => ['amount' => app(DepositLedger::class)->held($record) / 100])
+            ->schema(fn (Lease $record): array => [
+                TextInput::make('amount')->label(__('Amount refunded'))->prefix($record->currency)->numeric()->minValue(1)->required(),
+                Textarea::make('reason')->label(__('Note (optional)'))->placeholder(__('e.g. Paid by M-Pesa, ref QJK7X2'))->maxLength(500)->rows(2),
+            ])
+            ->modalSubmitActionLabel(__('Record refund'))
+            ->action(function (array $data, Lease $record): void {
+                try {
+                    app(DepositLedger::class)->refund($record, (int) round(((float) $data['amount']) * 100), $data['reason'] ?? null, auth()->id());
+                    Notification::make()->success()->title(__('Refund recorded'))->send();
+                } catch (Throwable $e) {
+                    Notification::make()->danger()->title(__('Could not refund'))->body($e->getMessage())->send();
+                }
+            });
+    }
+
+    private static function money(Lease $lease, int $minor): string
+    {
+        return $lease->currency.' '.number_format($minor / 100, 0, '.', ',');
     }
 
     /** @return array<string, mixed> */

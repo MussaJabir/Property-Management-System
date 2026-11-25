@@ -341,6 +341,28 @@ renter's invoices. `invoices.amount_paid` = sum of its allocations from complete
 payments. Existing payments were carried over as one allocation of their full
 amount, so no balance changed.
 
+### `deposit_transactions`
+Tenant deposits, kept apart from rent (`App\Services\Deposits\DepositLedger`).
+
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint PK | |
+| tenant_id | string FK | |
+| lease_id | UUID FK | |
+| type | string | `received` \| `deduction` \| `refund` \| `carried_in` \| `carried_out` |
+| amount | bigint | minor units, always positive |
+| occurred_on | date | |
+| reason | string, nullable | required for a deduction |
+| invoice_id | UUID FK, nullable | the invoice a `received` entry came from (unique per invoice + type) |
+| recorded_by_user_id | FK users.id, nullable | |
+
+Held = received + carried_in − deduction − refund − carried_out. A deposit counts
+as `received` once the invoice carrying its deposit line is fully paid (and the
+entry goes if a reversal reopens it). Refunds are recorded by owners or managers
+only. A renewal moves what is held from the old lease to the new one. Existing
+paid deposit lines were carried over as `received`. Statements show the deposit
+held apart from the balance owed.
+
 ### `receipts`
 | Column | Type | Notes |
 |---|---|---|
