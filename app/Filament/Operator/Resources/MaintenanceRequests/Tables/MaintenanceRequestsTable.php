@@ -2,8 +2,10 @@
 
 namespace App\Filament\Operator\Resources\MaintenanceRequests\Tables;
 
+use App\Filament\Operator\Resources\Materials\Tables\MaterialsTable;
 use App\Models\Contractor;
 use App\Models\MaintenanceRequest;
+use App\Models\Material;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -11,15 +13,18 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Throwable;
 
 class MaintenanceRequestsTable
@@ -80,6 +85,14 @@ class MaintenanceRequestsTable
                     ->date('d/m/Y')
                     ->sortable(),
 
+                TextColumn::make('due_on')
+                    ->label(__('Due'))
+                    ->state(fn (MaintenanceRequest $r): ?string => $r->isFinished() ? null : $r->dueDate()->format('d/m/Y'))
+                    ->color(fn (MaintenanceRequest $r): ?string => $r->isOverdue() ? 'danger' : null)
+                    ->description(fn (MaintenanceRequest $r): ?string => $r->isOverdue() ? __('Overdue') : null)
+                    ->placeholder('—')
+                    ->sortable(),
+
                 TextColumn::make('formatted_cost')
                     ->label('Cost')
                     ->description(fn (MaintenanceRequest $r): ?string => $r->estimated_cost !== null ? __('Estimate').' '.$r->formatted_estimated_cost : null)
@@ -108,6 +121,12 @@ class MaintenanceRequestsTable
                         'high' => 'High',
                         'urgent' => 'Urgent',
                     ]),
+                Filter::make('overdue')
+                    ->label(__('Overdue'))
+                    ->query(fn (Builder $q) => $q->scopes(['overdue'])),
+                Filter::make('repeat')
+                    ->label(__('Repeat faults (same fault, same unit, :days days)', ['days' => MaintenanceRequest::REPEAT_DAYS]))
+                    ->query(fn (Builder $q) => $q->scopes(['repeatFaults'])),
                 SelectFilter::make('category')
                     ->label(__('Fault type'))
                     ->options(MaintenanceRequest::CATEGORIES),
@@ -136,6 +155,12 @@ class MaintenanceRequestsTable
                                 ->where('status', 'active')
                                 ->pluck('name', 'id')),
                         self::moneyInput('estimate', __('Estimated cost (optional)')),
+                        DatePicker::make('due_on')
+                            ->label(__('Finish by'))
+                            ->displayFormat('d/m/Y')
+                            ->native(false)
+                            ->default(fn (MaintenanceRequest $record) => today()->addDays(MaintenanceRequest::DAYS_TO_FIX[$record->priority] ?? 7))
+                            ->helperText(__('Set from the priority; change it if needed.')),
                         Textarea::make('note')->rows(2)->placeholder(__('Instructions for the work')),
                     ])
                     ->modalHeading(__('Approve and create a work order?'))
@@ -147,6 +172,7 @@ class MaintenanceRequestsTable
                                 assigneeId: filled($data['assignee'] ?? null) ? (int) $data['assignee'] : null,
                                 estimatedCents: $data['estimate'] ?? null,
                                 note: $data['note'] ?? null,
+                                dueOn: $data['due_on'] ?? null,
                             );
                             Notification::make()->title(__('Work order :number created', ['number' => $record->work_order_number]))->success()->send();
                         } catch (Throwable $e) {
@@ -183,6 +209,40 @@ class MaintenanceRequestsTable
                             Notification::make()->title('Marked in progress')->success()->send();
                         } catch (Throwable $e) {
                             Notification::make()->title('Could not start')->body($e->getMessage())->danger()->send();
+                        }
+                    }),
+
+                Action::make('issueMaterials')
+                    ->label(__('Issue materials'))
+                    ->icon(Heroicon::OutlinedCube)
+                    ->color('gray')
+                    ->visible(fn (MaintenanceRequest $r): bool => ($r->isApproved() || $r->isInProgress()) && (auth()->user()?->can('update', $r) ?? false))
+                    ->schema([
+                        Select::make('material')
+                            ->label(__('Material'))
+                            ->options(fn (): array => Material::query()->orderBy('name')->get()
+                                ->mapWithKeys(fn (Material $m): array => [$m->id => $m->name.' — '.MaterialsTable::qty($m->stock_quantity).' '.strtolower($m->unitLabel()).' '.__('in stock')])->all())
+                            ->required()
+                            ->searchable(),
+                        TextInput::make('quantity')
+                            ->label(__('Quantity'))
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->required(),
+                    ])
+                    ->modalHeading(__('Issue materials to this job'))
+                    ->modalDescription(__('Taken from stock and added to the job\'s materials cost.'))
+                    ->action(function (array $data, MaintenanceRequest $record): void {
+                        try {
+                            $material = Material::query()->findOrFail($data['material']);
+                            $issue = $record->issueMaterial($material, (float) $data['quantity'], auth()->id());
+                            Notification::make()
+                                ->title(__('Materials issued'))
+                                ->body(MaintenanceRequest::money($issue->total_cost))
+                                ->success()
+                                ->send();
+                        } catch (Throwable $e) {
+                            Notification::make()->title(__('Could not issue materials'))->body($e->getMessage())->danger()->send();
                         }
                     }),
 

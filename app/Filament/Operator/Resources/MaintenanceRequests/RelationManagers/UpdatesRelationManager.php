@@ -52,6 +52,7 @@ class UpdatesRelationManager extends RelationManager
                     ->badge()
                     ->placeholder('Note')
                     ->color(fn (?string $state): string => match ($state) {
+                        'approved' => 'primary',
                         'in_progress' => 'info',
                         'completed' => 'success',
                         'cancelled' => 'danger',

@@ -6,6 +6,7 @@ use App\Filament\Operator\Navigation\NavGroup;
 use App\Filament\Operator\Resources\MaintenanceRequests\Pages\CreateMaintenanceRequest;
 use App\Filament\Operator\Resources\MaintenanceRequests\Pages\EditMaintenanceRequest;
 use App\Filament\Operator\Resources\MaintenanceRequests\Pages\ListMaintenanceRequests;
+use App\Filament\Operator\Resources\MaintenanceRequests\RelationManagers\MaterialIssuesRelationManager;
 use App\Filament\Operator\Resources\MaintenanceRequests\RelationManagers\UpdatesRelationManager;
 use App\Filament\Operator\Resources\MaintenanceRequests\Schemas\MaintenanceRequestForm;
 use App\Filament\Operator\Resources\MaintenanceRequests\Tables\MaintenanceRequestsTable;
@@ -57,6 +58,7 @@ class MaintenanceRequestResource extends Resource
     {
         return [
             UpdatesRelationManager::class,
+            MaterialIssuesRelationManager::class,
         ];
     }
 

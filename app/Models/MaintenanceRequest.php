@@ -45,6 +45,8 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string|null $category
  * @property string|null $work_order_number
  * @property Carbon|null $approved_at
+ * @property Carbon|null $due_on
+ * @property int|null $maintenance_schedule_id
  * @property Carbon|null $signed_off_at
  * @property string|null $sign_off_note
  * @property int|null $reported_by_user_id
@@ -79,6 +81,17 @@ class MaintenanceRequest extends Model implements HasMedia
 
     public const STATUS_CANCELLED = 'cancelled';
 
+    /** Days to fix a job, by priority; sets the due date when it is approved. */
+    public const DAYS_TO_FIX = [
+        self::PRIORITY_URGENT => 1,
+        self::PRIORITY_HIGH => 3,
+        self::PRIORITY_MEDIUM => 7,
+        self::PRIORITY_LOW => 14,
+    ];
+
+    /** The same fault on the same unit within this many days counts as a repeat. */
+    public const REPEAT_DAYS = 90;
+
     /** Fault types, value => label. */
     public const CATEGORIES = [
         'plumbing' => 'Plumbing',
@@ -102,6 +115,8 @@ class MaintenanceRequest extends Model implements HasMedia
         'category',
         'work_order_number',
         'approved_at',
+        'due_on',
+        'maintenance_schedule_id',
         'signed_off_at',
         'sign_off_note',
         'estimated_cost',
@@ -124,6 +139,7 @@ class MaintenanceRequest extends Model implements HasMedia
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
             'approved_at' => 'datetime',
+            'due_on' => 'date',
             'signed_off_at' => 'datetime',
             'cost' => 'integer',
             'estimated_cost' => 'integer',
@@ -151,6 +167,18 @@ class MaintenanceRequest extends Model implements HasMedia
     public function contractor(): BelongsTo
     {
         return $this->belongsTo(Contractor::class);
+    }
+
+    /** @return BelongsTo<MaintenanceSchedule, $this> */
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(MaintenanceSchedule::class, 'maintenance_schedule_id');
+    }
+
+    /** @return HasMany<MaterialIssue, $this> */
+    public function materialIssues(): HasMany
+    {
+        return $this->hasMany(MaterialIssue::class);
     }
 
     /** @return BelongsTo<User, $this> */
@@ -206,13 +234,16 @@ class MaintenanceRequest extends Model implements HasMedia
      * Approve a pending request: it becomes a numbered work order, optionally
      * given to a staff member and/or a contractor, with an estimated cost.
      */
-    public function approve(?int $userId = null, ?int $contractorId = null, ?int $assigneeId = null, ?int $estimatedCents = null, ?string $note = null): void
+    public function approve(?int $userId = null, ?int $contractorId = null, ?int $assigneeId = null, ?int $estimatedCents = null, ?string $note = null, ?string $dueOn = null): void
     {
         if (! $this->isPending()) {
             throw new RuntimeException("Request {$this->id} cannot be approved from status {$this->status}");
         }
 
-        DB::transaction(function () use ($userId, $contractorId, $assigneeId, $estimatedCents, $note): void {
+        DB::transaction(function () use ($userId, $contractorId, $assigneeId, $estimatedCents, $note, $dueOn): void {
+            if ($dueOn !== null) {
+                $this->due_on = Carbon::parse($dueOn);
+            }
             $this->markApproved($userId);
             if ($contractorId !== null) {
                 $this->contractor_id = $contractorId;
@@ -241,6 +272,91 @@ class MaintenanceRequest extends Model implements HasMedia
         $this->approved_at = now();
         $this->approved_by_user_id = $userId;
         $this->work_order_number ??= app(WorkOrderNumberGenerator::class)->next((string) $this->tenant_id);
+        $this->due_on ??= today()->addDays(self::DAYS_TO_FIX[$this->priority] ?? 7);
+    }
+
+    /** When the job should be finished: its due date, or the priority's target from when it was reported. */
+    public function dueDate(): Carbon
+    {
+        return $this->due_on?->copy()
+            ?? $this->reported_at->copy()->startOfDay()->addDays(self::DAYS_TO_FIX[$this->priority] ?? 7);
+    }
+
+    public function isOverdue(): bool
+    {
+        return ! $this->isFinished() && $this->dueDate()->lt(today());
+    }
+
+    /** Finished by its due date (null while still open or cancelled). */
+    public function wasOnTime(): ?bool
+    {
+        if (! $this->isCompleted() || $this->completed_at === null) {
+            return null;
+        }
+
+        return $this->completed_at->copy()->startOfDay()->lte($this->dueDate());
+    }
+
+    /** Another job for the same fault on the same unit in the days before this one. */
+    public function isRepeat(): bool
+    {
+        if ($this->category === null) {
+            return false;
+        }
+
+        return self::query()
+            ->whereKeyNot($this->getKey())
+            ->where('unit_id', $this->unit_id)
+            ->where('category', $this->category)
+            ->where('status', '!=', self::STATUS_CANCELLED)
+            ->whereBetween('reported_at', [$this->reported_at->copy()->subDays(self::REPEAT_DAYS), $this->reported_at])
+            ->exists();
+    }
+
+    /**
+     * Take materials from stock for this job. The price is fixed at the time
+     * of issue and added to the job's materials cost.
+     */
+    public function issueMaterial(Material $material, float $quantity, ?int $userId = null): MaterialIssue
+    {
+        if (! $this->isApproved() && ! $this->isInProgress()) {
+            throw new RuntimeException(__('Materials can only be issued to an approved or running job.'));
+        }
+        if ($quantity <= 0) {
+            throw new RuntimeException(__('Enter a quantity above zero.'));
+        }
+
+        return DB::transaction(function () use ($material, $quantity, $userId): MaterialIssue {
+            /** @var Material $locked */
+            $locked = Material::query()->lockForUpdate()->findOrFail($material->getKey());
+            if ((float) $locked->stock_quantity < $quantity) {
+                throw new RuntimeException(__('Only :qty :unit of :name in stock.', [
+                    'qty' => rtrim(rtrim((string) $locked->stock_quantity, '0'), '.'),
+                    'unit' => strtolower($locked->unitLabel()),
+                    'name' => $locked->name,
+                ]));
+            }
+
+            $total = (int) round($locked->unit_cost * $quantity);
+            /** @var MaterialIssue $issue */
+            $issue = $this->materialIssues()->create([
+                'tenant_id' => $this->tenant_id,
+                'material_id' => $locked->id,
+                'quantity' => $quantity,
+                'unit_cost' => $locked->unit_cost,
+                'total_cost' => $total,
+                'issued_by_user_id' => $userId,
+                'issued_at' => now(),
+            ]);
+
+            $locked->stock_quantity = number_format((float) $locked->stock_quantity - $quantity, 2, '.', '');
+            $locked->save();
+
+            $this->materials_cost = (int) $this->materials_cost + $total;
+            $this->save();
+
+            return $issue;
+        });
     }
 
     public function isInProgress(): bool
@@ -303,8 +419,8 @@ class MaintenanceRequest extends Model implements HasMedia
             if ($materialsCents !== null) {
                 $this->materials_cost = $materialsCents;
             }
-            if ($costCents === null && ($labourCents !== null || $materialsCents !== null)) {
-                $costCents = (int) $labourCents + (int) $materialsCents;
+            if ($costCents === null && ($this->labour_cost !== null || $this->materials_cost !== null)) {
+                $costCents = (int) $this->labour_cost + (int) $this->materials_cost;
             }
             if ($costCents !== null) {
                 $this->cost = $costCents;
@@ -424,6 +540,28 @@ class MaintenanceRequest extends Model implements HasMedia
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_IN_PROGRESS]);
+    }
+
+    /** Open jobs past their due date. */
+    public function scopeOverdue(Builder $query): Builder
+    {
+        return $this->scopeOpen($query)->whereNotNull('due_on')->whereDate('due_on', '<', today());
+    }
+
+    /** Jobs with an earlier job for the same fault on the same unit in the repeat window. */
+    public function scopeRepeatFaults(Builder $query): Builder
+    {
+        return $query->whereNotNull('category')->whereExists(function ($sub): void {
+            $sub->selectRaw('1')
+                ->from('maintenance_requests as earlier')
+                ->whereColumn('earlier.unit_id', 'maintenance_requests.unit_id')
+                ->whereColumn('earlier.category', 'maintenance_requests.category')
+                ->whereColumn('earlier.id', '!=', 'maintenance_requests.id')
+                ->where('earlier.status', '!=', self::STATUS_CANCELLED)
+                ->whereNull('earlier.deleted_at')
+                ->whereColumn('earlier.reported_at', '<=', 'maintenance_requests.reported_at')
+                ->whereRaw("earlier.reported_at >= maintenance_requests.reported_at - interval '".self::REPEAT_DAYS." days'");
+        });
     }
 
     public function scopeUrgent(Builder $query): Builder
