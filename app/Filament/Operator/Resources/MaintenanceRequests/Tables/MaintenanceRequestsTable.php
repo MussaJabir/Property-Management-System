@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\MaintenanceRequests\Tables;
 
+use App\Models\Contractor;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -31,7 +32,14 @@ class MaintenanceRequestsTable
                     ->searchable()
                     ->wrap()
                     ->limit(60)
-                    ->weight('semibold'),
+                    ->weight('semibold')
+                    ->description(fn (MaintenanceRequest $r): ?string => $r->work_order_number),
+
+                TextColumn::make('category')
+                    ->label(__('Fault type'))
+                    ->formatStateUsing(fn (?string $state): string => MaintenanceRequest::CATEGORIES[$state ?? ''] ?? '—')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('unit.code')
                     ->label('Unit')
@@ -53,6 +61,7 @@ class MaintenanceRequestsTable
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
+                        'approved' => 'primary',
                         'in_progress' => 'info',
                         'completed' => 'success',
                         'cancelled' => 'gray',
@@ -62,6 +71,7 @@ class MaintenanceRequestsTable
 
                 TextColumn::make('assignedTo.name')
                     ->label('Assigned')
+                    ->description(fn (MaintenanceRequest $r): ?string => $r->contractor?->displayName())
                     ->placeholder('—')
                     ->toggleable(),
 
@@ -72,13 +82,21 @@ class MaintenanceRequestsTable
 
                 TextColumn::make('formatted_cost')
                     ->label('Cost')
+                    ->description(fn (MaintenanceRequest $r): ?string => $r->estimated_cost !== null ? __('Estimate').' '.$r->formatted_estimated_cost : null)
                     ->placeholder('—')
                     ->toggleable(),
+
+                TextColumn::make('signed_off_at')
+                    ->label(__('Signed off'))
+                    ->date('d/m/Y')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('status')
                     ->options([
                         'pending' => 'Pending',
+                        'approved' => 'Approved',
                         'in_progress' => 'In progress',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
@@ -90,14 +108,57 @@ class MaintenanceRequestsTable
                         'high' => 'High',
                         'urgent' => 'Urgent',
                     ]),
+                SelectFilter::make('category')
+                    ->label(__('Fault type'))
+                    ->options(MaintenanceRequest::CATEGORIES),
+                SelectFilter::make('contractor_id')
+                    ->label(__('Contractor'))
+                    ->options(fn (): array => Contractor::query()->orderBy('name')->pluck('name', 'id')->all()),
                 TrashedFilter::make(),
             ])
             ->recordActions([
+                Action::make('approve')
+                    ->label(__('Approve'))
+                    ->icon(Heroicon::OutlinedClipboardDocumentCheck)
+                    ->color('primary')
+                    ->visible(fn (MaintenanceRequest $r): bool => $r->isPending() && (auth()->user()?->can('update', $r) ?? false))
+                    ->schema([
+                        Select::make('contractor')
+                            ->label(__('Contractor (optional)'))
+                            ->options(fn (): array => Contractor::query()->active()->orderBy('name')->get()
+                                ->mapWithKeys(fn (Contractor $c): array => [$c->id => $c->displayName()])->all())
+                            ->searchable(),
+                        Select::make('assignee')
+                            ->label(__('Staff member (optional)'))
+                            ->options(fn () => User::query()
+                                ->where('tenant_id', tenant('id'))
+                                ->where('type', 'operator')
+                                ->where('status', 'active')
+                                ->pluck('name', 'id')),
+                        self::moneyInput('estimate', __('Estimated cost (optional)')),
+                        Textarea::make('note')->rows(2)->placeholder(__('Instructions for the work')),
+                    ])
+                    ->modalHeading(__('Approve and create a work order?'))
+                    ->action(function (array $data, MaintenanceRequest $record): void {
+                        try {
+                            $record->approve(
+                                userId: auth()->id(),
+                                contractorId: filled($data['contractor'] ?? null) ? (int) $data['contractor'] : null,
+                                assigneeId: filled($data['assignee'] ?? null) ? (int) $data['assignee'] : null,
+                                estimatedCents: $data['estimate'] ?? null,
+                                note: $data['note'] ?? null,
+                            );
+                            Notification::make()->title(__('Work order :number created', ['number' => $record->work_order_number]))->success()->send();
+                        } catch (Throwable $e) {
+                            Notification::make()->title(__('Could not approve'))->body($e->getMessage())->danger()->send();
+                        }
+                    }),
+
                 Action::make('start')
                     ->label('Start')
                     ->icon(Heroicon::OutlinedPlayCircle)
                     ->color('info')
-                    ->visible(fn (MaintenanceRequest $r): bool => $r->isPending())
+                    ->visible(fn (MaintenanceRequest $r): bool => $r->isPending() || $r->isApproved())
                     ->schema([
                         Select::make('assignee')
                             ->label('Assign to (optional)')
@@ -131,14 +192,10 @@ class MaintenanceRequestsTable
                     ->color('success')
                     ->visible(fn (MaintenanceRequest $r): bool => $r->isInProgress())
                     ->schema([
-                        TextInput::make('cost')
-                            ->label('Cost (optional)')
-                            ->prefix('TZS')
-                            ->numeric()
-                            ->minValue(0)
-                            ->step(1)
-                            ->helperText('Whole shillings.')
-                            ->dehydrateStateUsing(fn ($state) => $state === null || $state === '' ? null : (int) round(((float) $state) * 100)),
+                        self::moneyInput('labour', __('Labour (optional)')),
+                        self::moneyInput('materials', __('Materials (optional)')),
+                        self::moneyInput('cost', __('Total cost (optional)'))
+                            ->helperText(__('Whole shillings. Leave empty to use labour plus materials.')),
                         Textarea::make('note')->rows(2)->placeholder('Resolution summary'),
                     ])
                     ->modalHeading('Complete this request?')
@@ -148,10 +205,34 @@ class MaintenanceRequestsTable
                                 userId: auth()->id(),
                                 costCents: $data['cost'] ?? null,
                                 note: $data['note'] ?? null,
+                                labourCents: $data['labour'] ?? null,
+                                materialsCents: $data['materials'] ?? null,
                             );
                             Notification::make()->title('Marked completed')->success()->send();
                         } catch (Throwable $e) {
                             Notification::make()->title('Could not complete')->body($e->getMessage())->danger()->send();
+                        }
+                    }),
+
+                Action::make('signOff')
+                    ->label(__('Sign off'))
+                    ->icon(Heroicon::OutlinedHandThumbUp)
+                    ->color('success')
+                    ->visible(fn (MaintenanceRequest $r): bool => $r->isCompleted() && ! $r->isSignedOff() && (auth()->user()?->can('update', $r) ?? false))
+                    ->schema([
+                        Textarea::make('note')
+                            ->label(__('Note (optional)'))
+                            ->rows(2)
+                            ->placeholder(__('e.g. Checked with the tenant, tap no longer leaks')),
+                    ])
+                    ->modalHeading(__('Sign off the finished work?'))
+                    ->modalDescription(__('Confirms the work was checked and accepted.'))
+                    ->action(function (array $data, MaintenanceRequest $record): void {
+                        try {
+                            $record->signOff(auth()->id(), $data['note'] ?? null);
+                            Notification::make()->title(__('Signed off'))->success()->send();
+                        } catch (Throwable $e) {
+                            Notification::make()->title(__('Could not sign off'))->body($e->getMessage())->danger()->send();
                         }
                     }),
 
@@ -186,5 +267,17 @@ class MaintenanceRequestsTable
                 ]),
             ])
             ->defaultSort('reported_at', 'desc');
+    }
+
+    /** Whole shillings in the form, cents out. */
+    private static function moneyInput(string $name, string $label): TextInput
+    {
+        return TextInput::make($name)
+            ->label($label)
+            ->prefix('TZS')
+            ->numeric()
+            ->minValue(0)
+            ->step(1)
+            ->dehydrateStateUsing(fn ($state) => $state === null || $state === '' ? null : (int) round(((float) $state) * 100));
     }
 }

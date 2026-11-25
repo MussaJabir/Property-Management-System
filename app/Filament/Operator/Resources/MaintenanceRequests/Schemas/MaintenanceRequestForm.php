@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\MaintenanceRequests\Schemas;
 
+use App\Models\Contractor;
 use App\Models\MaintenanceRequest;
 use App\Models\Unit;
 use App\Models\User;
@@ -39,6 +40,18 @@ class MaintenanceRequestForm
                             ])
                             ->default(MaintenanceRequest::PRIORITY_MEDIUM)
                             ->native(false),
+
+                        Select::make('category')
+                            ->label(__('Fault type'))
+                            ->options(MaintenanceRequest::CATEGORIES)
+                            ->required()
+                            ->native(false),
+
+                        TextInput::make('work_order_number')
+                            ->label(__('Work order'))
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->visible(fn (?MaintenanceRequest $record): bool => filled($record?->work_order_number)),
 
                         Textarea::make('description')
                             ->required()
@@ -83,10 +96,27 @@ class MaintenanceRequestForm
                             ->searchable()
                             ->preload()
                             ->placeholder('Leave empty — assign later'),
+
+                        Select::make('contractor_id')
+                            ->label(__('Contractor'))
+                            ->options(fn (): array => Contractor::query()->active()->orderBy('name')->get()
+                                ->mapWithKeys(fn (Contractor $c): array => [$c->id => $c->displayName()])->all())
+                            ->searchable()
+                            ->placeholder(__('None — done by our staff')),
+                    ]),
+
+                Section::make(__('Costs'))
+                    ->description(__('Whole shillings. The actual cost is labour plus materials unless you enter it yourself.'))
+                    ->columns(2)
+                    ->components([
+                        self::money('estimated_cost', __('Estimated cost')),
+                        self::money('labour_cost', __('Labour')),
+                        self::money('materials_cost', __('Materials')),
+                        self::money('cost', __('Actual cost')),
                     ]),
 
                 Section::make('Photos')
-                    ->description('Before / during / after photos. Max 5 MB each.')
+                    ->description('Photos of the problem, before work starts. Max 5 MB each.')
                     ->components([
                         SpatieMediaLibraryFileUpload::make('photos')
                             ->hiddenLabel()
@@ -100,6 +130,34 @@ class MaintenanceRequestForm
                             ->maxSize(5120)
                             ->columnSpanFull(),
                     ]),
+
+                Section::make(__('Photos after the work'))
+                    ->description(__('Taken when the job is done, to compare with the photos above.'))
+                    ->visible(fn (string $operation): bool => $operation === 'edit')
+                    ->components([
+                        SpatieMediaLibraryFileUpload::make('after_photos')
+                            ->hiddenLabel()
+                            ->collection('after_photos')
+                            ->visibility(Files::usesB2() ? 'private' : null)
+                            ->multiple()
+                            ->reorderable()
+                            ->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->maxSize(5120)
+                            ->columnSpanFull(),
+                    ]),
             ]);
+    }
+
+    /** Money input shown in whole shillings, stored in cents. */
+    private static function money(string $name, string $label): TextInput
+    {
+        return TextInput::make($name)
+            ->label($label)
+            ->prefix('TZS')
+            ->numeric()
+            ->minValue(0)
+            ->step(1)
+            ->formatStateUsing(fn ($state) => $state === null ? null : (int) round(((int) $state) / 100))
+            ->dehydrateStateUsing(fn ($state) => $state === null || $state === '' ? null : (int) round(((float) $state) * 100));
     }
 }

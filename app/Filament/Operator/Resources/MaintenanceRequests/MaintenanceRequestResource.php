@@ -70,6 +70,6 @@ class MaintenanceRequestResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['unit.property', 'reportedBy', 'assignedTo']);
+        return parent::getEloquentQuery()->with(['unit.property', 'reportedBy', 'assignedTo', 'contractor']);
     }
 }

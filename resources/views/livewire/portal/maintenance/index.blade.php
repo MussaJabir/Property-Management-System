@@ -15,6 +15,7 @@
             @php
                 $colors = [
                     'pending' => 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
+                    'approved' => 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
                     'in_progress' => 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
                     'completed' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300',
                     'cancelled' => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
