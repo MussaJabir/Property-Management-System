@@ -8,7 +8,7 @@
     <div class="flex flex-col gap-6">
         {{ $this->filtersForm }}
 
-        <div class="grid gap-4 sm:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <x-filament::section compact>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('Charged') }}</p>
                 <p class="text-xl font-bold">{{ $cur }} {{ $fmt($statement['charged']) }}</p>
@@ -22,6 +22,10 @@
                 <p @class(['text-xl font-bold', 'text-primary-700 dark:text-primary-400' => $closing <= 0, 'text-danger-700 dark:text-danger-400' => $closing > 0])>
                     {{ $closing < 0 ? __('Credit :amount', ['amount' => $cur.' '.$fmt(abs($closing))]) : $cur.' '.$fmt($closing) }}
                 </p>
+            </x-filament::section>
+            <x-filament::section compact>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('Deposit held (not in balance)') }}</p>
+                <p class="text-xl font-bold">{{ $cur }} {{ $fmt($statement['deposit_held']) }}</p>
             </x-filament::section>
         </div>
 

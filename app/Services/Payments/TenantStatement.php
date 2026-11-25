@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Renter;
+use App\Services\Deposits\DepositLedger;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\View;
@@ -25,7 +26,7 @@ final class TenantStatement
     /**
      * @return array{
      *     renter: Renter, from: Carbon, to: Carbon, currency: string,
-     *     opening: int, charged: int, paid: int, closing: int,
+     *     opening: int, charged: int, paid: int, closing: int, deposit_held: int,
      *     rows: list<array<string, mixed>>
      * }
      */
@@ -57,6 +58,8 @@ final class TenantStatement
             'charged' => (int) collect($rows)->sum(fn (array $r): int => $r['charged'] ?? 0),
             'paid' => (int) collect($rows)->sum(fn (array $r): int => $r['paid'] ?? 0),
             'closing' => $balance,
+            // Kept apart: the deposit is not part of what is owed.
+            'deposit_held' => app(DepositLedger::class)->heldForRenter((string) $renter->getKey()),
             'rows' => $rows,
         ];
     }
