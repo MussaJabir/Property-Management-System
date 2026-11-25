@@ -3,6 +3,7 @@
 namespace App\Filament\Operator\Resources\Properties\Pages;
 
 use App\Filament\Operator\Concerns\ShowsPlanUsage;
+use App\Filament\Operator\Resources\Buildings\BuildingResource;
 use App\Filament\Operator\Resources\Locations\LocationResource;
 use App\Filament\Operator\Resources\Properties\PropertyResource;
 use App\Services\Plans\PlanUsage;
@@ -20,6 +21,12 @@ class ListProperties extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('buildings')
+                ->label(__('Buildings'))
+                ->icon(Heroicon::OutlinedBuildingOffice)
+                ->color('gray')
+                ->visible(fn (): bool => BuildingResource::canAccess())
+                ->url(fn (): string => BuildingResource::getUrl()),
             Action::make('locations')
                 ->label(__('Locations'))
                 ->icon(Heroicon::OutlinedMapPin)

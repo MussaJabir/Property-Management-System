@@ -7,6 +7,8 @@ use App\Models\Expense;
 use App\Models\Lease;
 use App\Models\MaintenanceRequest;
 use App\Models\Property;
+use App\Models\RentalApplication;
+use App\Models\Renter;
 use App\Models\Unit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -45,6 +47,8 @@ class ClientPurger
         Lease::class,
         Expense::class,
         MaintenanceRequest::class,
+        Renter::class,
+        RentalApplication::class,
     ];
 
     /**

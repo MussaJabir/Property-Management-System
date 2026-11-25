@@ -2,8 +2,10 @@
 
 namespace App\Filament\Operator\Resources\Units\Schemas;
 
+use App\Filament\Operator\Support\DocumentsSection;
 use App\Filament\Operator\Support\RentFields;
 use App\Filament\Operator\Support\ShortStays;
+use App\Models\Building;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Services\Plans\PlanUsage;
@@ -38,7 +40,9 @@ class UnitForm
                             ->options(fn () => Property::pluck('name', 'id'))
                             ->required()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('building_id', null)),
 
                         TextInput::make('code')
                             ->label('Unit code')
@@ -46,6 +50,21 @@ class UnitForm
                             ->required()
                             ->maxLength(50)
                             ->helperText('A short label that identifies this unit inside its property.'),
+
+                        Select::make('building_id')
+                            ->label(__('Building'))
+                            ->options(fn (Get $get): array => filled($get('property_id'))
+                                ? Building::query()->where('property_id', $get('property_id'))->orderBy('name')->pluck('name', 'id')->all()
+                                : [])
+                            ->placeholder(__('None'))
+                            ->helperText(__('Add buildings from Properties → Buildings.'))
+                            ->visible(fn (Get $get): bool => filled($get('property_id'))
+                                && Building::query()->where('property_id', $get('property_id'))->exists()),
+
+                        TextInput::make('floor')
+                            ->label(__('Floor'))
+                            ->maxLength(20)
+                            ->placeholder(__('e.g. Ground, 1, 2')),
 
                         Select::make('type')
                             ->required()
@@ -206,6 +225,8 @@ class UnitForm
                                 ? ' '.__('Featured until :date: shown first in search.', ['date' => $record->featured_until?->format('d/m/Y')])
                                 : '')),
                     ]),
+
+                DocumentsSection::make(__('Permits, inspection reports and other unit papers. Only staff can open them.')),
             ]);
     }
 

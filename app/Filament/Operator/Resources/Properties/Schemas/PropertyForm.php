@@ -2,6 +2,7 @@
 
 namespace App\Filament\Operator\Resources\Properties\Schemas;
 
+use App\Filament\Operator\Support\DocumentsSection;
 use App\Models\Location;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -101,6 +102,8 @@ class PropertyForm
                             ->maxSize(5120)
                             ->columnSpanFull(),
                     ]),
+
+                DocumentsSection::make(__('Title deed, permits, insurance and other property papers. Only staff can open them.')),
             ]);
     }
 }

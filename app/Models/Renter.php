@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Audited;
 use App\Models\Concerns\TenantScopedModel;
+use App\Support\Files;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Propaganistas\LaravelPhone\Casts\E164PhoneNumberCast;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * Renter ("mpangaji") = the person or business renting a unit. NOT the same
@@ -22,9 +25,9 @@ use Propaganistas\LaravelPhone\Casts\E164PhoneNumberCast;
  * Phone numbers are normalized to E.164 (assuming TZ when no country code is
  * given) via propaganistas/laravel-phone.
  */
-class Renter extends Model
+class Renter extends Model implements HasMedia
 {
-    use Audited, HasFactory, HasUuids, SoftDeletes, TenantScopedModel;
+    use Audited, HasFactory, HasUuids, InteractsWithMedia, SoftDeletes, TenantScopedModel;
 
     public const TYPE_INDIVIDUAL = 'individual';
 
@@ -101,5 +104,12 @@ class Renter extends Model
     public function scopeBusiness(Builder $query): Builder
     {
         return $query->where('type', self::TYPE_BUSINESS);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        // ID copies, payslips, references: staff only.
+        $this->addMediaCollection('documents')
+            ->useDisk(Files::privateDisk());
     }
 }
