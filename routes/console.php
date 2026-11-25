@@ -25,6 +25,12 @@ Schedule::command('leases:remind-ending')
     ->withoutOverlapping()
     ->runInBackground();
 
+// Preventive maintenance: open the work orders that fall due today.
+Schedule::command('maintenance:run-schedules')
+    ->dailyAt('06:30')
+    ->withoutOverlapping()
+    ->runInBackground();
+
 Schedule::command('billing:detect-overdue')
     ->dailyAt('06:00')
     ->withoutOverlapping()

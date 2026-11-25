@@ -4,6 +4,8 @@ namespace App\Filament\Operator\Resources\MaintenanceRequests\Pages;
 
 use App\Filament\Operator\Resources\Contractors\ContractorResource;
 use App\Filament\Operator\Resources\MaintenanceRequests\MaintenanceRequestResource;
+use App\Filament\Operator\Resources\MaintenanceSchedules\MaintenanceScheduleResource;
+use App\Filament\Operator\Resources\Materials\MaterialResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
@@ -22,6 +24,18 @@ class ListMaintenanceRequests extends ListRecords
                 ->color('gray')
                 ->visible(fn (): bool => ContractorResource::canAccess())
                 ->url(fn (): string => ContractorResource::getUrl()),
+            Action::make('schedules')
+                ->label(__('Schedules'))
+                ->icon(Heroicon::OutlinedCalendarDays)
+                ->color('gray')
+                ->visible(fn (): bool => MaintenanceScheduleResource::canAccess())
+                ->url(fn (): string => MaintenanceScheduleResource::getUrl()),
+            Action::make('materials')
+                ->label(__('Materials'))
+                ->icon(Heroicon::OutlinedCube)
+                ->color('gray')
+                ->visible(fn (): bool => MaterialResource::canAccess())
+                ->url(fn (): string => MaterialResource::getUrl()),
             CreateAction::make()->label('New request'),
         ];
     }
