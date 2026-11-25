@@ -4,6 +4,7 @@ namespace App\Services\Clients;
 
 use App\Models\Client;
 use App\Models\Expense;
+use App\Models\Inspection;
 use App\Models\Lease;
 use App\Models\MaintenanceRequest;
 use App\Models\Property;
@@ -47,6 +48,7 @@ class ClientPurger
         Lease::class,
         Expense::class,
         MaintenanceRequest::class,
+        Inspection::class,
         Renter::class,
         RentalApplication::class,
     ];
