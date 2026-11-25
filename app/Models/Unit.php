@@ -183,6 +183,7 @@ class Unit extends Model implements HasMedia
         return $this->belongsTo(Property::class);
     }
 
+    /** @return HasMany<Lease, $this> */
     public function leases(): HasMany
     {
         return $this->hasMany(Lease::class);

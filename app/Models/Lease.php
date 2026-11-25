@@ -440,7 +440,7 @@ class Lease extends Model implements HasMedia
                 'billing_cycle' => $this->billing_cycle,
                 'billing_cycle_months' => $this->billing_cycle_months,
                 'payment_due_day' => $this->payment_due_day,
-                'grace_days' => $this->grace_days,
+                'grace_days' => (int) ($this->grace_days ?? 0),
                 'notice_days' => $this->notice_days,
                 'late_fee_type' => $this->late_fee_type,
                 'late_fee_value' => $this->late_fee_value,
