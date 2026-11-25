@@ -11,6 +11,7 @@ use App\Models\Subscription;
 use App\Services\Payments\Selcom\SelcomClient;
 use App\Services\Plans\PlanUsage;
 use App\Services\RentInvoiceGenerator;
+use App\Support\RentReminders;
 use App\Support\RequestAlerts;
 use App\Support\TwoStepLogin;
 use BackedEnum;
@@ -111,6 +112,7 @@ class WorkspaceSettings extends Page implements HasForms
             'brand_primary_color' => $this->client->brand_primary_color,
             'default_locale' => $this->client->settings['default_locale'] ?? 'en',
             'auto_invoices' => RentInvoiceGenerator::enabledFor($this->client),
+            RentReminders::SETTING => RentReminders::daysFor($this->client),
             'request_email' => RequestAlerts::emailEnabled($this->client),
             'request_sms' => (bool) ($this->client->settings['request_sms'] ?? false),
             'request_sms_numbers' => array_map(RequestAlerts::display(...), RequestAlerts::smsNumbers($this->client)),
@@ -219,6 +221,13 @@ class WorkspaceSettings extends Page implements HasForms
                                 Toggle::make('auto_invoices')
                                     ->label(__('Create rent invoices automatically'))
                                     ->helperText(__('Each active lease gets its rent invoice when a new period starts, and its first invoice (with the deposit) when it is activated.')),
+
+                                Select::make(RentReminders::SETTING)
+                                    ->label(__('Remind renters before rent is due'))
+                                    ->options(RentReminders::options())
+                                    ->selectablePlaceholder(false)
+                                    ->native(false)
+                                    ->helperText(__('One email per unpaid invoice, to the renter\'s email or portal account.')),
                             ]),
 
                         Tab::make(__('Alerts'))
@@ -537,6 +546,7 @@ class WorkspaceSettings extends Page implements HasForms
         $settings = $this->client->settings ?? [];
         $settings['default_locale'] = $data['default_locale'] ?? 'en';
         $settings['auto_invoices'] = (bool) ($data['auto_invoices'] ?? true);
+        $settings[RentReminders::SETTING] = (int) ($data[RentReminders::SETTING] ?? RentReminders::DEFAULT_DAYS);
         $settings['request_email'] = (bool) ($data['request_email'] ?? true);
         $settings['request_sms'] = (bool) ($data['request_sms'] ?? false);
         if (array_key_exists('request_sms_numbers', $data)) {
